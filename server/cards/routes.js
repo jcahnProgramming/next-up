@@ -1,8 +1,8 @@
 import express from 'express';
 import { MAX_CARDS, checkLane, checkLogo, checkTitle } from '../core/cardRules.js';
 import { appendEvent } from '../core/events.js';
-import { keyAfter, spreadKeys, tooLong } from '../core/positions.js';
-import { CARD_CREATED, CARD_DELETED, CARD_EDITED } from './events.js';
+import { keyAfter, keyBetween, spreadKeys, tooLong } from '../core/positions.js';
+import { CARD_CREATED, CARD_DELETED, CARD_EDITED, CARD_MOVED } from './events.js';
 
 /**
  * /api/boards/:code/cards. Mounted by boards/routes.js AFTER requireAccess, so a password board without access never
@@ -11,10 +11,15 @@ import { CARD_CREATED, CARD_DELETED, CARD_EDITED } from './events.js';
  *   GET    /             a page of the board's live cards, in lane order: { cards, next, limit }   ?limit=&after=
  *   POST   /             add { title, logo?, lane, actor? } to the bottom of the lane → 201 { card }
  *   PATCH  /:id          edit { version, title?, logo?, lane?, actor? } → { card }; a new lane puts it at the bottom
+ *   POST   /:id/move     place it { lane, index, afterId?, actor? } → { card, moved }
  *   DELETE /:id          tombstone { version, actor? } → { card } (the card as it was)
  *
  * Every change writes its event (cards/events.js) in the same transaction. Edits and deletes name the version they
  * started from; if someone else changed the card since, the answer is 409 { code: 'conflict', card } with the latest.
+ * A move names no version: if two people move the same card at once, the later one wins and both are logged.
+ *
+ * A placement writes only the card it places, unless the lane's keys hit their length cap: then that one lane is
+ * rebalanced first and the answer carries `rebalanced: true` (other cards' keys changed; reload the board).
  */
 export function createCardsRouter({ db }) {
   const router = express.Router({ mergeParams: true });
@@ -50,10 +55,10 @@ export function createCardsRouter({ db }) {
       const id = q.insert(boardId, lane.lane, place.position, title.title, logo.logo);
       const card = q.byId(boardId, id);
       appendEvent(db(), { boardId, type: CARD_CREATED, actor: body.actor, payload: { cardId: id, card: stateOf(card, place.index) } });
-      return card;
+      return { card, rebalanced: place.rebalanced };
     }).immediate();
     if (outcome === 'full') return cardLimit(res);
-    res.status(201).json({ card: cardBody(outcome) });
+    res.status(201).json(withRebalanced({ card: cardBody(outcome.card) }, outcome.rebalanced));
   });
 
   router.patch('/:id', (req, res) => {
@@ -85,23 +90,83 @@ export function createCardsRouter({ db }) {
       if (!card || card.deleted_at) return { gone: true };
       if (card.version !== version) return { conflict: card };
       const next = { title: card.title, logo: card.logo, lane: card.lane, position: card.position, ...changes };
+      const edited = next.title !== card.title || next.logo !== card.logo;
       const moved = next.lane !== card.lane;
-      if (next.title === card.title && next.logo === card.logo && !moved) return { card };
+      if (!edited && !moved) return { card };
       const before = stateOf(card, q.indexOf(card));
-      let index = before.index;
+      let place = null;
       if (moved) {
-        const place = bottomOf(boardId, next.lane);
+        place = bottomOf(boardId, next.lane);
         next.position = place.position;
-        index = place.index;
       }
       q.update(boardId, id, next);
       const saved = q.byId(boardId, id);
-      appendEvent(db(), { boardId, type: CARD_EDITED, actor: body.actor, payload: { cardId: id, before, after: stateOf(saved, index) } });
-      return { card: saved };
+      // The name or logo is an edit and the lane a move, each logged as itself (cards/events.js).
+      if (edited) {
+        const after = { ...before, title: saved.title, logo: saved.logo };
+        appendEvent(db(), { boardId, type: CARD_EDITED, actor: body.actor, payload: { cardId: id, before, after } });
+      }
+      if (moved) {
+        appendEvent(db(), {
+          boardId,
+          type: CARD_MOVED,
+          actor: body.actor,
+          payload: { cardId: id, before: placeOf(before), after: placeOf(stateOf(saved, place.index)) },
+        });
+      }
+      return { card: saved, rebalanced: place?.rebalanced ?? false };
     }).immediate();
     if (outcome.gone) return gone(res);
     if (outcome.conflict) return conflict(res, outcome.conflict);
-    res.json({ card: cardBody(outcome.card) });
+    res.json(withRebalanced({ card: cardBody(outcome.card) }, outcome.rebalanced));
+  });
+
+  // Drag and drop, and keyboard moves. `index` is where the card goes among the lane's OTHER live cards (0 = top);
+  // `afterId`, when it names a live card in that lane, wins over it (the card the mover saw just above the gap: it
+  // keeps their intent if the lane changed under them). Null afterId means the top. Dropping a card back in its own
+  // place changes and logs nothing ({ moved: false }).
+  router.post('/:id/move', (req, res) => {
+    const body = req.body ?? {};
+    const id = cardIdOf(req, res);
+    if (id === null) return undefined;
+    const lane = checkLane(body.lane);
+    if (!lane.ok) return invalid(res, 'lane', lane.error);
+    if (!Number.isSafeInteger(body.index) || body.index < 0 || body.index > MAX_CARDS) {
+      return invalid(res, 'index', 'Reload the board and try again.');
+    }
+    const afterId = body.afterId;
+    if (afterId !== undefined && afterId !== null && !(Number.isSafeInteger(afterId) && afterId > 0)) {
+      return invalid(res, 'afterId', 'Reload the board and try again.');
+    }
+    const boardId = req.board.id;
+
+    const outcome = db().transaction(() => {
+      const card = q.byId(boardId, id);
+      if (!card || card.deleted_at) return { gone: true };
+      const others = q.laneRows(boardId, lane.lane).filter((r) => r.id !== id);
+      let index = Math.min(body.index, others.length);
+      if (afterId === null) index = 0;
+      else if (afterId !== undefined) {
+        const at = others.findIndex((r) => r.id === afterId);
+        if (at !== -1) index = at + 1;
+      }
+      const from = q.indexOf(card);
+      if (card.lane === lane.lane && from === index) return { card, moved: false };
+
+      const before = placeOf(stateOf(card, from));
+      const place = placeBetween(boardId, lane.lane, others, index);
+      q.update(boardId, id, { title: card.title, logo: card.logo, lane: lane.lane, position: place.position });
+      const saved = q.byId(boardId, id);
+      appendEvent(db(), {
+        boardId,
+        type: CARD_MOVED,
+        actor: body.actor,
+        payload: { cardId: id, before, after: placeOf(stateOf(saved, index)) },
+      });
+      return { card: saved, moved: true, rebalanced: place.rebalanced };
+    }).immediate();
+    if (outcome.gone) return gone(res);
+    res.json(withRebalanced({ card: cardBody(outcome.card), moved: outcome.moved }, outcome.rebalanced));
   });
 
   router.delete('/:id', (req, res) => {
@@ -132,16 +197,33 @@ export function createCardsRouter({ db }) {
     const last = q.lastPosition(boardId, lane);
     const index = q.laneCount(boardId, lane);
     let position = keyAfter(last);
+    let rebalanced = false;
     if (tooLong(position)) {
-      rebalance(boardId, lane);
+      rebalance(boardId, q.laneIds(boardId, lane));
       position = keyAfter(q.lastPosition(boardId, lane));
+      rebalanced = true;
     }
-    return { position, index };
+    return { position, index, rebalanced };
   }
 
-  function rebalance(boardId, lane) {
-    const ids = q.laneIds(boardId, lane);
-    spreadKeys(ids.length).forEach((key, i) => q.setPosition(boardId, ids[i], key));
+  // A key for a card going in at `index` among `others` (the lane's other live cards, in order), written by the
+  // caller onto that one card. Rebalances the others first if the gap's key would pass the cap, or if the neighbours
+  // share a key (nothing fits between equal keys). Call inside the write transaction.
+  function placeBetween(boardId, lane, others, index) {
+    const keyAt = (rows, i) => rows[i]?.position ?? null;
+    const prev = keyAt(others, index - 1);
+    const next = keyAt(others, index);
+    const position = prev !== null && next !== null && prev >= next ? null : keyBetween(prev, next);
+    if (position !== null && !tooLong(position)) return { position, rebalanced: false };
+    const keys = rebalance(boardId, others.map((r) => r.id));
+    return { position: keyBetween(keys[index - 1] ?? null, keys[index] ?? null), rebalanced: true };
+  }
+
+  // Evenly spaced short keys for these cards, in this order (core/positions.js). Returns the keys.
+  function rebalance(boardId, ids) {
+    const keys = spreadKeys(ids.length);
+    keys.forEach((key, i) => q.setPosition(boardId, ids[i], key));
+    return keys;
   }
 
   return router;
@@ -164,6 +246,10 @@ function cardBody(row) {
 function stateOf(row, index) {
   return { title: row.title, logo: row.logo, lane: row.lane, position: row.position, index };
 }
+
+const placeOf = ({ lane, position, index }) => ({ lane, position, index });
+
+const withRebalanced = (body, rebalanced) => (rebalanced ? { ...body, rebalanced: true } : body);
 
 function cardIdOf(req, res) {
   const id = Number(req.params.id);
@@ -231,6 +317,11 @@ function queries(db) {
       st(`SELECT id FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL ORDER BY position, id LIMIT ${MAX_CARDS}`)
         .pluck()
         .all(boardId, lane),
+    laneRows: (boardId, lane) =>
+      st(`SELECT id, position FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL ORDER BY position, id LIMIT ${MAX_CARDS}`).all(
+        boardId,
+        lane,
+      ),
     indexOf: (card) =>
       st(
         `SELECT COUNT(*) FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL

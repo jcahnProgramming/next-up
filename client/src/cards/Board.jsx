@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { PlusIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
 import { useTopbar } from '../chrome/topbar.jsx';
 import { useOnline } from '../chrome/useOnline.js';
+import { usePhone } from '../chrome/usePhone.js';
 import { useAskName } from '../prefs/NamePrompt.jsx';
 import { LANES, MAX_CARDS, laneName } from '../../../server/core/cardRules.js';
-import { addCard, deleteCard, editCard, loadCards } from './api.js';
+import { keyBetween, tooLong } from '../../../server/core/positions.js';
+import { addCard, deleteCard, editCard, loadCards, moveCard } from './api.js';
 import { CardPill } from './Card.jsx';
 import { CardEditor, CardPanel, ConfirmDelete } from './CardSheets.jsx';
+import { useCardDrag } from './useCardDrag.js';
 import './board.css';
 
 /**
@@ -18,12 +21,20 @@ import './board.css';
  * Changes go through the name prompt first, then the API; the board shows what the server answered. Other people's
  * changes appear on reload (live sync comes later). A board that locks under us (lock pressed in another tab, or its
  * password changed) goes back to its lock screen via onLocked.
+ *
+ * Cards move by drag and drop, long-press on a phone, or the keyboard (useCardDrag.js); every step is announced in
+ * a live region. A drop shows the card in its new place at once and puts it back if the server refuses.
  */
 export function Board({ board, onLocked }) {
   const code = board.code;
   const { toast } = useTopbar();
   const askName = useAskName();
   const online = useOnline();
+  const phone = usePhone();
+  const lanesRef = useRef(null);
+  const hintId = useId();
+  const [said, setSaid] = useState({ text: '', n: 0 });
+  const announce = useCallback((text) => setSaid((p) => ({ text, n: p.n + 1 })), []);
   const [load, setLoad] = useState({ kind: 'loading' });
   const [data, setData] = useState(null); // { cards, limit, loadedAt }
   const [sheet, setSheet] = useState(null); // { mode: 'view' | 'edit' | 'add' | 'delete', id?, lane?, back? }
@@ -118,6 +129,32 @@ export function Board({ board, onLocked }) {
     return r;
   };
 
+  // A drop (useCardDrag): the card shows in its new place straight away; the server writes that one card's lane and
+  // position, and if it refuses, the card goes back. `to.index` counts the lane's other cards, as the server does.
+  const move = async (card, to) => {
+    const others = lanes[to.lane].filter((c) => c.id !== card.id);
+    const above = others[to.index - 1] ?? null;
+    const guess = keyGuess(above?.position ?? null, others[to.index]?.position ?? null);
+    if (guess) upsert({ ...card, lane: to.lane, position: guess });
+    const undo = () => upsert(card);
+    if (!(await askName(`move ${card.title}`))) return undo();
+    const r = common(await moveCard(code, card, { lane: to.lane, index: to.index, afterId: above ? above.id : null }));
+    if (r.kind === 'ok') {
+      upsert(r.card);
+      if (r.rebalanced) reload(); // other cards' keys changed on the server
+    } else if (r.kind === 'gone') {
+      drop(card.id);
+      toast(`${card.title} was deleted by someone else.`, 'error');
+    } else if (r.kind !== 'locked') {
+      undo();
+      toast(r.offline ? `You’re offline, so ${card.title} didn’t move.` : `Couldn’t move ${card.title}. It’s back where it was.`, 'error');
+    }
+    return undefined;
+  };
+
+  const dnd = useCardDrag({ enabled: load.kind === 'ready' && online && !sheet, lanes, rootRef: lanesRef, onDrop: move, announce });
+  const drag = dnd.drag;
+
   const openAdd = (lane) => setSheet({ mode: 'add', lane });
   const open = (card) => setSheet({ mode: 'view', id: card.id });
 
@@ -173,7 +210,10 @@ export function Board({ board, onLocked }) {
         </p>
       )}
 
-      <div className={`lanes${paused ? ' is-stale' : ''}`}>
+      <div
+        ref={lanesRef}
+        className={`lanes${paused ? ' is-stale' : ''}${drag ? ' is-dragging' : ''}${dnd.settling ? ' is-settling' : ''}`}
+      >
         {LANES.map((lane) => (
           <Lane
             key={lane.id}
@@ -183,9 +223,31 @@ export function Board({ board, onLocked }) {
             canAdd={!paused && !full}
             onAdd={() => openAdd(lane.id)}
             onOpen={open}
+            dnd={paused ? null : dnd}
+            drag={drag}
+            phone={phone}
+            describedBy={paused ? undefined : hintId}
           />
         ))}
       </div>
+
+      <p id={hintId} className="sr-only">
+        Enter opens it. To move it, press Space, then the arrow keys; Space drops it and Escape cancels.
+      </p>
+      <div className="sr-only" aria-live="assertive" aria-atomic="true">
+        {/* An alternating no-break space makes a repeated message ("position 1 of 3" twice) announce again. */}
+        {said.text}
+        {said.n % 2 ? ' ' : ''}
+      </div>
+      {drag && phone && drag.mode === 'pointer' && !drag.scrolling && <DragHint drag={drag} card={cardById(drag.id)} />}
+      {drag?.scrolling && (
+        <div className={`autoscroll autoscroll-${drag.scrolling}`} aria-hidden="true">
+          <span>
+            <ArrowIcon down={drag.scrolling === 'down'} />
+            Scrolling {drag.scrolling}
+          </span>
+        </div>
+      )}
 
       {sheet?.mode === 'view' && sheetCard && (
         <CardPanel
@@ -220,19 +282,40 @@ export function Board({ board, onLocked }) {
   );
 }
 
-function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen }) {
+/**
+ * A lane. During a drag (`drag`) nothing in it re-orders: each card slides by whole card pitches to where it will
+ * be (--shift), the list grows or shrinks by --extra pitches, and the slot is drawn absolutely at --at. On drop the
+ * real order changes and the shifts drop to zero in the same frame, so nothing jumps.
+ */
+function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen, dnd, drag, phone, describedBy }) {
   const headId = `lane-${lane.id}`;
   const n = cards.length;
+  const isSource = Boolean(drag && cards.some((c) => c.id === drag.id));
+  const isTarget = drag?.to.lane === lane.id;
+  const others = drag ? cards.filter((c) => c.id !== drag.id) : cards;
+  const shiftOf = (card, at) => {
+    if (!drag || card.id === drag.id) return 0;
+    const i = others.indexOf(card);
+    return (isTarget && i >= drag.to.index ? i + 1 : i) - at;
+  };
+  // On a phone the header says what the drop will do (Board-Phone 3 and 4): "3 → 4", "4 + 1 moving", "Drop here".
+  const moving = drag && phone && drag.from.lane !== drag.to.lane;
+  const count = moving && isTarget ? `${n} → ${n + 1}` : moving && isSource ? `${n - 1} + 1 moving` : n;
   return (
-    <section className="lane glass-1" aria-labelledby={headId}>
-      <div className="lane-head">
+    <section
+      className={`lane glass-1${isTarget ? ' is-drop' : ''}${isSource ? ' is-source' : ''}`}
+      aria-labelledby={headId}
+      data-drop-lane={lane.id}
+    >
+      <div className={`lane-head${isTarget && phone ? ' is-target' : ''}`}>
         <span className={`lane-dot ld-${lane.id}`} aria-hidden="true" />
         <h2 id={headId} className="lane-name">
           {lane.name}
         </h2>
         <span className="lane-n" aria-label={n === 1 ? '1 game' : `${n} games`}>
-          {n}
+          {count}
         </span>
+        {isTarget && phone && <span className="lane-drop-here" aria-hidden="true">Drop here</span>}
         <button
           type="button"
           className="icon-btn lane-add-btn"
@@ -256,18 +339,65 @@ function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen }) {
             Add a game
           </button>
         </div>
+      ) : n === 0 && isTarget ? (
+        <div className="card-slot" data-slot data-lane-list aria-hidden="true" />
       ) : n === 0 ? (
         <div className="lane-empty">{EMPTY[lane.id]}</div>
       ) : (
-        <ol className="lane-cards">
-          {cards.map((card) => (
-            <li key={card.id}>
-              <CardPill card={card} onOpen={onOpen} />
-            </li>
-          ))}
+        <ol className="lane-cards" data-lane-list style={drag ? { '--extra': others.length + (isTarget ? 1 : 0) - n } : undefined}>
+          {cards.map((card, at) => {
+            const lifted = card.id === drag?.id;
+            return (
+              <li key={card.id} className={lifted ? 'is-dragged' : undefined} style={drag ? { '--shift': shiftOf(card, at) } : undefined}>
+                {lifted && moving && (
+                  <span className="from-tag" aria-hidden="true">
+                    from {laneName(drag.from.lane)}
+                  </span>
+                )}
+                <CardPill card={card} onOpen={onOpen} dnd={dnd} lifted={lifted} describedBy={describedBy} />
+              </li>
+            );
+          })}
+          {isTarget && <li className="card-slot is-placed" data-slot aria-hidden="true" style={{ '--at': drag.to.index }} />}
         </ol>
       )}
     </section>
+  );
+}
+
+// Phone (Board-Phone 2 and 4): what letting go will do, where a toast would sit.
+function DragHint({ drag, card }) {
+  const same = drag.to.lane === drag.from.lane && drag.to.index === drag.from.index;
+  return (
+    <div className="drag-hint" aria-hidden="true">
+      <span className="toast glass-2">
+        {same || !card ? 'Drag to any lane. Release to drop.' : `Release to move ${card.title} to ${laneName(drag.to.lane)}, ${ordinal(drag.to.index + 1)}`}
+      </span>
+    </div>
+  );
+}
+
+const ordinal = (n) => {
+  const s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th';
+  return `${n}${s}`;
+};
+
+// The key the server will most likely give a dropped card, so it shows in place before the answer arrives. Null when
+// the gap is too tight to guess (the server will rebalance the lane, and the board reloads).
+function keyGuess(above, below) {
+  try {
+    const key = keyBetween(above, below);
+    return tooLong(key) ? null : key;
+  } catch {
+    return null;
+  }
+}
+
+function ArrowIcon({ down }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={down ? 'M12 5v14M6 13l6 6 6-6' : 'M12 19V5M6 11l6-6 6 6'} />
+    </svg>
   );
 }
 

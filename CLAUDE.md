@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.4.0 has boards, access, lanes and cards; not drag and drop, card details, history or live sync yet)
+## What Next Up will be (the agreed spec; 0.5.0 has boards, access, lanes, cards and drag and drop; not card details, history or live sync yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -119,9 +119,16 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   characters, an optional logo id, one of three lanes. At most `MAX_CARDS` = 200 live cards per board, checked inside
   the creating transaction, refused with a plain message. Edits and deletes carry the card's `version`; a stale one
   gets 409 `{ code: 'conflict', card }` with the latest, never a silent overwrite.
+- **Moves** (`POST /api/boards/:code/cards/:id/move` `{ lane, index, afterId? }`): `index` counts the lane's other
+  cards; `afterId` (the card just above the gap, null for the top) wins when it is still in that lane. Moves carry no
+  version: if two people move one card at once the later write wins and both are logged (each mover's screen corrects
+  on its next load). A move still bumps the version, so an edit sheet opened before it gets the conflict. Dropping a
+  card where it is writes and logs nothing. Every change of lane or order is `card.moved`, the edit sheet's Lane
+  dropdown included; an edit that renames and moves at once logs `card.edited` (lane unchanged) then `card.moved`.
 - **Order within a lane is a fractional key** (`server/core/positions.js`): placing a card writes only that card.
   Keys are capped at 64 characters; a placement that would pass the cap rebalances that one lane first (378
-  consecutive moves into the same gap before that can happen). A new card goes to the bottom of its lane.
+  consecutive moves into the same gap before that can happen); the answer then says `rebalanced: true` and the
+  client reloads the board. A new card goes to the bottom of its lane.
 - **The change log is `events`** (`server/core/events.js`): append-only (the database refuses updates, and deletes
   except when purging a retired board), indexed on `(board_id, created_at)`. Event types **declare themselves** with
   `declareEventType({ type, restorable, payload: zod object })` next to the feature that writes them
@@ -129,7 +136,8 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   the event in the same transaction as the change. Each payload holds enough to undo it without reading anything
   else. Types so far: `board.created` `{ hasPassword }`; `card.created` `{ cardId, card }`, `card.edited`
   `{ cardId, before, after }` (restorable), `card.deleted` `{ cardId, card }` (restorable), where a card state is
-  `{ title, logo, lane, position, index }` (`server/cards/events.js`).
+  `{ title, logo, lane, position, index }`; `card.moved` `{ cardId, before, after }` (restorable), where each is only
+  the place `{ lane, position, index }` (`server/cards/events.js`).
 - History offers Restore on card edits, deletes and moves. Restoring a move puts the card as close to its old lane
   and position as the board now allows. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
@@ -199,6 +207,13 @@ building any screen; where an artboard contradicts this file, this file wins and
 Apple styling: glass, translucency, restraint, content-forward. No navigation menu: a top bar with the name and a
 settings button, a bottom bar with the version.
 
+- **The coffee bar** (`client/src/chrome/AppShell.jsx`) is a thin bar pinned to the bottom of the viewport on every
+  page, separate from the version link: one plain link to https://buymeacoffee.com/PathPlays (new tab,
+  `rel="noopener noreferrer"`) with an inline stroke icon. **Never** a script, widget, pixel, third-party logo or
+  analytics. It sits below dialogs, sheets and toasts; the page clears it with `--coffee-bar-h` of bottom padding
+  (so the version link sits just above it), toasts and the drag hint sit above it, and drag auto-scroll measures from
+  its top edge. It takes no pointer events during a drag.
+
 - **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script in `client/index.html` applies the stored
   theme (`nu.theme` in localStorage) before first paint; unset, Light/Dark follow the device ("Match device"). Dark
   is glass. **Legacy is flat**: no blur or translucency, 1 px borders, small radii, squared buttons; cards stay
@@ -210,6 +225,12 @@ settings button, a bottom bar with the version.
   edges, a drop slot, plus a Lane dropdown in the edit sheet.
 - **Cards** are wide pills (`design/v1/Card-Anatomy.dc.html`, `Card-States.dc.html`), keyboard-reachable
   (`role="button" tabindex="0"`): Enter opens, Space lifts, arrows move.
+- **Moving cards** is `client/src/cards/useCardDrag.js`: native pointer events and keys, no library. Mouse drags
+  start after 5 px; touch lifts after a 350 ms hold that moves under 8 px (sooner movement is a scroll). During a drag
+  nothing re-orders: neighbours slide by `--shift` pitches, the slot sits at `--at`, the dragged `<li>` follows by
+  an inline transform, and the real order changes on drop (see "Bugs that cost us"). Every step is announced in a
+  live region ("Lifted Valheim. Up Next, position 2 of 5."). A drop shows at once and is put back if the server
+  refuses; it asks for the display name first like any change.
 - **Buttons never clip or truncate their labels.** Sizes come from the `--btn-*` tokens, never inline sizes on a
   button; touch targets are at least 44 px.
 - **No native `<select>`** (nor `<datalist>` or native date/time/colour pickers): their popups ignore the theme

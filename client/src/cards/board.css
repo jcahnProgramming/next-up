@@ -622,3 +622,200 @@
 .ov-bottom .card-editor {
   height: calc(100dvh - 44px);
 }
+
+/* ---------- moving a card (Card-States "lifted" and "drop target", Board-Desktop mid-drag, Board-Phone 2–4) ----------
+   Nothing re-orders during a drag (useCardDrag.js): each card slides by whole pitches (--shift), the list grows or
+   shrinks (--extra), the slot sits at --at, and the dragged <li> follows the pointer by an inline transform. */
+.lane-cards {
+  --pitch: calc(var(--card-h) + var(--card-gap));
+  position: relative;
+  margin-bottom: calc(var(--pitch) * var(--extra, 0));
+}
+.lane-cards > li {
+  position: relative;
+  transition: transform var(--dur-base) var(--spring);
+}
+.lanes.is-dragging .lane-cards > li:not(.card-slot) {
+  transform: translateY(calc(var(--pitch) * var(--shift, 0)));
+}
+/* The drop itself: the lanes take their real order in the frame the shifts go to zero, so nothing slides twice. */
+.lanes.is-settling .lane-cards > li {
+  transition: none;
+}
+/* It follows the pointer exactly; the keyboard, a cancel and the drop set their own glide inline. */
+.lane-cards > li.is-dragged {
+  z-index: 30;
+  transition: none;
+}
+/* Glass lanes are stacking contexts: the lane the card came from rises so the card stays above the others. */
+.lane.is-source {
+  position: relative;
+  z-index: 5;
+}
+.card {
+  -webkit-touch-callout: none;
+}
+.card[role='button'].is-lifted {
+  transform: rotate(var(--card-lift-rotate)) scale(var(--card-lift-scale));
+  box-shadow: var(--card-shadow-lift);
+  cursor: grabbing;
+}
+.card[role='button'].is-lifted:focus-visible {
+  box-shadow: var(--card-shadow-lift), var(--focus-ring);
+}
+.card[role='button'].is-lifted .card-art {
+  transform: none;
+}
+/* While a card is held, the others don't react to the pointer passing over them. */
+.lanes.is-dragging .card[role='button']:not(.is-lifted):hover {
+  transform: none;
+  box-shadow: var(--card-shadow);
+}
+.lanes.is-dragging .card[role='button']:not(.is-lifted):hover .card-art {
+  transform: none;
+}
+html.is-card-dragging,
+html.is-card-dragging * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.card-slot {
+  flex: none;
+  height: var(--card-h);
+  border-radius: var(--r-full);
+  background: var(--placeholder-fill);
+  background-image: repeating-linear-gradient(135deg, transparent 0 10px, var(--placeholder-fill) 10px 20px);
+  box-shadow: inset 0 0 0 2px var(--placeholder-edge);
+  /* scrolled into view clear of the coffee bar (keyboard moves) */
+  scroll-margin: 24px 0 calc(var(--coffee-bar-h, 0px) + 24px);
+}
+.card-slot.is-placed {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--pitch) * var(--at, 0));
+  transition: top var(--dur-base) var(--spring);
+}
+.lanes.is-settling .card-slot.is-placed {
+  transition: none;
+}
+.lane.is-drop {
+  box-shadow: var(--shadow-card), inset 0 0 0 2px var(--placeholder-edge);
+}
+.lane-head.is-target {
+  border-radius: var(--r-full);
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--placeholder-edge);
+}
+.lane-head.is-target .lane-name {
+  color: var(--accent-text);
+}
+.lane-drop-here {
+  flex: none;
+  font-size: var(--fs-caption);
+  font-weight: 650;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+.from-tag {
+  position: absolute;
+  top: -12px;
+  left: 18px;
+  z-index: 31;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--r-full);
+  background: var(--surface-solid);
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--elev-2), var(--edge);
+  pointer-events: none;
+}
+
+/* Phone: what letting go will do, where a toast would sit (above the coffee bar). */
+.drag-hint {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--coffee-bar-h, 0px) + 16px);
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+.drag-hint .toast {
+  min-height: 40px;
+  padding: 8px 18px;
+  font-size: 13px;
+  text-align: center;
+}
+/* Auto-scroll: a band at the edge the card is held near; the bottom one sits on the coffee bar's top edge. */
+.autoscroll {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  height: var(--autoscroll-zone);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.autoscroll-down {
+  bottom: var(--coffee-bar-h, 0px);
+  align-items: flex-end;
+  padding-bottom: 14px;
+  background: linear-gradient(0deg, var(--accent-soft), transparent);
+}
+.autoscroll-up {
+  top: 0;
+  align-items: flex-start;
+  padding-top: 14px;
+  background: linear-gradient(180deg, var(--accent-soft), transparent);
+}
+.autoscroll span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--r-full);
+  background: var(--surface-solid);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: var(--elev-2), var(--edge);
+}
+
+@media (max-width: 600px) {
+  .lane-cards {
+    --pitch: calc(var(--card-h-phone) + 8px);
+  }
+  .card-slot {
+    height: var(--card-h-phone);
+  }
+  /* Board-Phone: the rest of the board dims a little, and lane headers stay in sight while the page scrolls. */
+  .lanes.is-dragging .card:not(.is-lifted) {
+    opacity: 0.82;
+  }
+  .lanes.is-dragging .lane-head {
+    position: sticky;
+    top: 8px;
+    z-index: 4;
+    padding: 4px 6px 4px 8px;
+    border-radius: var(--r-full);
+    background: var(--surface-2);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow: var(--shadow-card);
+  }
+  .lanes.is-dragging .lane-head.is-target {
+    background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface-2);
+    box-shadow: var(--shadow-card), inset 0 0 0 2px var(--placeholder-edge);
+  }
+}

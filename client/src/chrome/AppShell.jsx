@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { NamePromptProvider } from '../prefs/NamePrompt.jsx';
 import { APP_VERSION } from '../release.js';
-import { ArrowRight, SettingsIcon } from './icons.jsx';
+import { ArrowRight, CoffeeIcon, SettingsIcon } from './icons.jsx';
 import { createScrollMemory, focusMainHeading, restoreScroll, scrollDecision } from './scrollMemory.js';
 import { CodeChip, TopbarProvider, useTopbar } from './topbar.jsx';
 import './chrome.css';
@@ -58,9 +58,21 @@ function Shell() {
           <span>What's new</span>
         </NavLink>
       </footer>
+
+      {/* Pinned to the bottom of the viewport on every page, separate from the version link above (which stays in
+          the page and clears it through the shell's bottom padding). A plain link: no script, pixel or widget. */}
+      <aside className="coffee-bar" aria-label="Support Next Up">
+        <a className="coffee-link" href={COFFEE_URL} target="_blank" rel="noopener noreferrer">
+          <CoffeeIcon />
+          <span>Buy me a coffee</span>
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+      </aside>
     </div>
   );
 }
+
+const COFFEE_URL = 'https://buymeacoffee.com/PathPlays';
 
 const memory = createScrollMemory();
 

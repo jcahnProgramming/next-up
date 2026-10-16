@@ -5,11 +5,13 @@ import { initials, markBroken, useLogo } from './logos.js';
  * a solid fill from the theme's --card-fb-* tokens with the name and a monogram disc.
  *
  * In a lane it is role="button" tabindex="0" (it holds block layout, which <button> may not): click or Enter opens
- * its panel. Space-to-lift and arrow moves arrive with drag and drop. Nothing clickable sits inside it yet; anything
- * that ever does must sit above this whole-card target (CLAUDE.md, "Bugs that cost us").
+ * its panel; dragging it, a long press on a touch screen, or Space then arrows moves it (useCardDrag.js, given as
+ * `dnd`; `describedBy` points at the instructions). Nothing clickable sits inside it yet; anything that ever does
+ * must sit above this whole-card target (CLAUDE.md, "Bugs that cost us").
  */
-export function CardPill({ card, onOpen }) {
+export function CardPill({ card, onOpen, dnd, lifted = false, describedBy }) {
   const onKeyDown = (e) => {
+    if (dnd?.onKeyDown(e, card)) return;
     if (e.key === 'Enter') {
       e.preventDefault();
       onOpen(card);
@@ -18,11 +20,14 @@ export function CardPill({ card, onOpen }) {
   return (
     <CardFace
       card={card}
+      className={lifted ? 'is-lifted' : ''}
       role="button"
       tabIndex={0}
       aria-haspopup="dialog"
+      aria-describedby={describedBy}
       onClick={() => onOpen(card)}
       onKeyDown={onKeyDown}
+      onPointerDown={dnd ? (e) => dnd.onPointerDown(e, card) : undefined}
       data-card-id={card.id}
     />
   );

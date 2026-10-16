@@ -4,7 +4,7 @@ import { readDisplayName } from '../prefs/displayName.js';
 /**
  * The cards API (server/cards/routes.js). Every call resolves to one plain result, never throws:
  *
- *   { kind: 'ok', card } | { kind: 'ok', cards, limit }
+ *   { kind: 'ok', card, rebalanced? } | { kind: 'ok', cards, limit }   rebalanced: other cards' keys changed (reload)
  *   { kind: 'locked', changed }        the board locked under us (lock pressed in another tab, or the password changed)
  *   { kind: 'invalid', field, error }  the server refused an input
  *   { kind: 'conflict', card }         someone else changed the card first; `card` is the latest
@@ -21,7 +21,7 @@ function read(r) {
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
   if (status === 200 || status === 201) {
-    if (data?.card) return { kind: 'ok', card: data.card };
+    if (data?.card) return { kind: 'ok', card: data.card, rebalanced: data.rebalanced === true };
     if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit };
   }
   if (data?.code === 'conflict' && data.card) return { kind: 'conflict', card: data.card };
@@ -54,6 +54,10 @@ export const addCard = async (code, { title, logo, lane }) =>
 
 export const editCard = async (code, card, changes) =>
   read(await request(`${base(code)}/${card.id}`, { method: 'PATCH', body: { ...changes, version: card.version, actor: actor() } }));
+
+/** Places the card at `index` among `lane`'s other cards; `afterId` is the card just above that gap (null: the top). */
+export const moveCard = async (code, card, { lane, index, afterId }) =>
+  read(await request(`${base(code)}/${card.id}/move`, { method: 'POST', body: { lane, index, afterId, actor: actor() } }));
 
 export const deleteCard = async (code, card) =>
   read(await request(`${base(code)}/${card.id}`, { method: 'DELETE', body: { version: card.version, actor: actor() } }));

@@ -121,6 +121,17 @@ export function ErrorIcon({ size = 14 }) {
   );
 }
 
+// The coffee bar: a cup with steam, drawn here (no third-party logo).
+export function CoffeeIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <path d="M4 10h13v4a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z" />
+      <path d="M17 11.5h1.5a2.5 2.5 0 0 1 0 5H16.5" />
+      <path d="M8.5 3.5c-.7.9-.7 1.8 0 2.7M12.5 3.5c-.7.9-.7 1.8 0 2.7" />
+    </svg>
+  );
+}
+
 // Cards (design/v1 Detail-Desktop, Detail-Edit).
 export function EditIcon({ size = 14 }) {
   return (

@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "0.5.0",
+      "date": "2026-10-15",
+      "title": "Drag and drop",
+      "sections": {
+        "New": [
+          "Drag a card to move it: up or down within its lane, or into another lane at any position. The card lifts and tilts as you pick it up, a slot opens where it will land, and the cards around it slide apart to make room. Let go to drop it; press Escape to put it back. Dropping it where it started changes nothing.",
+          "On a phone, press and hold a card for a moment to pick it up, then drag it. Hold it near the top or bottom of the screen and the page scrolls toward the lane you want; that lane's heading lights up, says “Drop here” and shows its new count, and a note at the bottom says where the game will land. A quick tap still opens the card, and swiping still scrolls the board. The Lane option in a card's edit sheet is still there if you'd rather not drag.",
+          "Move cards from the keyboard: Tab to a card, press Space to pick it up, use the up and down arrows to move it within its lane and left and right to move it between lanes, then Space or Enter to drop it, or Escape to cancel. Screen readers hear each step, for example “Lifted Valheim. Up Next, position 2 of 5.”",
+          "Every move is recorded in the board's history with where the card was and where it went, so a later History page can put it back. Moving a card with the edit sheet's Lane option is recorded as a move too. If two people move the same card at the same moment, the later move wins and both are recorded; the other person sees the result when they next load the board.",
+          "A “Buy me a coffee” link to support Next Up now sits in a thin bar along the bottom of every page. It's a plain link that opens Buy Me a Coffee in a new tab; nothing from that site loads in Next Up."
+        ]
+      }
+    },
+    {
       "version": "0.4.0",
       "date": "2026-10-15",
       "title": "Lanes and cards",
