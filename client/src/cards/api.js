@@ -12,14 +12,20 @@ import { readDisplayName } from '../prefs/displayName.js';
  *   { kind: 'full', error }            the board holds the most cards it can
  *   { kind: 'error', offline }         couldn't reach Next Up, or it failed
  *
+ * A change refused because the board is being deleted is `invalid` with the server's words, and `deleting`: the board
+ * as it is now (its countdown), so the page can show the banner even if the live stream hasn't said so yet.
+ *
  * Changes carry this browser's display name as `actor` (a label; "Someone" when there's none).
  */
 const base = (code) => `/api/boards/${code}/cards`;
+
+const deleting = (data) => ({ kind: 'invalid', field: null, error: data.error, deleting: data.board ?? null });
 
 function read(r) {
   if (r.failed) return { kind: 'error', offline: r.offline };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
+  if (data?.code === 'board_deleting') return deleting(data);
   if (status === 200 || status === 201) {
     if (data?.card) return { kind: 'ok', card: data.card, rebalanced: data.rebalanced === true };
     if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit, head: data.head };
@@ -84,6 +90,7 @@ function readPlayers(r) {
   if (r.failed) return { kind: 'error', offline: r.offline };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
+  if (data?.code === 'board_deleting') return deleting(data);
   if ((status === 200 || status === 201) && data?.player) return { kind: 'ok', player: data.player, playerCount: data.playerCount };
   if (status === 200 && Array.isArray(data?.players)) return { kind: 'ok', players: data.players, next: data.next ?? null, limit: data.limit };
   if (data?.code === 'player_exists') return { kind: 'exists', error: data.error, player: data.player };

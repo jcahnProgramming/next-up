@@ -114,9 +114,9 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
         <div className="create-choice" aria-live="polite">
           {withPassword ? (
             <p>
-              <b>Locked, for good.</b> Anyone with the code sees only a lock screen until they enter this password. You’ll
-              be able to change it later in Settings (coming soon), but never remove it. Nobody can recover a forgotten
-              password, so keep it somewhere safe.
+              <b>Locked, for good.</b> Anyone with the code sees only a lock screen until they enter this password. You
+              can change it later in Settings, but never remove it. Nobody can recover a forgotten password, so keep it
+              somewhere safe.
             </p>
           ) : (
             <p>

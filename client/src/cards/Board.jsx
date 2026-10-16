@@ -9,6 +9,7 @@ import { addCard, deleteCard, editCard, loadCards, moveCard } from './api.js';
 import { CardPill } from './Card.jsx';
 import { CardEditor, CardPanel, ConfirmDelete } from './CardSheets.jsx';
 import { HistoryPanel } from '../history/HistoryPanel.jsx';
+import { DeletingBanner, RestoreBoard, withDeadline } from '../boards/Deletion.jsx';
 import { LiveContext, SyncBanner, sentenceOf, tagOf, useLive } from '../live/Live.jsx';
 import { hueOf } from './CardDetail.jsx';
 import { useCardDrag } from './useCardDrag.js';
@@ -28,13 +29,17 @@ import './board.css';
  * A board that locks under us (lock pressed in another tab, or its password changed) goes back to its lock screen
  * via onLocked.
  *
+ * While the board is being deleted (`board.deletion`, then whatever the live stream says) it shows the countdown
+ * banner with Restore (boards/Deletion.jsx) and editing is paused, as when offline; viewing and History go on. When
+ * the countdown ends, or the stream says the board is gone, onGone() has the page look the code up again.
+ *
  * Cards move by drag and drop, long-press on a phone, or the keyboard (useCardDrag.js); every step is announced in
  * a live region. A drop shows the card in its new place at once and puts it back if the server refuses.
  *
  * History (`history`, opened from the top bar or a card's panel; history/HistoryPanel.jsx) lists the board's changes
  * and restores them; after a restore the board reloads, since a restore can move, bring back or change any card.
  */
-export function Board({ board, onLocked, history, onHistory, onLive }) {
+export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
   const code = board.code;
   const { toast } = useTopbar();
   const askName = useAskName();
@@ -51,6 +56,15 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
   // The event id the board first loaded at: where the live stream starts (live/Live.jsx). Null until then.
   const [head, setHead] = useState(null);
   const [flashes, setFlashes] = useState(() => new Map()); // card id → { tag, hue, n }: "Bunzato moved this"
+  // While the board is being deleted: { scheduledAt, purgeAt, leftMs, deadline } (boards/Deletion.jsx), else null.
+  const [deletion, setDeletion] = useState(() => withDeadline(board.deletion));
+  const [restoring, setRestoring] = useState(false);
+  // The board as the server says it is now (a live change, the stream catching up, a refused change): only a
+  // different deletion (or none) replaces the countdown, so it doesn't jitter with each message's latency.
+  const boardNow = useCallback((b) => {
+    if (!b) return;
+    setDeletion((d) => (!b.deletion ? null : d?.purgeAt === b.deletion.purgeAt ? d : withDeadline(b.deletion)));
+  }, []);
 
   // Live changes, as they arrive (live/connection.js), in id order and each once.
   const latest = useRef({});
@@ -139,6 +153,7 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
   const apply = (m) => {
     const { entry, card, own } = m;
     if (replay.current) replay.current.push(m);
+    boardNow(m.board);
     if (card) {
       const before = latest.current.data?.cards.find((c) => c.id === card.id) ?? null;
       setData((d) => (d ? applyCard(d, m, moving.current) : d));
@@ -186,9 +201,14 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
       for (const fn of listeners.current) fn({ reset: true });
     },
     onLocked: (changed) => common({ kind: 'locked', changed }),
+    onBoard: boardNow,
+    onGone: () => onGone(),
   });
-  const paused = live.status !== 'live';
-  const stale = paused && live.status !== 'connecting';
+  const deleting = deletion !== null;
+  const connected = live.status === 'live';
+  // Editing pauses while the stream isn't live, and while the board is being deleted; only the first greys the lanes.
+  const paused = !connected || deleting;
+  const stale = !connected && live.status !== 'connecting';
   const subscribe = useCallback((fn) => {
     listeners.current.add(fn);
     return () => {
@@ -196,8 +216,8 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
     };
   }, []);
   const liveValue = useMemo(
-    () => ({ status: live.status, why: live.why, since: live.since, retry: live.retry, subscribe }),
-    [live.status, live.why, live.since, live.retry, subscribe],
+    () => ({ status: live.status, why: live.why, since: live.since, retry: live.retry, deleting, subscribe }),
+    [live.status, live.why, live.since, live.retry, deleting, subscribe],
   );
 
   // The top bar's sync pill (pages/BoardPage.jsx puts it there).
@@ -216,6 +236,7 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
       setSheet(null);
       onLocked(r.changed);
     }
+    if (r.deleting) boardNow(r.deleting); // refused: the board is being deleted (the banner says so)
     return r;
   };
 
@@ -329,6 +350,15 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
         Board <span className="code-text">{code}</span>, {total === 1 ? '1 game' : `${total} games`}
       </h1>
 
+      {deletion && (
+        <DeletingBanner
+          deletion={deletion}
+          canRestore={connected}
+          onRestore={() => setRestoring(true)}
+          // At zero the board is erased: look the code up again (it's free now), after a moment to say so.
+          onDone={() => setTimeout(() => onGone(), 1500)}
+        />
+      )}
       <SyncBanner live={live} loadedAt={data.loadedAt} />
       {!stale && load.kind === 'error' && (
         <div className="banner banner-err board-banner" role="alert">
@@ -341,7 +371,7 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
           </button>
         </div>
       )}
-      {full && !stale && (
+      {full && !stale && !deleting && (
         <p className="banner banner-info board-banner" role="status">
           <span className="banner-text">
             <b>This board is full.</b> It holds {data.limit} games, the most a board can. Delete one to add another.
@@ -446,6 +476,23 @@ export function Board({ board, onLocked, history, onHistory, onLive }) {
             // The restore's changes arrive on the live stream like any other; a rebalanced lane needs a reload.
             if (r.rebalanced) reload();
             toast(r.rebalanced ? 'Restored. The board has been reloaded.' : 'Restored. History shows it as a new change.');
+          }}
+        />
+      )}
+      {restoring && deletion && (
+        <RestoreBoard
+          code={code}
+          onClose={() => setRestoring(false)}
+          onDone={(r) => {
+            setRestoring(false);
+            if (r.kind === 'open' || r.kind === 'not-deleting') {
+              boardNow(r.board);
+              toast(r.kind === 'open' ? `Restored. ${code} won’t be deleted.` : `Someone else restored ${code} first. It won’t be deleted.`);
+            } else if (r.kind === 'locked') {
+              common(r);
+            } else if (r.kind === 'free') {
+              onGone();
+            }
           }}
         />
       )}

@@ -29,6 +29,8 @@ function harness({ online = true } = {}) {
     online,
     resets: 0,
     locked: null,
+    gone: 0,
+    boards: [],
     statuses,
     changes,
     conns,
@@ -74,7 +76,7 @@ function harness({ online = true } = {}) {
         },
         send: (text) => push(text),
         change: (id, data = {}) => push(`id: ${id}\nevent: change\ndata: ${JSON.stringify(data)}\n\n`),
-        ready: (head) => push(`event: ready\ndata: ${JSON.stringify({ head })}\n\n`),
+        ready: (head, board) => push(`event: ready\ndata: ${JSON.stringify({ head, ...(board ? { board } : {}) })}\n\n`),
         end: () => close(),
       };
       signal.addEventListener('abort', () => {
@@ -97,6 +99,8 @@ function harness({ online = true } = {}) {
       onChange: (data, id) => changes.push(id),
       onReset: () => env.resets++,
       onLocked: (changed) => (env.locked = changed),
+      onBoard: (board) => env.boards.push(board),
+      onGone: () => env.gone++,
       fetchImpl,
       now: env.now,
       setTimer: (fn, ms) => {
@@ -257,6 +261,35 @@ describe('live connection (client/src/live/connection.js)', () => {
     await flush();
     assert.equal(env.resets, 1);
     assert.deepEqual(env.changes, [901]);
+  });
+
+  test('ready hands over the board as it is now (being deleted, or not)', async () => {
+    const { env, live } = harness();
+    live(5);
+    env.last().open();
+    env.last().ready(5, { code: 'pnc', hasPassword: false, deletion: { leftMs: 1000 } });
+    await flush();
+    assert.deepEqual(env.boards, [{ code: 'pnc', hasPassword: false, deletion: { leftMs: 1000 } }]);
+  });
+
+  test('a board purged while open: "gone" on the stream, or "free" on reconnecting, stops it and says so once', async () => {
+    const a = harness();
+    a.live(5);
+    a.env.last().open();
+    a.env.last().ready(5);
+    a.env.last().send('event: gone\ndata: {"status":"free","code":"pnc"}\n\n');
+    await flush();
+    assert.equal(a.env.gone, 1);
+    await a.env.advance(120_000);
+    assert.equal(a.env.conns.length, 1, 'never reconnects to a board that is gone');
+
+    const b = harness();
+    b.live(5);
+    b.env.last().json(404, { status: 'free', code: 'pnc', full: false });
+    await flush();
+    assert.equal(b.env.gone, 1);
+    await b.env.advance(120_000);
+    assert.equal(b.env.conns.length, 1);
   });
 
   test('retry() reconnects now, from the last id', async () => {

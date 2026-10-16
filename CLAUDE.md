@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.8.0 has boards, access, lanes, cards, drag and drop, card details, history and restore, and live sync; not board retiring or Settings' "This board" yet)
+## What Next Up will be (the agreed spec; 0.9.0 has all of it: boards, access, lanes, cards, drag and drop, card details, history and restore, live sync, board retiring and Settings' "This board")
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -45,6 +45,12 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 - **A password can only be set when the board is created.** An open board can never gain one later. A password
   board's password can be **changed** (current password required) but **never removed**: a locked board stays locked
   for life. The database enforces all three (triggers in `server/core/schema.js`), not just the app.
+- **Changing it** (`POST /api/boards/:code/password { current, password }`, Settings) checks the current password on
+  the shared wrong-password counter, refuses a new one equal to the current, raises `password_version`, gives THIS
+  browser a fresh grant at the new version, and logs `board.password_changed` (who and when, nothing else). Every
+  other grant is then stale, and the write's live notify ends every open stream still on the old version with
+  `locked { reason: 'password_changed' }` at once. A page told that looks the board up again first: another tab of the
+  browser that made the change holds the fresh cookie and simply reopens (`client/src/pages/BoardPage.jsx`).
 - **Rate limits are per network** (per client IP; IPv6 per /64), in memory (`server/core/rateLimit.js`): a restart
   forgets them. Behind the tunnel the client's address is Cloudflare's `CF-Connecting-IP` header
   (`server/core/network.js`); never rate-limit everyone as one IP by accident (every tunnel request shares
@@ -86,10 +92,13 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 
 - **Theme picker** (the five themes, with Light/Dark following the device by default as "Match device") and
   **display name**. Both are per browser.
-- **"This board"**: **change password** (password boards only; current password required, and the check shares the
-  wrong-password counter) and **delete board**. There is no "set" or "remove": a password is chosen only at creation
-  and can never be removed. It is a board setting that lives on the Settings page; it shows only while on a board you
-  can access, and is absent when Settings is opened from the landing page. (Not built yet.)
+- **"This board"** (`client/src/pages/settings/BoardSettings.jsx`): **change password** (password boards only;
+  current password, new, and again; a confirmation before anything is sent; the check shares the wrong-password
+  counter and shows its "too many tries" countdown) and **delete board** (type the code to confirm). There is no
+  "set" or "remove": a password is chosen only at creation and can never be removed. It shows only when Settings was
+  opened from an open board (the top bar's Settings link carries the code in history state, `chrome/AppShell.jsx`)
+  and the server still opens it for this browser; from the landing page or a lock screen it is absent. While the
+  board is being deleted it shows the countdown and Restore instead.
 
 ## Images
 
@@ -111,8 +120,18 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   reason here. The one exception:
   - **Retired boards.** Anyone with edit access can delete ("retire") a board. It is soft-deleted (`deleted_at`) and
     restorable for 24 hours; after that the board and its whole history are purged and its code becomes free. Reason:
-    with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever. (Not built
-    yet; the schema already lets only a retired board, or its events, be deleted.)
+    with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever.
+    (`server/boards/retire.js`.) `POST /api/boards/:code/deletion { confirm: <code> }` schedules it and logs
+    `board.deletion_scheduled`; `DELETE …/deletion` restores it and logs `board.deletion_cancelled`. While deleting,
+    the board's answers carry `deletion { scheduledAt, purgeAt, leftMs }` (`leftMs` measured by the server as it
+    answers: the client counts down from that, never from its own clock against `purgeAt`); reading, History, the
+    live stream and unlocking go on, every other write answers 409 `board_deleting`, and the database refuses every
+    event but the deletion's own (trigger `events_paused_while_deleting`, migration 006), so nothing can change.
+    The code stays taken and the board still counts against `MAX_BOARDS`. The sweep (`app.locals.sweep`, every
+    `SWEEP_MS` = 10 min from `index.js`, and once at start-up) purges boards past 24 hours (players, cards, events,
+    board, in one transaction, re-checked inside it) and ends their live streams with `gone`; looking up or creating a
+    code whose board is past its 24 hours purges it first, so the countdown reaching zero means the code is free. A
+    restored board has `deleted_at` NULL and is never touched (the `*_purge_only_retired` triggers refuse it too).
 - Deleting a card or player is a logged change that can be restored, never a hard delete. Cards are tombstoned
   (`cards.deleted_at`); the database refuses deleting a card row unless its board is retired.
 - **Cards** (`server/cards/routes.js`, rules shared with the client in `server/core/cardRules.js`): title 1–60
@@ -156,7 +175,9 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   (`server/cards/events.js`). One save that renames, re-dates and moves logs card.edited, card.detail_edited,
   card.moved in that order. `player.added`, `player.removed` and `player.restored`
   `{ cardId, playerId, name, position }` (removed and restored are restorable; `position` is the 0-based place in the
-  sign-up list; `server/players/events.js`). Card and player queries shared by routes and restores live in
+  sign-up list; `server/players/events.js`). `board.password_changed` `{}`, `board.deletion_scheduled` `{ purgeAt }`
+  and `board.deletion_cancelled` `{}` (`server/boards/events.js`) are never restorable through History: a password
+  change can't be undone, and a deletion has its own Restore. Card and player queries shared by routes and restores live in
   `server/cards/store.js` and `server/players/store.js`.
 - **History** (`server/history/routes.js`, `client/src/history/`): `GET /api/boards/:code/history` pages the log
   newest first, 50 at a time (`?before=` cursor, at most 100 per answer, `?card=` for one card through the
@@ -181,11 +202,13 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   `GET /api/boards/:code/live?since=<event id>&tab=<tab id>` is a Server-Sent Events stream, registered after
   `requireAccess` like every board route (a password board without access gets only the 403 `locked` answer, and no
   stream opens). It sends the board's events in id order, each as `id: <event id>` `event: change` with
-  `{ entry, card, lane, player, own }`: the History entry (`describeEvents`, shared with the history route), the card
-  and player as they are NOW (so applying one twice is harmless), the card's lane keys (a rebalanced lane re-sorts),
-  and `own` (this tab made it). Then `ready` once caught up; `reset { head }` when more than `REPLAY_MAX` = 200
-  behind (the client reloads the board); `locked { reason: 'password_changed' }` and the stream ends when the board's
-  `password_version` passes the one its access was granted at (checked on every write and heartbeat). The cards
+  `{ entry, card, lane, player, board, own }`: the History entry (`describeEvents`, shared with the history route),
+  the card, player and board as they are NOW (so applying one twice is harmless; `board.deletion` is how viewers see
+  a deletion scheduled or restored), the card's lane keys (a rebalanced lane re-sorts), and `own` (this tab made it).
+  Then `ready { head, board }` once caught up; `reset { head }` when more than `REPLAY_MAX` = 200 behind (the client
+  reloads the board); `locked { reason: 'password_changed' }` and the stream ends when the board's
+  `password_version` passes the one its access was granted at (checked on every write and heartbeat); `gone` and the
+  stream ends when the board was purged (the page looks the code up again and finds it free). The cards
   answer carries `head` (the newest event id as of that read), where a freshly loaded board's stream starts.
   - Every non-GET board request notifies its board's streams once its answer has gone (`liveWrites`), and runs inside
     `appendContext` so the hub learns which tab (`X-NU-Tab`, random per page load, never stored) wrote each event.
@@ -268,6 +291,7 @@ and after and fails if it changed.
 - "Nothing here" and "no coverage here" must look different.
 - Stale data shows its age. If live sync drops, say so; never show a board as live when it isn't.
 - Wherever editing is paused because we're offline, say "Editing paused until we reconnect." with a "Retry" button.
+  While a board is being deleted, editing is paused too, and the board says so with the countdown and Restore.
 
 ## Design
 
@@ -350,6 +374,8 @@ version on the left and the coffee link on the right.
 - Live sync: `server/test/live.test.js` reads real streams from `startApp()` (its `live` is the hub; `close()` ends
   open streams first), and `server/test/live-client.test.js` runs the client's connection against a fake fetch and
   clock.
+- Password changes, deleting, restoring and purging: `server/test/board-settings.test.js` (`sweep()` from `startApp()`
+  runs the purge on the test's clock).
 - Drag tests use real input (DevTools protocol) or a lost-capture simulation: events dispatched from page script never
   engage real pointer capture, so they hide drag bugs.
 - Visual pass in at least two themes, plus phone width (390 px), with no horizontal scroll.

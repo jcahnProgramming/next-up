@@ -8,9 +8,12 @@ import { readDisplayName } from '../prefs/displayName.js';
  *   { kind: 'locked', changed }         password board without access (changed: the password changed since)
  *   { kind: 'free', full }              nobody has this code (full: Next Up is at its board limit)
  *   { kind: 'limited', what, retryAfter }  what: 'lookups' | 'passwords'; retryAfter in seconds
- *   { kind: 'wrong' }                   wrong password
+ *   { kind: 'wrong' }                   wrong password (the lock screen's, or Settings' current password)
  *   { kind: 'exists' } | { kind: 'full' }  creation refused
  *   { kind: 'invalid', field, error }   the server refused an input
+ *   { kind: 'deleting', board }         the board is being deleted: nothing on it can change until it's restored
+ *   { kind: 'not-deleting', board }     restore, but someone else restored it first
+ *   { kind: 'no-password' }             change password on an open board (which can never get one)
  *   { kind: 'error', offline }          couldn't reach Next Up, or it failed (never shown as "nothing here")
  *
  * Access is an httpOnly cookie the server sets; this code never sees or stores it.
@@ -58,6 +61,9 @@ function read(status, data) {
   if (data?.code === 'wrong_password') return { kind: 'wrong' };
   if (data?.code === 'exists') return { kind: 'exists' };
   if (data?.code === 'board_limit') return { kind: 'full' };
+  if (data?.code === 'board_deleting') return { kind: 'deleting', board: data.board ?? null };
+  if (data?.code === 'not_deleting') return { kind: 'not-deleting', board: data.board ?? null };
+  if (data?.code === 'no_password') return { kind: 'no-password' };
   if (status === 400 && data?.field) return { kind: 'invalid', field: data.field, error: data.error };
   return { kind: 'error', offline: false };
 }
@@ -70,3 +76,15 @@ export const createBoard = (code, password) =>
 export const unlockBoard = (code, password) => call(`/api/boards/${code}/unlock`, { method: 'POST', body: { password } });
 
 export const lockBoard = (code) => call(`/api/boards/${code}/lock`, { method: 'POST' });
+
+/** Settings: the current password (checked against the shared wrong-password limit) and the new one. → open | wrong | … */
+export const changePassword = (code, current, password) =>
+  call(`/api/boards/${code}/password`, { method: 'POST', body: { current, password, actor: readDisplayName() ?? undefined } });
+
+/** Deletes the board in 24 hours (confirm: the code, as typed). → open, with board.deletion */
+export const deleteBoard = (code, confirm) =>
+  call(`/api/boards/${code}/deletion`, { method: 'POST', body: { confirm, actor: readDisplayName() ?? undefined } });
+
+/** Restores a board being deleted. → open, without board.deletion */
+export const restoreBoard = (code) =>
+  call(`/api/boards/${code}/deletion`, { method: 'DELETE', body: { actor: readDisplayName() ?? undefined } });

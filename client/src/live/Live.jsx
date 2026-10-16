@@ -8,16 +8,18 @@ import './live.css';
  * Live sync on the page: the stream's hook, the context the board's sheets read it from, the sync pill (design/v1
  * Components "Live sync", Topbar-Options) and the banners (Components "Banners", Board-States, Board-Phone-States).
  *
- *   useLive({ code, head, onChange, onReset, onLocked }) → { status, why, since, retry }
+ *   useLive({ code, head, onChange, onReset, onLocked, onBoard, onGone }) → { status, why, since, retry }
  *     head: the event id the board was loaded at (null until it has loaded: nothing connects before that)
- *   <LiveContext.Provider value={{ ...live, subscribe }}>   subscribe(fn) → unsubscribe: every change applied, in order
- *   usePaused()  true unless live: editing pauses everywhere until the stream is caught up and hearing from Next Up
+ *   <LiveContext.Provider value={{ ...live, deleting, subscribe }}>   subscribe(fn) → unsubscribe: every change
+ *     applied, in order; deleting: the board is being deleted (boards/Deletion.jsx), which pauses editing too
+ *   usePaused()  true unless live and not being deleted: editing pauses everywhere until the stream is caught up and
+ *     hearing from Next Up, and while the board is being deleted
  */
-export function useLive({ code, head, onChange, onReset, onLocked }) {
+export function useLive({ code, head, onChange, onReset, onLocked, onBoard, onGone }) {
   const [state, setState] = useState({ status: 'connecting', why: null, since: null });
   const conn = useRef(null);
-  const latest = useRef({ onChange, onReset, onLocked });
-  latest.current = { onChange, onReset, onLocked };
+  const latest = useRef({ onChange, onReset, onLocked, onBoard, onGone });
+  latest.current = { onChange, onReset, onLocked, onBoard, onGone };
   const started = head !== null;
 
   useEffect(() => {
@@ -30,6 +32,8 @@ export function useLive({ code, head, onChange, onReset, onLocked }) {
       onChange: (data, id) => latest.current.onChange(data, id),
       onReset: () => latest.current.onReset(),
       onLocked: (changed) => latest.current.onLocked(changed),
+      onBoard: (board) => latest.current.onBoard?.(board),
+      onGone: () => latest.current.onGone?.(),
     });
     conn.current = c;
     // Back online, or the page shown again after sleep: catch up now rather than at the next backoff.
@@ -57,10 +61,13 @@ export function useLive({ code, head, onChange, onReset, onLocked }) {
   return { ...state, retry: () => conn.current?.retry() };
 }
 
-export const LiveContext = createContext({ status: 'live', why: null, since: null, retry: () => {}, subscribe: () => () => {} });
+export const LiveContext = createContext({ status: 'live', why: null, since: null, deleting: false, retry: () => {}, subscribe: () => () => {} });
 
 export const useLiveState = () => useContext(LiveContext);
-export const usePaused = () => useContext(LiveContext).status !== 'live';
+export const usePaused = () => {
+  const { status, deleting } = useContext(LiveContext);
+  return status !== 'live' || deleting;
+};
 
 /** Calls fn(message) for every live change the board applies while the caller is mounted ({ reset: true } on a reload). */
 export function useLiveChanges(fn) {
@@ -120,9 +127,22 @@ export function SyncBanner({ live, loadedAt }) {
   );
 }
 
-/** "Editing paused until we reconnect." with Retry, inside a sheet, wherever editing is paused (CLAUDE.md). */
+/**
+ * "Editing paused until we reconnect." with Retry, inside a sheet, wherever editing is paused (CLAUDE.md). While the
+ * board is being deleted (and connected), it says that instead: reconnecting wouldn't help, restoring the board would.
+ */
 export function PausedBanner() {
-  const { status, why, retry } = useLiveState();
+  const { status, why, retry, deleting } = useLiveState();
+  if (deleting && status === 'live') {
+    return (
+      <div className="banner banner-warn" role="status">
+        <WarningIcon />
+        <span className="banner-text">
+          <b>This board is being deleted.</b> Editing is paused until someone restores it.
+        </span>
+      </div>
+    );
+  }
   const lead = status === 'offline' ? 'You’re offline.' : status === 'down' ? 'Not connected.' : why === 'busy' ? 'Next Up is busy.' : status === 'connecting' ? 'Connecting…' : 'Reconnecting…';
   return (
     <div className={`banner ${status === 'offline' || status === 'down' ? 'banner-err' : 'banner-warn'}`} role="status">

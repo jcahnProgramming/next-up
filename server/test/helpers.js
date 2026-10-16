@@ -19,7 +19,7 @@ export function memoryDb() {
 
 /**
  * Starts the web app on a random port with its own database and a clock the test moves.
- * Returns { base, db, clock, live, request, close } (live: the app's live-sync hub, live/hub.js). request(path, { method, body, ip, cookie, headers }) → { status, body, headers, cookie }.
+ * Returns { base, db, clock, live, request, sweep, close } (live: the app's live-sync hub, live/hub.js). request(path, { method, body, ip, cookie, headers }) → { status, body, headers, cookie }.
  */
 export async function startApp(opts = {}) {
   const db = memoryDb();
@@ -54,8 +54,9 @@ export async function startApp(opts = {}) {
   }
 
   const live = app.locals.live;
+  // sweep(): the retired-board sweep index.js runs every 10 minutes, on the test's clock (boards/retire.js).
   // Open live streams would keep the server from closing: end them first, as index.js does on shutdown.
-  return { base, db, clock, live, request, close: () =>
+  return { base, db, clock, live, request, sweep: app.locals.sweep, close: () =>
       new Promise((r) => {
         live.close();
         server.close(r);

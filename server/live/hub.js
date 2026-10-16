@@ -1,3 +1,4 @@
+import { boardBody } from '../boards/retire.js';
 import { describeEvents } from '../history/routes.js';
 import { eventsAfter, latestEventId } from '../core/events.js';
 import { cardBody, cardStore } from '../cards/store.js';
@@ -9,15 +10,17 @@ import { playerBody, playerQueries } from '../players/store.js';
  * It rides on the change log rather than a channel of its own: a stream sends a board's `events` rows in id order,
  * each with its id, so a browser that drops resumes from the last id it saw and misses nothing. What a stream sends:
  *
- *   id: <event id>  event: change  data: { entry, card, lane, player, own }
+ *   id: <event id>  event: change  data: { entry, card, lane, player, board, own }
  *       entry   the change as History lists it (history/routes.js describeEvents), so an open History panel adds it
  *       card    the card it's about as it is NOW (cardBody, plus `deleted`), or null; applying it twice is harmless
  *       lane    { id, cards: [[id, position], …] } that card's lane as it is now, so a rebalanced lane re-sorts
  *       player  the player it's about as they are now (playerBody, plus `removed`), or null
+ *       board   the board as it is now (boards/retire.js boardBody: `deletion` while it's being deleted)
  *       own     true when this browser tab made the change (it already shows it: no flash, no "changed by")
- *   event: ready    { head }  caught up; from here on it's live
+ *   event: ready    { head, board }  caught up; from here on it's live (board: as it is now)
  *   event: reset    { head }  too far behind to replay (more than REPLAY_MAX changes): reload the board, then carry on
  *   event: locked   { status: 'locked', code, reason: 'password_changed' }  the password changed; the stream ends
+ *   event: gone     { status: 'free', code }  the board was purged (24 h after it was deleted); the stream ends
  *   ": hb"          a heartbeat comment every HEARTBEAT_MS, well inside Cloudflare's ~100 s idle cut-off
  *
  * Nothing here knows one event type from another. Which changes were a tab's own is learned as they're written
@@ -35,7 +38,7 @@ export const LIVE_LIMITS = Object.freeze({ perNetwork: 20, perBoard: 100, total:
 const MAX_BUFFERED = 1024 * 1024;
 const MAX_ORIGINS = 5000;
 
-export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LIMITS, replayMax = REPLAY_MAX }) {
+export function createLiveHub({ db, now = Date.now, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LIMITS, replayMax = REPLAY_MAX }) {
   const boards = new Map(); // boardId → { id, code, streams: Set }
   const networks = new Map(); // network → open streams
   const origins = new Map(); // eventId → { tab, row }: which tab wrote it, the newest MAX_ORIGINS
@@ -43,6 +46,10 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
   let timer = null;
 
   const stores = () => ({ cards: cardStore(db), players: playerQueries(db) });
+  const boardNow = (id) => {
+    const row = db().prepare('SELECT id, code, password_hash, password_version, created_at, deleted_at FROM boards WHERE id = ? LIMIT 1').get(id);
+    return row ? boardBody(row, now()) : null;
+  };
 
   /** Whether one more stream fits: null, or which limit it hits. */
   function refusal(network, boardId) {
@@ -92,7 +99,7 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
       s.lastId = since;
       catchUp(ch, [s], since);
     }
-    if (s.open) write(s, frame('ready', { head: s.lastId }));
+    if (s.open) write(s, frame('ready', { head: s.lastId, board: boardNow(board.id) }));
     return true;
   }
 
@@ -151,6 +158,7 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
   function build(boardId, events) {
     const { cards, players } = stores();
     const entries = describeEvents(db(), boardId, events);
+    const board = boardNow(boardId);
     const lanes = new Map();
     const laneOf = (lane) => {
       if (!lanes.has(lane)) lanes.set(lane, cards.q.laneRows(boardId, lane).map((r) => [r.id, r.position]));
@@ -166,6 +174,7 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
         card,
         lane: card && !card.deleted ? { id: card.lane, cards: laneOf(card.lane) } : null,
         player: prow ? { ...playerBody(prow), removed: prow.deleted_at !== null } : null,
+        board,
       };
       // Kept (up to MAX_ORIGINS) after sending: a tab that reconnects and replays its own change still knows it.
       const origin = origins.get(e.id);
@@ -187,7 +196,8 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
   }
 
   // A stream carries the password version its access was granted at. A change ends it with "password_changed",
-  // so the page shows that lock screen; a board gone altogether (purged) just ends. True when the streams go on.
+  // so the page shows that lock screen; a board gone altogether (purged) ends it with "gone", so the page shows the
+  // code as free. True when the streams go on.
   function checkPassword(ch) {
     const row = db().prepare('SELECT password_version FROM boards WHERE id = ? LIMIT 1').get(ch.id);
     let ok = true;
@@ -195,6 +205,7 @@ export function createLiveHub({ db, heartbeatMs = HEARTBEAT_MS, limits = LIVE_LI
       if (row && row.password_version === s.version) continue;
       ok = false;
       if (row) write(s, frame('locked', { status: 'locked', code: s.code, reason: 'password_changed' }));
+      else write(s, frame('gone', { status: 'free', code: s.code }));
       drop(s);
     }
     return ok;

@@ -143,6 +143,21 @@ html.ov-open {
   color: var(--text-2);
   text-wrap: pretty;
 }
+.modal-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--fs-footnote);
+}
+.modal-text p {
+  margin: 0;
+}
+/* A board code in a sentence stays whole (codes are at most 32 characters): "pnc-" never ends a line. */
+.modal-text .code-text {
+  white-space: nowrap;
+}
+.modal-text p + p {
+  margin-top: 10px;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;

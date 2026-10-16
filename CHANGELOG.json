@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "version": "0.9.0",
+      "date": "2026-10-16",
+      "title": "This board: change a board's password, or delete a board with 24 hours to undo it",
+      "sections": {
+        "New": [
+          "Settings has a “This board” section when you open Settings from a board you're in. It isn't there when you open Settings from the front page or from a lock screen.",
+          "Change a board's password: type the current one, then the new one twice (8 to 128 characters, as when a board is made). Next Up asks you to confirm first. This browser stays in. Everyone else, including anyone with the board open at that moment, goes straight to “The board’s password changed” and needs the new one. History records who changed it and when, never the password, and it can't be undone from History. An open board still can't get a password, and a password still can't be removed.",
+          "Wrong current passwords in Settings count against the same limit as the lock screen: 10 wrong tries from your network in 15 minutes, wherever they happen, then a “Too many tries for now” countdown in both places.",
+          "Delete a board from Settings by typing its code. Nothing is erased straight away. For 24 hours the board shows “This board will be deleted in 23h 12m.” with a live countdown and a Restore button, for everyone who opens it and for anyone already looking at it. Cards, players, details, dragging and History's Restore are paused, but the board, its cards and History can still be read. A board with a password still needs it.",
+          "Restore puts the board back to normal with one click and a confirmation, and anyone who can open the board can do it during those 24 hours. History shows who deleted the board and who restored it.",
+          "After 24 hours the board is erased for good: every card, player and line of its history. Its code is free again, and the old link shows the normal “create it?” page. Until then the code stays taken, and the board still counts towards Next Up's 500-board limit."
+        ],
+        "Improved": [
+          "The create-a-board screen no longer says changing the password is “coming soon”."
+        ]
+      }
+    },
+    {
       "version": "0.8.0",
       "date": "2026-10-16",
       "title": "Live sync: everyone sees changes as they happen",

@@ -22,8 +22,12 @@ export function AppShell() {
 }
 
 function Shell() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const { board } = useTopbar();
+  // Settings opened from an open board shows its "This board" section (pages/settings/BoardSettings.jsx); from
+  // anywhere else (the landing page, a lock screen) it doesn't. On Settings itself the button keeps what it had.
+  const settingsState = board && !board.plain ? { board: board.code } : pathname === '/settings' ? location.state : null;
   return (
     <>
       <ScrollManager />
@@ -47,7 +51,7 @@ function Shell() {
                 <HistoryIcon />
               </button>
             )}
-            <NavLink to="/settings" className="round-button" aria-label="Settings" title="Settings">
+            <NavLink to="/settings" state={settingsState} className="round-button" aria-label="Settings" title="Settings">
               <SettingsIcon />
             </NavLink>
           </div>

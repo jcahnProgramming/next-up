@@ -2,7 +2,7 @@
  * A board's live stream (server/live/hub.js), as plain JS so node:test runs it as it ships. No React here; the board
  * uses it through useLive.js.
  *
- *   const live = connectLive({ code, since, onStatus, onChange, onReset, onLocked });
+ *   const live = connectLive({ code, since, onStatus, onChange, onReset, onLocked, onBoard, onGone });
  *   live.retry()   try again now (the Retry button, coming back online, waking from sleep)
  *   live.close()   stop for good (leaving the board)
  *
@@ -22,6 +22,9 @@
  * Changes arrive in id order through onChange(data, id), each once: an id at or below the last one applied is
  * skipped (a replay overlapping what came before), and the next connection resumes after the last id applied. A
  * reset (too far behind to replay) calls onReset() to reload the board, and the stream carries on from the head.
+ * Each time it's caught up (ready), onBoard(board) gets the board as it is now (whether it's being deleted); each
+ * change carries it too. A board purged while open (24 hours after it was deleted) ends the stream with gone, or
+ * answers a reconnect with "free": either way onGone() is called and it stops.
  */
 export const STALE_MS = 60_000;
 export const DOWN_AFTER_MS = 20_000;
@@ -36,6 +39,8 @@ export function connectLive({
   onChange,
   onReset,
   onLocked,
+  onBoard,
+  onGone,
   fetchImpl = (...a) => fetch(...a),
   now = Date.now,
   setTimer = (fn, ms) => setTimeout(fn, ms),
@@ -86,6 +91,7 @@ export function connectLive({
           const data = await res.json().catch(() => null);
           if (mine !== ctl) return;
           if (data?.status === 'locked') return lock(data.reason === 'password_changed');
+          if (data?.status === 'free') return gone();
           return failed(res.status === 429 ? 'busy' : null, null, res.status === 429 ? Number(data?.retryAfter) || 30 : 0);
         }
         await read(res.body, mine);
@@ -124,6 +130,8 @@ export function connectLive({
       }
       lastId = n;
     } else if (event === 'ready') {
+      const { board } = JSON.parse(data);
+      if (board) onBoard?.(board);
       everLive = true;
       attempt = 0;
       failingSince = null;
@@ -134,7 +142,14 @@ export function connectLive({
       onReset?.();
     } else if (event === 'locked') {
       lock(JSON.parse(data).reason === 'password_changed');
+    } else if (event === 'gone') {
+      gone();
     }
+  }
+
+  function gone() {
+    stop();
+    onGone?.();
   }
 
   function lock(changed) {

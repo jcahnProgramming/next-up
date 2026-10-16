@@ -10,6 +10,13 @@
 .board-banner {
   margin: 0;
 }
+/* While the board is being deleted (boards/Deletion.jsx): the countdown doesn't jiggle as its digits change. */
+.deleting-banner .deleting-left {
+  font-variant-numeric: tabular-nums;
+}
+.deleting-banner > .btn {
+  flex: none;
+}
 
 /* ---------- lanes: side by side; stacked on narrow screens and phones (Board-Phone) ---------- */
 .lanes {

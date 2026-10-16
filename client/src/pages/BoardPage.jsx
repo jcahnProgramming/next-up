@@ -64,12 +64,18 @@ function BoardView({ code, state, setState, retry }) {
   }, [code, setState, toast]);
 
   // The board locked under us (its lock pressed in another tab, or its password changed): back to the lock screen.
+  // Unless this browser changed the password itself (in Settings, in another tab): then it holds a fresh grant, and
+  // looking the board up again opens it rather than asking for the password it just chose.
   const onLocked = useCallback(
-    (changed) => {
+    async (changed) => {
       setHistory(null);
-      setState({ kind: 'locked', changed });
+      if (changed) {
+        const again = await lookupBoard(code);
+        if (again.kind === 'open') return setState({ kind: 'open', board: again.board, opened: Date.now() });
+      }
+      return setState({ kind: 'locked', changed });
     },
-    [setState],
+    [code, setState],
   );
   const openHistory = useCallback(() => setHistory({ cardId: null }), []);
 
@@ -95,7 +101,19 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
     case 'open':
-      return <Board board={state.board} onLocked={onLocked} history={history} onHistory={setHistory} onLive={setLive} />;
+      return (
+        <Board
+          // A fresh grant (see onLocked) opens the board afresh, with a new live stream.
+          key={state.opened ?? 0}
+          board={state.board}
+          onLocked={onLocked}
+          // Purged (24 hours after it was deleted): look the code up again, which shows it free.
+          onGone={retry}
+          history={history}
+          onHistory={setHistory}
+          onLive={setLive}
+        />
+      );
     case 'locked':
       return (
         <Centered>

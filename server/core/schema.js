@@ -167,4 +167,19 @@ export const coreMigrations = [
       db.exec('CREATE INDEX events_board_seq ON events (board_id, id);');
     },
   },
+  {
+    // Retiring a board (boards/retire.js). While a board is being deleted (deleted_at set) nothing on it changes:
+    // every change writes an event in the same transaction, so refusing every event but the deletion's own (and its
+    // cancelling) pauses editing in the database as well as the routes. The sweep finds due boards by deleted_at.
+    id: '006_board_retire',
+    up(db) {
+      db.exec(`
+        CREATE TRIGGER events_paused_while_deleting BEFORE INSERT ON events
+          WHEN (SELECT deleted_at FROM boards WHERE id = NEW.board_id) IS NOT NULL
+            AND NEW.type NOT IN ('board.deletion_scheduled', 'board.deletion_cancelled')
+          BEGIN SELECT RAISE(ABORT, 'a board being deleted can''t change until it is restored'); END;
+        CREATE INDEX boards_retired ON boards (deleted_at) WHERE deleted_at IS NOT NULL;
+      `);
+    },
+  },
 ];
