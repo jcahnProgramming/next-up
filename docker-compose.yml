@@ -1,0 +1,59 @@
+# Next Up: web app (UI + API) and MCP server (read-only AI access), each in its own container.
+# Both run from the same image and share one SQLite file:
+#   ./data → /data   On <HOST> the deploy folder is <DEPLOY_DIR>, so the database
+#                    sits on the cache pool, never on <USER_SHARE>.
+#
+# PUBLIC, by design: the web app is reached from the internet as https://nextup.postnerfclarity.com through the
+# Cloudflare tunnel "<TUNNEL_NAME>", whose cloudflared container reaches it at http://<LAN_IP>:3230. The MCP server
+# is NOT added to the tunnel: it stays on the LAN.
+#
+# Host ports bind to <HOST>'s LAN address <LAN_IP> ONLY, never 0.0.0.0 (server/test/compose-guard.test.js).
+# Inside each container the process listens on all of the container's own interfaces; that is what Docker
+# forwards the published port to, and it is not reachable any other way. Consequence: `docker compose up` only
+# works on a machine that has the address <LAN_IP> (<HOST>). Locally, use `npm run dev`.
+
+x-common: &common
+  build: .
+  image: next-up:local
+  restart: unless-stopped
+  # Container user. Unraid appdata is usually nobody:users -> set PUID=99 PGID=100 in .env
+  user: "${PUID:-1000}:${PGID:-1000}"
+  env_file:
+    - path: .env
+      required: false
+  volumes:
+    - ./data:/data
+
+services:
+  next-up:
+    <<: *common
+    container_name: next-up
+    command: ["node", "server/index.js"]
+    environment:
+      DATA_DIR: /data
+      PORT: 3230
+    ports:
+      - "<LAN_IP>:3230:3230"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3230/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  next-up-mcp:
+    <<: *common
+    container_name: next-up-mcp
+    command: ["node", "server/mcp/index.js"]
+    environment:
+      DATA_DIR: /data
+      MCP_PORT: 3231
+    ports:
+      - "<LAN_IP>:3231:3231"
+    depends_on:
+      next-up:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3231/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

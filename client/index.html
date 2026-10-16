@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Next Up</title>
+    <link rel="icon" href="data:," />
+    <!-- Theme boot (from home-dashboard). Runs before the stylesheet paints, so a reload never flashes the wrong
+         theme. The theme is per browser in localStorage (nu.theme); unset, it follows the OS colour scheme.
+         Settings has no theme picker yet, so for now every visitor gets Light or Dark from their device. -->
+    <script>
+      (function () {
+        var d = document.documentElement, KEY = 'nu.theme';
+        var themes = ['light', 'dark', 'legacy', 'pastel', 'cyberpunk'];
+        var dark = matchMedia('(prefers-color-scheme: dark)');
+        function stored() {
+          try { var v = localStorage.getItem(KEY); return themes.indexOf(v) >= 0 ? v : null; } catch (e) { return null; }
+        }
+        function apply() { d.setAttribute('data-theme', stored() || (dark.matches ? 'dark' : 'light')); }
+        apply();
+        // An unset theme keeps following the device when its setting changes.
+        if (dark.addEventListener) dark.addEventListener('change', apply);
+        // A change made in another tab of this app applies here too.
+        window.addEventListener('storage', function (e) { if (!e.key || e.key === KEY) apply(); });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

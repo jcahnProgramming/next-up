@@ -1,0 +1,18 @@
+{
+  "releases": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-15",
+      "title": "Skeleton",
+      "sections": {
+        "New": [
+          "Next Up exists, but boards don't yet. The front page has the box where you'll type a board's code; pressing Enter goes to that board's address, which says plainly that boards are coming soon. Nothing is created or saved when you do this.",
+          "Every page has a bottom bar with the version number. Clicking it opens What's new: this list.",
+          "A settings button in the top right opens a Settings page that says what will live there: your theme and your display name, both kept in this browser only. Neither can be changed yet. The page follows your device's light or dark mode until the theme picker exists.",
+          "An AI access point (MCP) that reads and never changes anything. It needs a bearer token and has one tool so far, get_version, which reports the running version.",
+          "Behind the scenes: pushing to main rebuilds and restarts Next Up on <HOST>, and the deploy fails if either container doesn't answer its health check, keeps restarting, or reports a different version than this list. The deploy never touches the server's .env file, and checks that it didn't."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+/* Settings stub: the changelog page's header, then one glass sheet listing what will live here. */
+.settings {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.settings-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.settings-back {
+  align-self: flex-start;
+  height: 32px;
+  padding: 0 10px 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--accent-text);
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+.settings-back:hover {
+  background: var(--accent-soft);
+}
+.settings-title {
+  font-size: var(--fs-display);
+}
+.settings-sub {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-headline);
+}
+
+.settings-list {
+  border-radius: var(--r-sheet);
+  padding: 8px 24px;
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.settings-row {
+  padding: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.settings-row + .settings-row {
+  border-top: 1px solid var(--separator);
+}
+.settings-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.settings-row-title {
+  margin: 0;
+  font-size: var(--fs-headline);
+  font-weight: 600;
+}
+.settings-soon {
+  padding: 2px 9px;
+  border-radius: var(--r-full);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-tracking);
+}
+.settings-row-body {
+  margin: 0;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+@media (max-width: 600px) {
+  .settings-title {
+    font-size: var(--fs-large);
+  }
+  .settings-list {
+    padding: 4px 18px;
+  }
+}

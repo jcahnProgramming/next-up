@@ -1,0 +1,72 @@
+/* From home-dashboard (design/v1 ComingSoon.dc.html) */
+.soon {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 32px 0;
+}
+.soon-sheet {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 44px 32px 36px;
+  border-radius: var(--r-sheet);
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.soon-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.soon-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface-4);
+}
+.soon-dots .soon-dot-on {
+  background: var(--accent);
+}
+.soon-label {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--accent-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.soon-title {
+  font-size: var(--fs-title1);
+  text-wrap: balance;
+}
+.soon-body {
+  margin: 0;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+.soon-back {
+  margin-top: 12px;
+  height: 42px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  color: var(--text-1);
+  font-weight: 600;
+  transition: transform var(--dur-fast) var(--spring), background var(--dur-fast) var(--ease-out);
+}
+.soon-back:hover {
+  background: var(--surface-4);
+}
+.soon-back:active {
+  transform: scale(var(--press));
+}
+
+@media (max-width: 600px) {
+  .soon-sheet {
+    padding: 36px 20px 28px;
+  }
+}

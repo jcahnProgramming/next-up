@@ -1,0 +1,354 @@
+/* Next Up — design tokens (copied from home-dashboard client/src/theme/tokens.css, the same five themes)
+   Themes: light · dark · legacy · pastel · cyberpunk  (data-theme on <html>, or any wrapper)
+   Scales: data-radius (small|default|large) · data-text (s|m|l|xl) · data-density (comfortable|compact) · data-motion (full|reduced|off)
+   Apply before first paint with the theme boot script inlined in client/index.html.
+
+   Copied from design/v1/tokens.css, the single source of design tokens for the app. Changes from the design copy,
+   all to reach WCAG AA (4.5:1) for text on the darkest well (surface-3 over surface-2 over bg):
+     light      --text-3, --unknown-text  #6e6e77 → #65656e
+     dark       --text-3 #8e8e96 → #9b9ba3 · --accent-fill #0a7cf0 → #006edb (white button text)
+     legacy     --text-2, --unknown-text #8d96a0 → #9ba4ae · --text-3 #7d8691 → #8c95a0
+     pastel     --success-text #08765b → #066d53 · --accent-fill first stop #e7309a → #d01f86
+   Text is never set on --accent itself (dark: 3.65:1 with white); buttons use --accent-fill. */
+
+@font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono-latin.woff2") format("woff2"); font-weight: 100 800; font-display: swap; }
+
+/* Registered colour tokens interpolate, so a theme switch cross-fades every surface at once. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #f2f2f6; }
+@property --blob-1 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --blob-2 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --blob-3 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-1 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-2 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-3 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-4 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-solid { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@property --scrim { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --text-1 { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --text-2 { syntax: "<color>"; inherits: true; initial-value: #444; }
+@property --text-3 { syntax: "<color>"; inherits: true; initial-value: #666; }
+@property --text-on-accent { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #06c; }
+@property --accent-text { syntax: "<color>"; inherits: true; initial-value: #06c; }
+@property --accent-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --hairline { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --highlight { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --separator { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --success { syntax: "<color>"; inherits: true; initial-value: green; }
+@property --success-text { syntax: "<color>"; inherits: true; initial-value: green; }
+@property --success-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --warning { syntax: "<color>"; inherits: true; initial-value: orange; }
+@property --warning-text { syntax: "<color>"; inherits: true; initial-value: orange; }
+@property --warning-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --error { syntax: "<color>"; inherits: true; initial-value: red; }
+@property --error-text { syntax: "<color>"; inherits: true; initial-value: red; }
+@property --error-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --info { syntax: "<color>"; inherits: true; initial-value: blue; }
+@property --info-text { syntax: "<color>"; inherits: true; initial-value: blue; }
+@property --info-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --unknown { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --unknown-text { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --unknown-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --stopped { syntax: "<color>"; inherits: true; initial-value: #555; }
+
+/* ───────────── Scale defaults (root only, so nested theme wrappers inherit the user's scales) ───────────── */
+:root {
+  --radius-k: 1; --text-k: 1; --motion-k: 1;
+  /* density — comfortable */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --pad-card: 18px;
+  --gap-grid: 16px;
+  --card-unit: 324px;          /* every card is exactly this tall; overflow scrolls inside the card */
+  --card-min: 288px;           /* column min width before the grid reflows */
+  --control-h: 36px;
+  --row-h: 52px;
+  --section-gap: 44px;
+  --lh-tight: 1.15; --lh-snug: 1.3; --lh-body: 1.5; --lh-mono: 1.65;
+}
+
+/* ───────────── Shared, theme-independent tokens ───────────── */
+:root, [data-theme] {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: var(--font-sans);
+  --display-weight: 700;
+  --display-tracking: -0.022em;
+  --display-transform: none;
+  --label-transform: none;
+  --label-tracking: 0;
+
+
+  /* radius */
+  --r-xs: calc(6px * var(--radius-k));
+  --r-sm: calc(9px * var(--radius-k));
+  --r-md: calc(13px * var(--radius-k));
+  --r-lg: calc(18px * var(--radius-k));
+  --r-card: calc(22px * var(--radius-k));
+  --r-sheet: calc(30px * var(--radius-k));
+  --r-full: 999px;
+
+  /* type scale — tight, purposeful */
+  --fs-caption: calc(12px * var(--text-k));
+  --fs-footnote: calc(13px * var(--text-k));
+  --fs-body: calc(15px * var(--text-k));
+  --fs-headline: calc(17px * var(--text-k));
+  --fs-title3: calc(20px * var(--text-k));
+  --fs-title2: calc(24px * var(--text-k));
+  --fs-title1: calc(28px * var(--text-k));
+  --fs-large: calc(34px * var(--text-k));
+  --fs-display: calc(44px * var(--text-k));
+  --fs-mono: calc(12.5px * var(--text-k));
+
+  /* translucency */
+  --blur-sm: 10px; --blur-md: 24px; --blur-lg: 44px; --saturate: 180%;
+
+  /* motion — physical springs, never linear */
+  --spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  --spring-bounce: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: calc(180ms * var(--motion-k));
+  --dur-base: calc(380ms * var(--motion-k));
+  --dur-slow: calc(620ms * var(--motion-k));
+  --dur-theme: 700ms;
+  --lift: calc(-2px * var(--motion-k));
+  --press: calc(1 - 0.03 * var(--motion-k));
+
+  /* composites (resolved per theme) */
+  --glass-filter: blur(var(--blur-md)) saturate(var(--saturate));
+  --glass-filter-strong: blur(var(--blur-lg)) saturate(var(--saturate));
+  --edge: inset 0 0 0 0.5px var(--hairline), inset 0 1px 0 var(--highlight);
+  --shadow-card: var(--elev-1), var(--edge);
+  --shadow-card-hover: var(--elev-2), var(--edge);
+  --shadow-sheet: var(--elev-3), var(--edge);
+  --well: inset 0 1px 2px var(--well-shade);
+  --backdrop:
+    radial-gradient(55% 45% at 12% 8%, var(--blob-1), transparent 72%),
+    radial-gradient(45% 45% at 92% 18%, var(--blob-2), transparent 72%),
+    radial-gradient(60% 55% at 55% 105%, var(--blob-3), transparent 72%),
+    var(--backdrop-pattern), var(--bg);
+
+  transition:
+    --bg var(--dur-theme) ease, --blob-1 var(--dur-theme) ease, --blob-2 var(--dur-theme) ease, --blob-3 var(--dur-theme) ease,
+    --surface-1 var(--dur-theme) ease, --surface-2 var(--dur-theme) ease, --surface-3 var(--dur-theme) ease, --surface-4 var(--dur-theme) ease,
+    --surface-solid var(--dur-theme) ease, --scrim var(--dur-theme) ease,
+    --text-1 var(--dur-theme) ease, --text-2 var(--dur-theme) ease, --text-3 var(--dur-theme) ease, --text-on-accent var(--dur-theme) ease,
+    --accent var(--dur-theme) ease, --accent-text var(--dur-theme) ease, --accent-soft var(--dur-theme) ease,
+    --hairline var(--dur-theme) ease, --highlight var(--dur-theme) ease, --separator var(--dur-theme) ease,
+    --success var(--dur-theme) ease, --success-text var(--dur-theme) ease, --success-soft var(--dur-theme) ease,
+    --warning var(--dur-theme) ease, --warning-text var(--dur-theme) ease, --warning-soft var(--dur-theme) ease,
+    --error var(--dur-theme) ease, --error-text var(--dur-theme) ease, --error-soft var(--dur-theme) ease,
+    --info var(--dur-theme) ease, --info-text var(--dur-theme) ease, --info-soft var(--dur-theme) ease,
+    --unknown var(--dur-theme) ease, --unknown-text var(--dur-theme) ease, --unknown-soft var(--dur-theme) ease, --stopped var(--dur-theme) ease;
+}
+
+/* ───────────── LIGHT — clean, bright, generous ───────────── */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f2f6;
+  --blob-1: oklch(0.93 0.035 250); --blob-2: oklch(0.95 0.025 320); --blob-3: oklch(0.95 0.03 190);
+  --backdrop-pattern: linear-gradient(transparent, transparent);
+  --surface-1: rgb(255 255 255 / 0.74);
+  --surface-2: rgb(252 252 254 / 0.84);
+  --surface-3: rgb(118 118 128 / 0.10);
+  --surface-4: rgb(118 118 128 / 0.17);
+  --surface-solid: #ffffff;
+  --scrim: rgb(28 28 36 / 0.22);
+  --well-shade: rgb(0 0 0 / 0.04);
+  --text-1: #1d1d1f; --text-2: #55555d; --text-3: #65656e; --text-on-accent: #ffffff;
+  --accent: #0a6fe0; --accent-text: #0060c4; --accent-soft: rgb(10 111 224 / 0.11);
+  --accent-fill: #0a6fe0;
+  --hairline: rgb(0 0 0 / 0.06); --highlight: rgb(255 255 255 / 0.75); --separator: rgb(60 60 67 / 0.10);
+  --focus-ring: 0 0 0 3px rgb(10 111 224 / 0.35);
+  --success: #28a745; --success-text: #157a34; --success-soft: rgb(40 167 69 / 0.13); --success-fill: #34b75a;
+  --warning: #f09a0a; --warning-text: #995800; --warning-soft: rgb(240 154 10 / 0.15); --warning-fill: #f5a623;
+  --error: #e3342c; --error-text: #c0221b; --error-soft: rgb(227 52 44 / 0.11); --error-fill: #ea4c45;
+  --info: #0a6fe0; --info-text: #0060c4; --info-soft: rgb(10 111 224 / 0.11);
+  --unknown: #9a9aa2; --unknown-text: #65656e; --unknown-soft: rgb(118 118 128 / 0.12);
+  --stopped: #55555d;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.04), 0 3px 10px rgb(0 0 0 / 0.04);
+  --elev-2: 0 2px 6px rgb(0 0 0 / 0.05), 0 14px 32px rgb(0 0 0 / 0.09);
+  --elev-3: 0 10px 24px rgb(0 0 0 / 0.08), 0 36px 72px rgb(0 0 0 / 0.18);
+  --glow-accent: 0 0 0 transparent;
+}
+
+/* ───────────── DARK — true Apple dark, deep neutrals, never #000 ───────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141416;
+  --blob-1: oklch(0.27 0.035 260); --blob-2: oklch(0.25 0.03 310); --blob-3: oklch(0.24 0.025 200);
+  --backdrop-pattern: linear-gradient(transparent, transparent);
+  --surface-1: rgb(44 44 48 / 0.62);
+  --surface-2: rgb(34 34 38 / 0.80);
+  --surface-3: rgb(118 118 128 / 0.20);
+  --surface-4: rgb(118 118 128 / 0.30);
+  --surface-solid: #1e1e21;
+  --scrim: rgb(0 0 0 / 0.48);
+  --well-shade: rgb(0 0 0 / 0.25);
+  --text-1: #f5f5f7; --text-2: #aeaeb5; --text-3: #9b9ba3; --text-on-accent: #ffffff;
+  --accent: #0a84ff; --accent-text: #5aaeff; --accent-soft: rgb(10 132 255 / 0.18);
+  --accent-fill: #006edb;
+  --hairline: rgb(255 255 255 / 0.08); --highlight: rgb(255 255 255 / 0.06); --separator: rgb(255 255 255 / 0.08);
+  --focus-ring: 0 0 0 3px rgb(10 132 255 / 0.45);
+  --success: #30d158; --success-text: #52dd77; --success-soft: rgb(48 209 88 / 0.16); --success-fill: #30d158;
+  --warning: #ff9f0a; --warning-text: #ffb446; --warning-soft: rgb(255 159 10 / 0.16); --warning-fill: #ff9f0a;
+  --error: #ff453a; --error-text: #ff6d64; --error-soft: rgb(255 69 58 / 0.16); --error-fill: #ff453a;
+  --info: #0a84ff; --info-text: #5aaeff; --info-soft: rgb(10 132 255 / 0.18);
+  --unknown: #7c7c84; --unknown-text: #a1a1a9; --unknown-soft: rgb(118 118 128 / 0.20);
+  --stopped: #c7c7cc;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.30), 0 4px 14px rgb(0 0 0 / 0.22);
+  --elev-2: 0 2px 8px rgb(0 0 0 / 0.35), 0 16px 36px rgb(0 0 0 / 0.40);
+  --elev-3: 0 12px 28px rgb(0 0 0 / 0.40), 0 40px 80px rgb(0 0 0 / 0.55);
+  --glow-accent: 0 0 0 transparent;
+}
+
+/* ───────────── LEGACY — near-black slate, one bright accent, muted grey ───────────── */
+[data-theme="legacy"] {
+  color-scheme: dark;
+  --bg: #0e1318;
+  --blob-1: oklch(0.2 0.015 240); --blob-2: oklch(0.18 0.01 240); --blob-3: oklch(0.19 0.012 230);
+  --backdrop-pattern: linear-gradient(transparent, transparent);
+  --surface-1: rgb(23 30 38 / 0.88);
+  --surface-2: rgb(27 35 44 / 0.94);
+  --surface-3: rgb(148 163 184 / 0.09);
+  --surface-4: rgb(148 163 184 / 0.15);
+  --surface-solid: #171e26;
+  --scrim: rgb(4 7 10 / 0.6);
+  --well-shade: rgb(0 0 0 / 0.3);
+  --blur-md: 12px; --blur-lg: 20px; --saturate: 120%;
+  --text-1: #e6edf3; --text-2: #9ba4ae; --text-3: #8c95a0; --text-on-accent: #04121c;
+  --accent: #3fc1ff; --accent-text: #6dd0ff; --accent-soft: rgb(63 193 255 / 0.13);
+  --accent-fill: #3fc1ff;
+  --hairline: rgb(148 163 184 / 0.10); --highlight: rgb(255 255 255 / 0.03); --separator: rgb(148 163 184 / 0.10);
+  --focus-ring: 0 0 0 3px rgb(63 193 255 / 0.4);
+  --success: #3fb950; --success-text: #56d364; --success-soft: rgb(63 185 80 / 0.14); --success-fill: #3fb950;
+  --warning: #d29922; --warning-text: #e3b341; --warning-soft: rgb(210 153 34 / 0.15); --warning-fill: #d29922;
+  --error: #f85149; --error-text: #ff7b72; --error-soft: rgb(248 81 73 / 0.14); --error-fill: #f85149;
+  --info: #3fc1ff; --info-text: #6dd0ff; --info-soft: rgb(63 193 255 / 0.13);
+  --unknown: #6e7681; --unknown-text: #9ba4ae; --unknown-soft: rgb(110 118 129 / 0.16);
+  --stopped: #b1bac4;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-2: 0 4px 12px rgb(0 0 0 / 0.45), 0 12px 28px rgb(0 0 0 / 0.35);
+  --elev-3: 0 16px 40px rgb(0 0 0 / 0.6);
+  --glow-accent: 0 0 0 transparent;
+}
+
+/* ───────────── PASTEL — unapologetically girlypop ───────────── */
+[data-theme="pastel"] {
+  color-scheme: light;
+  --bg: #ffe3ee;
+  --blob-1: oklch(0.86 0.12 350); --blob-2: oklch(0.86 0.10 300); --blob-3: oklch(0.91 0.10 165);
+  --backdrop-pattern:
+    radial-gradient(35% 30% at 70% 60%, oklch(0.9 0.09 60 / 0.9), transparent 70%),
+    radial-gradient(30% 28% at 25% 70%, oklch(0.96 0.1 98 / 0.85), transparent 70%);
+  --surface-1: rgb(255 246 251 / 0.62);
+  --surface-2: rgb(255 244 250 / 0.80);
+  --surface-3: rgb(212 70 150 / 0.10);
+  --surface-4: rgb(212 70 150 / 0.17);
+  --surface-solid: #fff3f8;
+  --scrim: rgb(110 24 84 / 0.20);
+  --well-shade: rgb(180 40 120 / 0.10);
+  --text-1: #3b0d2e; --text-2: #6f2a5a; --text-3: #864470; --text-on-accent: #ffffff;
+  --accent: #d4208a; --accent-text: #b5136f; --accent-soft: rgb(212 32 138 / 0.13);
+  --accent-fill: linear-gradient(135deg, #d01f86 0%, #b03ee0 100%);
+  --hairline: rgb(255 255 255 / 0.65); --highlight: rgb(255 255 255 / 0.9); --separator: rgb(180 40 120 / 0.12);
+  --focus-ring: 0 0 0 3px rgb(212 32 138 / 0.35), 0 0 18px rgb(255 95 176 / 0.45);
+  --success: #12b88f; --success-text: #066d53; --success-soft: rgb(30 210 165 / 0.20); --success-fill: linear-gradient(135deg, #52e8c0, #12b88f);
+  --warning: #f59b1f; --warning-text: #934800; --warning-soft: rgb(255 190 70 / 0.28); --warning-fill: linear-gradient(135deg, #ffd25e, #ff9d3a);
+  --error: #e3192b; --error-text: #b10d1d; --error-soft: rgb(227 25 43 / 0.13); --error-fill: linear-gradient(135deg, #ff4d4d, #d3122a);
+  --info: #8a4ff0; --info-text: #6430c9; --info-soft: rgb(138 79 240 / 0.15);
+  --unknown: #a3949c; --unknown-text: #6f5e68; --unknown-soft: rgb(120 100 112 / 0.14);
+  --stopped: #6f2a5a;
+  --elev-1: 0 2px 10px rgb(255 90 170 / 0.16), 0 0 0 transparent;
+  --elev-2: 0 6px 26px rgb(240 80 165 / 0.26), 0 0 40px rgb(190 110 255 / 0.14);
+  --elev-3: 0 18px 54px rgb(210 60 160 / 0.30), 0 0 80px rgb(180 110 255 / 0.20);
+  --glow-accent: 0 0 22px rgb(240 60 160 / 0.45);
+  --display-weight: 800;
+  --display-tracking: -0.03em;
+}
+
+/* ───────────── CYBERPUNK — neon on dark, loud but disciplined ───────────── */
+[data-theme="cyberpunk"] {
+  color-scheme: dark;
+  --bg: #0b0716;
+  --blob-1: oklch(0.32 0.17 310 / 0.75); --blob-2: oklch(0.32 0.13 215 / 0.7); --blob-3: oklch(0.26 0.12 280 / 0.8);
+  --backdrop-pattern:
+    repeating-linear-gradient(0deg, rgb(0 240 255 / 0.035) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, rgb(0 240 255 / 0.035) 0 1px, transparent 1px 44px);
+  --surface-1: rgb(22 14 42 / 0.70);
+  --surface-2: rgb(17 11 33 / 0.86);
+  --surface-3: rgb(0 240 255 / 0.07);
+  --surface-4: rgb(0 240 255 / 0.13);
+  --surface-solid: #140c27;
+  --scrim: rgb(5 0 16 / 0.62);
+  --well-shade: rgb(0 0 0 / 0.4);
+  --text-1: #eeecff; --text-2: #b3acdf; --text-3: #938cc6; --text-on-accent: #07030f;
+  --accent: #00eaff; --accent-text: #4ff3ff; --accent-soft: rgb(0 234 255 / 0.12);
+  --accent-fill: linear-gradient(90deg, #00eaff 0%, #ff3ad8 100%);
+  --hairline: rgb(0 234 255 / 0.20); --highlight: rgb(255 255 255 / 0.04); --separator: rgb(0 234 255 / 0.12);
+  --focus-ring: 0 0 0 2px #00eaff, 0 0 16px rgb(0 234 255 / 0.6);
+  --success: #3dff8f; --success-text: #6dffab; --success-soft: rgb(61 255 143 / 0.12); --success-fill: #3dff8f;
+  --warning: #ffd60a; --warning-text: #ffe24f; --warning-soft: rgb(255 214 10 / 0.13); --warning-fill: #ffd60a;
+  --error: #ff3b6b; --error-text: #ff7395; --error-soft: rgb(255 59 107 / 0.15); --error-fill: #ff3b6b;
+  --info: #00eaff; --info-text: #4ff3ff; --info-soft: rgb(0 234 255 / 0.12);
+  --unknown: #77709a; --unknown-text: #a29cc6; --unknown-soft: rgb(119 112 154 / 0.18);
+  --stopped: #cfc9f2;
+  --elev-1: 0 0 0 1px rgb(0 234 255 / 0.06), 0 4px 18px rgb(0 0 0 / 0.5);
+  --elev-2: 0 0 26px rgb(0 234 255 / 0.12), 0 14px 34px rgb(0 0 0 / 0.6);
+  --elev-3: 0 0 48px rgb(255 58 216 / 0.18), 0 30px 70px rgb(0 0 0 / 0.7);
+  --glow-accent: 0 0 18px rgb(0 234 255 / 0.55);
+  --font-display: var(--font-mono);
+  --display-weight: 700;
+  --display-tracking: 0.02em;
+  --display-transform: uppercase;
+  --label-transform: uppercase;
+  --label-tracking: 0.08em;
+}
+
+/* ───────────── Scales ───────────── */
+[data-radius="small"] { --radius-k: 0.55; }
+[data-radius="large"] { --radius-k: 1.35; }
+[data-text="s"] { --text-k: 0.92; }
+[data-text="l"] { --text-k: 1.1; }
+[data-text="xl"] { --text-k: 1.22; }
+[data-density="compact"] {
+  --pad-card: 14px; --gap-grid: 12px; --card-unit: 284px; --card-min: 256px;
+  --control-h: 30px; --row-h: 40px; --section-gap: 30px; --lh-body: 1.4; --lh-mono: 1.5;
+}
+[data-motion="reduced"] { --motion-k: 0.6; --spring: var(--ease-out); --spring-bounce: var(--ease-out); --lift: 0px; --press: 1; }
+[data-motion="off"] { --motion-k: 0; --dur-theme: 0ms; --lift: 0px; --press: 1; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion]) { --motion-k: 0.6; --spring: var(--ease-out); --spring-bounce: var(--ease-out); --lift: 0px; --press: 1; }
+}
+
+/* ───────────── Keyframes (durations come from tokens) ───────────── */
+@keyframes hd-pulse { 0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes hd-spin { to { transform: rotate(360deg); } }
+@keyframes hd-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes hd-sheet-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes hd-sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes hd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hd-pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes hd-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Card middle scrolls silently — the fade mask signals more content */
+[data-card-scroll] { scrollbar-width: none; }
+[data-card-scroll]::-webkit-scrollbar { display: none; }
+
+/* ───────────── Resets ───────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font-sans); font-size: var(--fs-body); line-height: var(--lh-body);
+  color: var(--text-1); background: var(--bg);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+a { color: var(--accent-text); text-decoration: none; }
+a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+::selection { background: var(--accent-soft); }

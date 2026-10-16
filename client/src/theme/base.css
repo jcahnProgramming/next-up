@@ -1,0 +1,223 @@
+/* App-wide base on top of tokens.css. Every colour here is a token. */
+
+html {
+  /* The theme's layered backdrop (blobs, pattern, bg) behind every page. */
+  background: var(--backdrop);
+  background-attachment: fixed;
+  min-height: 100%;
+}
+body {
+  min-height: 100vh;
+  background: transparent;
+}
+#root {
+  min-height: 100vh;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Display type: follows the theme (mono + uppercase in Cyberpunk, heavier in Pastel). */
+.display {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  line-height: var(--lh-tight);
+}
+
+/* Glass surfaces */
+.glass-1 {
+  background: var(--surface-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--shadow-card);
+}
+.glass-2 {
+  background: var(--surface-2);
+  backdrop-filter: var(--glass-filter-strong);
+  -webkit-backdrop-filter: var(--glass-filter-strong);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Pill buttons, shared by Settings and cards. */
+.pill-button {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-1);
+  font-size: var(--fs-footnote);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--spring);
+}
+.pill-button:active:not(:disabled) {
+  transform: scale(var(--press));
+}
+.pill-button:disabled {
+  opacity: 0.5;
+}
+.pill-solid {
+  background: var(--surface-solid);
+  box-shadow: var(--elev-1);
+}
+.pill-accent {
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
+  box-shadow: var(--glow-accent);
+}
+.pill-link {
+  color: var(--accent-text);
+}
+.pill-link:hover {
+  background: var(--accent-soft);
+}
+.pill-quiet {
+  color: var(--text-2);
+  font-weight: 500;
+}
+.pill-quiet:hover {
+  background: var(--surface-3);
+}
+.pill-danger {
+  color: var(--error-text);
+  font-weight: 500;
+}
+.pill-danger:hover {
+  background: var(--error-soft);
+}
+.pill-danger-solid {
+  background: var(--error-soft);
+  color: var(--error-text);
+  box-shadow: inset 0 0 0 1px var(--error);
+}
+.pill-warning-solid {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  box-shadow: inset 0 0 0 1px var(--warning);
+}
+
+
+/* Inline panels (confirmations, forms, results) and form fields, shared. */
+.panel {
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-solid);
+  box-shadow: var(--elev-1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: hd-rise var(--dur-base) var(--spring);
+}
+.panel-row {
+  flex-direction: row;
+  align-items: center;
+  font-size: var(--fs-footnote);
+  color: var(--text-2);
+}
+.panel-title-warning {
+  color: var(--warning-text);
+}
+.panel-warning {
+  box-shadow: var(--elev-1), inset 0 0 0 1px var(--warning);
+}
+.panel-error {
+  box-shadow: var(--elev-1), inset 0 0 0 1px var(--error);
+}
+.panel-kicker {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.panel-title {
+  font-weight: 600;
+}
+.panel-text {
+  font-size: var(--fs-footnote);
+  color: var(--text-1);
+  text-wrap: pretty;
+}
+.panel-quiet {
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+.panel-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field-label {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.field-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text-1);
+  outline: none;
+  min-width: 0;
+}
+.field-input::placeholder {
+  color: var(--text-3);
+}
+.field-input:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+.field-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+}
+
+
+/* Segmented control, shared. */
+.segmented {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+.segment {
+  height: 30px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--r-sm) - 3px);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--fs-footnote);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.segment[aria-pressed='true'] {
+  background: var(--surface-solid);
+  box-shadow: var(--elev-1);
+  color: var(--text-1);
+}
+

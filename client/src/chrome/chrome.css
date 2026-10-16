@@ -1,0 +1,120 @@
+/* App chrome: top bar, page frame, bottom bar. From home-dashboard (its design/v1 Dashboard header + footer). */
+
+.shell {
+  width: 100%;
+  max-width: 1480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px 44px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+  color: var(--text-1);
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.topbar-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-title3);
+  color: var(--text-1);
+}
+.topbar-name:hover {
+  color: var(--text-1);
+  text-decoration: none;
+}
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: none;
+}
+
+.round-button {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-1);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--shadow-card);
+  color: var(--text-1);
+  transition: transform var(--dur-fast) var(--spring), background var(--dur-fast) var(--ease-out);
+}
+.round-button:hover {
+  color: var(--text-1);
+  transform: scale(calc(1 + 0.06 * var(--motion-k)));
+}
+.round-button:active {
+  transform: scale(calc(1 - 0.06 * var(--motion-k)));
+}
+.round-button[aria-current='page'] {
+  background: var(--surface-4);
+}
+
+
+/* ---------- page frame ---------- */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  animation: hd-rise var(--dur-slow) var(--spring);
+}
+
+/* ---------- bottom bar ---------- */
+.bottombar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 0 4px;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+.version-link {
+  padding: 6px 10px;
+  border-radius: var(--r-full);
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+}
+.version-link:hover {
+  background: var(--surface-3);
+  color: var(--text-1);
+  text-decoration: none;
+}
+.version-number {
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 600px) {
+  .shell {
+    padding: 20px 16px 28px;
+  }
+  .topbar {
+    gap: 10px;
+  }
+  .topbar-name {
+    font-size: var(--fs-headline);
+  }
+  .topbar-actions {
+    gap: 8px;
+  }
+}
+
