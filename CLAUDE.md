@@ -280,8 +280,17 @@ and after and fails if it changed.
 - The MCP process opens the database `query_only`: SQLite itself refuses writes from it.
 - Keep tool names stable: a rename breaks every connected client.
 - **What MCP can never return**: board passwords or their hashes, the token, the access-grant key, anything that
-  unlocks a password board or grants editing. No tool reads boards yet.
-- Tools so far: `get_version`.
+  unlocks a password board or grants editing.
+- **Boards by code only** (`server/mcp/resolvers/board.js`): every board tool takes the code it was given. No tool
+  lists, searches or enumerates boards or codes, and no answer or error names a code the caller didn't give. A
+  password board answers exactly `{ status: 'locked' }` to every tool and every argument (the hash is never even
+  read), and no tool takes a password. A board past its 24 hours of deleting is "no board" (the MCP can't purge it).
+  Every board tool's description says password boards answer only "locked".
+- Tools so far: `get_version`; `get_board(code)` (lanes in order, each card's id, title, logo, go-live date, player
+  count and 1-based position; `deletion` or null); `get_card(code, card)` (by id, or exact title ignoring case;
+  `ambiguous` with the choices when a title fits more than one; players in sign-up order); `get_history(code,
+  limit?, before?)` (20 by default, at most 100, newest first, each change as History words it via `describeEvents`,
+  never a payload). Tested end to end over MCP against a real file in `server/test/mcp-read.test.js`.
 
 ## Honesty rules
 

@@ -39,3 +39,24 @@ that nothing else did.
 
 Public hostname `nextup.postnerfclarity.com` → service `HTTP` `<LAN_IP>:3230`. Only the web app; the MCP server
 (3231) stays on the LAN.
+
+## Connecting Claude Code to the MCP server (at home)
+
+The MCP server is read-only and only on the LAN: `http://<LAN_IP>:3231/mcp`, with the bearer token from `.env` on
+<HOST>. Read the token on <HOST> (it's never printed by the app):
+
+```bash
+grep '^MCP_BEARER_TOKEN=' <DEPLOY_DIR>/.env | cut -d= -f2-
+```
+
+Then on the Mac, for every project (`--scope user`; leave it out to add it to the current project only):
+
+```bash
+claude mcp add --transport http --scope user next-up http://<LAN_IP>:3231/mcp \
+  --header "Authorization: Bearer <the token>"
+claude mcp list          # next-up: ✔ Connected
+```
+
+`claude mcp add` saves without checking the token; a wrong one shows as "Failed to connect" in `claude mcp list` or
+`/mcp`. Tools: `get_version`, `get_board`, `get_card`, `get_history`. Boards with a password always answer only
+"locked".

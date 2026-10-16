@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "0.10.0",
+      "date": "2026-10-16",
+      "title": "Claude can read open boards through the MCP server",
+      "sections": {
+        "New": [
+          "The MCP server (on the home network only, port 3231, with its bearer token) has three new read-only tools, so Claude can answer questions like “what's up next on pnc-raids, and who's signed up for Dune?” mid-conversation.",
+          "get_board reads a board by its code: the three lanes in order, and in each its cards top to bottom with title, logo, go-live date and how many players have signed up. An empty lane says it's empty. A board being deleted says when it will be erased.",
+          "get_card reads one card in full: lane and position, go-live date, server info exactly as typed, the players in sign-up order, and when it was made and last edited. Name the card by its id or its exact title (case doesn't matter). If two cards share that title, it lists both instead of guessing.",
+          "get_history reads a board's change log, newest first, worded exactly as the History panel words it, with who and when. 20 changes at a time by default, up to 100, with a cursor to read further back.",
+          "Boards with a password stay closed to the MCP. Every tool answers only “locked” for them: no name, cards, counts, logos, players, dates or history. There's no way to give the MCP a password.",
+          "You have to give the MCP a board's code. It can't list, search or guess codes, and nothing it says ever mentions a code you didn't give it. It still can't change anything: its connection to the database refuses every write."
+        ]
+      }
+    },
+    {
       "version": "0.9.0",
       "date": "2026-10-16",
       "title": "This board: change a board's password, or delete a board with 24 hours to undo it",
