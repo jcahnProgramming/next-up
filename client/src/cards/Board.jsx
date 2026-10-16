@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { PlusIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
 import { useTopbar } from '../chrome/topbar.jsx';
-import { useOnline } from '../chrome/useOnline.js';
 import { usePhone } from '../chrome/usePhone.js';
 import { useAskName } from '../prefs/NamePrompt.jsx';
 import { LANES, MAX_CARDS, laneName } from '../../../server/core/cardRules.js';
@@ -10,6 +9,8 @@ import { addCard, deleteCard, editCard, loadCards, moveCard } from './api.js';
 import { CardPill } from './Card.jsx';
 import { CardEditor, CardPanel, ConfirmDelete } from './CardSheets.jsx';
 import { HistoryPanel } from '../history/HistoryPanel.jsx';
+import { LiveContext, SyncBanner, sentenceOf, tagOf, useLive } from '../live/Live.jsx';
+import { hueOf } from './CardDetail.jsx';
 import { useCardDrag } from './useCardDrag.js';
 import './board.css';
 
@@ -19,9 +20,13 @@ import './board.css';
  *
  *   loading (shimmer pills) · couldn't load (Retry) · the lanes · offline (the board as loaded, editing paused)
  *
- * Changes go through the name prompt first, then the API; the board shows what the server answered. Other people's
- * changes appear on reload (live sync comes later). A board that locks under us (lock pressed in another tab, or its
- * password changed) goes back to its lock screen via onLocked.
+ * Changes go through the name prompt first, then the API; the board shows what the server answered. Everyone else's
+ * changes arrive live (live/): cards, details, players and an open History update in place, and a card someone
+ * else changed wears the flash and name tag ("Bunzato moved this") for a moment. Mid-drag, changes wait for the
+ * drop (a remote delete of the held card cancels the drag, saying so); an open edit sheet keeps what's being typed
+ * and says "Changed by …"; a panel whose card was deleted says so. Editing pauses whenever the stream isn't live.
+ * A board that locks under us (lock pressed in another tab, or its password changed) goes back to its lock screen
+ * via onLocked.
  *
  * Cards move by drag and drop, long-press on a phone, or the keyboard (useCardDrag.js); every step is announced in
  * a live region. A drop shows the card in its new place at once and puts it back if the server refuses.
@@ -29,27 +34,45 @@ import './board.css';
  * History (`history`, opened from the top bar or a card's panel; history/HistoryPanel.jsx) lists the board's changes
  * and restores them; after a restore the board reloads, since a restore can move, bring back or change any card.
  */
-export function Board({ board, onLocked, history, onHistory }) {
+export function Board({ board, onLocked, history, onHistory, onLive }) {
   const code = board.code;
   const { toast } = useTopbar();
   const askName = useAskName();
-  const online = useOnline();
   const phone = usePhone();
   const lanesRef = useRef(null);
   const hintId = useId();
   const [said, setSaid] = useState({ text: '', n: 0 });
   const announce = useCallback((text) => setSaid((p) => ({ text, n: p.n + 1 })), []);
+  const [heard, setHeard] = useState({ text: '', n: 0 }); // other people's changes, read out politely
   const [load, setLoad] = useState({ kind: 'loading' });
   const [data, setData] = useState(null); // { cards, limit, loadedAt }
-  const [sheet, setSheet] = useState(null); // { mode: 'view' | 'edit' | 'add' | 'delete', id?, lane?, back?, focus? }
+  const [sheet, setSheet] = useState(null); // { mode: 'view' | 'edit' | 'add' | 'delete', id?, lane?, back?, focus?, gone? }
   const [attempt, setAttempt] = useState(0);
+  // The event id the board first loaded at: where the live stream starts (live/Live.jsx). Null until then.
+  const [head, setHead] = useState(null);
+  const [flashes, setFlashes] = useState(() => new Map()); // card id → { tag, hue, n }: "Bunzato moved this"
+
+  // Live changes, as they arrive (live/connection.js), in id order and each once.
+  const latest = useRef({});
+  const listeners = useRef(new Set());
+  const held = useRef([]); // changes that arrived mid-drag, applied on the drop
+  const replay = useRef(null); // changes that arrived while the board was reloading, applied again on top of it
+  const moving = useRef(new Set()); // cards this tab has dropped and the server hasn't answered for yet
+  const remoteBy = useRef(new Map()); // card id → who last changed it, someone else (the edit sheet's "Changed by")
+  const flashTimers = useRef(new Set());
 
   useEffect(() => {
     let live = true;
+    replay.current = [];
     loadCards(code).then((r) => {
       if (!live) return;
+      const arrived = replay.current ?? [];
+      replay.current = null;
       if (r.kind === 'ok') {
-        setData({ cards: r.cards, limit: r.limit ?? MAX_CARDS, loadedAt: new Date() });
+        const loaded = { cards: r.cards, limit: r.limit ?? MAX_CARDS, loadedAt: new Date() };
+        // A change that arrived while this was loading may be newer than what it read: put it back on top.
+        setData(arrived.reduce((d, m) => applyCard(d, m, moving.current), loaded));
+        setHead((h) => h ?? r.head ?? null);
         setLoad({ kind: 'ready' });
       } else if (r.kind === 'locked') {
         onLocked(r.changed);
@@ -64,8 +87,13 @@ export function Board({ board, onLocked, history, onHistory }) {
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // Only ever newer: an answer or a change that arrives after a newer one for the same card doesn't undo it.
   const upsert = useCallback((card) => {
-    setData((d) => ({ ...d, cards: [...d.cards.filter((c) => c.id !== card.id), card] }));
+    setData((d) => {
+      const at = d.cards.find((c) => c.id === card.id);
+      if (at && card.version < at.version) return d;
+      return { ...d, cards: [...d.cards.filter((c) => c.id !== card.id), card] };
+    });
   }, []);
   const drop = useCallback((id) => {
     setData((d) => ({ ...d, cards: d.cards.filter((c) => c.id !== id) }));
@@ -85,7 +113,102 @@ export function Board({ board, onLocked, history, onHistory }) {
   const cardById = (id) => data?.cards.find((c) => c.id === id) ?? null;
   const total = data?.cards.length ?? 0;
   const full = data ? total >= data.limit : false;
-  const paused = !online;
+
+  // ---- live sync ----
+  const flash = (id, m) => {
+    const n = m.entry.id;
+    setFlashes((f) => new Map(f).set(id, { tag: tagOf(m), hue: hueOf(m.entry.actor), initials: [...m.entry.actor][0]?.toUpperCase() ?? '?', n }));
+    const timer = setTimeout(() => {
+      flashTimers.current.delete(timer);
+      setFlashes((f) => {
+        if (f.get(id)?.n !== n) return f;
+        const next = new Map(f);
+        next.delete(id);
+        return next;
+      });
+    }, FLASH_MS);
+    flashTimers.current.add(timer);
+  };
+  useEffect(() => {
+    const timers = flashTimers.current;
+    return () => {
+      for (const t of timers) clearTimeout(t);
+    };
+  }, []);
+
+  const apply = (m) => {
+    const { entry, card, own } = m;
+    if (replay.current) replay.current.push(m);
+    if (card) {
+      const before = latest.current.data?.cards.find((c) => c.id === card.id) ?? null;
+      setData((d) => (d ? applyCard(d, m, moving.current) : d));
+      if (!own) {
+        remoteBy.current.set(card.id, entry.actor);
+        const open = latest.current.sheet;
+        if (card.deleted && open?.id === card.id) {
+          const title = before?.title ?? card.title;
+          if (open.mode === 'delete') {
+            setSheet(null);
+            toast(`${entry.actor} deleted ${title} first.`);
+          } else {
+            // The panel or edit sheet stays, saying so, rather than showing a card that's gone.
+            setSheet((sh) => (sh?.id === card.id ? { ...sh, gone: { card: before ?? withoutDeleted(card), actor: entry.actor } } : sh));
+          }
+        }
+        if (!card.deleted) flash(card.id, m);
+      }
+    }
+    if (!own) setHeard((h) => ({ text: `${sentenceOf(m)}.`, n: h.n + 1 }));
+    for (const fn of listeners.current) fn(m);
+  };
+
+  const onChange = (m) => {
+    const dragging = latest.current.drag;
+    if (dragging) {
+      // Never yank the card someone is holding: everything waits for the drop. Unless the card they hold is gone.
+      held.current.push(m);
+      if (m.card?.deleted && m.card.id === dragging.id) {
+        latest.current.cancelDrag();
+        toast(`${m.entry.actor} deleted ${cardById(dragging.id)?.title ?? m.card.title} while you were moving it.`, 'error');
+      }
+      return;
+    }
+    apply(m);
+  };
+
+  const live = useLive({
+    code,
+    head,
+    onChange,
+    onReset: () => {
+      // Too far behind to replay: load the board afresh (the stream carries on from its head).
+      reload();
+      for (const fn of listeners.current) fn({ reset: true });
+    },
+    onLocked: (changed) => common({ kind: 'locked', changed }),
+  });
+  const paused = live.status !== 'live';
+  const stale = paused && live.status !== 'connecting';
+  const subscribe = useCallback((fn) => {
+    listeners.current.add(fn);
+    return () => {
+      listeners.current.delete(fn);
+    };
+  }, []);
+  const liveValue = useMemo(
+    () => ({ status: live.status, why: live.why, since: live.since, retry: live.retry, subscribe }),
+    [live.status, live.why, live.since, live.retry, subscribe],
+  );
+
+  // The top bar's sync pill (pages/BoardPage.jsx puts it there).
+  useEffect(() => {
+    onLive?.({ status: live.status, since: live.since });
+  }, [onLive, live.status, live.since]);
+  useEffect(() => {
+    return () => {
+      onLive?.(null);
+    };
+  }, [onLive]);
 
   // ---- changes: each resolves to the API's result so the sheet can show what went wrong ----
   const common = (r) => {
@@ -108,6 +231,8 @@ export function Board({ board, onLocked, history, onHistory }) {
       if (r.kind === 'full') setData((d) => ({ ...d, limit: Math.min(d.limit, d.cards.length) }));
       return r;
     }
+    // `card` is the card as the edit sheet opened it (or last loaded it): its version is what this edit is from, so
+    // a change someone made since is a conflict, never silently overwritten.
     if (!(await askName(`save your changes to ${card.title}`))) return { kind: 'cancelled' };
     const r = common(await editCard(code, card, values));
     if (r.kind === 'ok') {
@@ -146,7 +271,10 @@ export function Board({ board, onLocked, history, onHistory }) {
     if (guess) upsert({ ...card, lane: to.lane, position: guess });
     const undo = () => upsert(card);
     if (!(await askName(`move ${card.title}`))) return undo();
+    // While the answer is on its way, other people's changes to the lane don't put this card back where it was.
+    moving.current.add(card.id);
     const r = common(await moveCard(code, card, { lane: to.lane, index: to.index, afterId: above ? above.id : null }));
+    moving.current.delete(card.id);
     if (r.kind === 'ok') {
       upsert(r.card);
       if (r.rebalanced) reload(); // other cards' keys changed on the server
@@ -160,8 +288,18 @@ export function Board({ board, onLocked, history, onHistory }) {
     return undefined;
   };
 
-  const dnd = useCardDrag({ enabled: load.kind === 'ready' && online && !sheet && !history, lanes, rootRef: lanesRef, onDrop: move, announce });
+  const dnd = useCardDrag({ enabled: load.kind === 'ready' && !paused && !sheet && !history, lanes, rootRef: lanesRef, onDrop: move, announce });
   const drag = dnd.drag;
+  latest.current = { data, sheet, drag, cancelDrag: dnd.cancel };
+
+  // The drop (or a cancel): what arrived meanwhile is applied now, in order.
+  useEffect(() => {
+    if (drag || held.current.length === 0) return;
+    const waiting = held.current;
+    held.current = [];
+    for (const m of waiting) apply(m);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag]);
 
   const openAdd = (lane) => setSheet({ mode: 'add', lane });
   const open = (card) => setSheet({ mode: 'view', id: card.id });
@@ -179,27 +317,20 @@ export function Board({ board, onLocked, history, onHistory }) {
   }
 
   const empty = total === 0;
-  const sheetCard = sheet?.id ? cardById(sheet.id) : null;
+  // A sheet's card, or (someone else deleted it while it was open) the card as it was, with who deleted it.
+  const liveCard = sheet?.id ? cardById(sheet.id) : null;
+  const sheetCard = liveCard ?? sheet?.gone?.card ?? null;
+  const goneBy = !liveCard && sheet?.gone ? sheet.gone.actor : null;
 
   return (
+    <LiveContext.Provider value={liveValue}>
     <div className="board">
       <h1 className="sr-only">
         Board <span className="code-text">{code}</span>, {total === 1 ? '1 game' : `${total} games`}
       </h1>
 
-      {paused && (
-        <div className="banner banner-err board-banner" role="status">
-          <OfflineIcon />
-          <span className="banner-text">
-            <b>You’re offline.</b> Showing the board as it was at {formatTime(data.loadedAt)}. Editing paused until we
-            reconnect.
-          </span>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={reload}>
-            Retry
-          </button>
-        </div>
-      )}
-      {!paused && load.kind === 'error' && (
+      <SyncBanner live={live} loadedAt={data.loadedAt} />
+      {!stale && load.kind === 'error' && (
         <div className="banner banner-err board-banner" role="alert">
           <WarningIcon />
           <span className="banner-text">
@@ -210,7 +341,7 @@ export function Board({ board, onLocked, history, onHistory }) {
           </button>
         </div>
       )}
-      {full && !paused && (
+      {full && !stale && (
         <p className="banner banner-info board-banner" role="status">
           <span className="banner-text">
             <b>This board is full.</b> It holds {data.limit} games, the most a board can. Delete one to add another.
@@ -220,7 +351,7 @@ export function Board({ board, onLocked, history, onHistory }) {
 
       <div
         ref={lanesRef}
-        className={`lanes${paused ? ' is-stale' : ''}${drag ? ' is-dragging' : ''}${dnd.settling ? ' is-settling' : ''}`}
+        className={`lanes${stale ? ' is-stale' : ''}${drag ? ' is-dragging' : ''}${dnd.settling ? ' is-settling' : ''}`}
       >
         {LANES.map((lane) => (
           <Lane
@@ -235,6 +366,7 @@ export function Board({ board, onLocked, history, onHistory }) {
             drag={drag}
             phone={phone}
             describedBy={paused ? undefined : hintId}
+            flashes={flashes}
           />
         ))}
       </div>
@@ -245,7 +377,11 @@ export function Board({ board, onLocked, history, onHistory }) {
       <div className="sr-only" aria-live="assertive" aria-atomic="true">
         {/* An alternating no-break space makes a repeated message ("position 1 of 3" twice) announce again. */}
         {said.text}
-        {said.n % 2 ? ' ' : ''}
+        {said.n % 2 ? ' ' : ''}
+      </div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {heard.text}
+        {heard.n % 2 ? ' ' : ''}
       </div>
       {drag && phone && drag.mode === 'pointer' && !drag.scrolling && <DragHint drag={drag} card={cardById(drag.id)} />}
       {drag?.scrolling && (
@@ -261,6 +397,7 @@ export function Board({ board, onLocked, history, onHistory }) {
         <CardPanel
           code={code}
           card={sheetCard}
+          goneBy={goneBy}
           paused={paused}
           toast={toast}
           onEdit={(focus) => setSheet({ mode: 'edit', id: sheetCard.id, back: 'view', focus })}
@@ -283,13 +420,15 @@ export function Board({ board, onLocked, history, onHistory }) {
         <CardEditor
           key={sheet.mode === 'add' ? 'add' : `edit-${sheet.id}`}
           card={sheet.mode === 'edit' ? sheetCard : null}
+          changedBy={sheet.mode === 'edit' ? (remoteBy.current.get(sheet.id) ?? null) : null}
+          goneBy={goneBy}
           lane={sheet.lane}
           focus={sheet.focus}
           paused={paused}
           full={full}
-          onSave={(values) => save(sheet.mode, sheetCard, values)}
+          onSave={(values, base) => save(sheet.mode, base, values)}
           onDelete={() => setSheet({ mode: 'delete', id: sheetCard.id, back: 'edit' })}
-          onClose={() => setSheet(sheet.back === 'view' ? { mode: 'view', id: sheet.id } : null)}
+          onClose={() => setSheet(goneBy ? null : sheet.back === 'view' ? { mode: 'view', id: sheet.id } : null)}
         />
       )}
       {history && (
@@ -304,29 +443,59 @@ export function Board({ board, onLocked, history, onHistory }) {
           }}
           onLocked={(changed) => common({ kind: 'locked', changed })}
           onRestored={(r) => {
-            reload();
+            // The restore's changes arrive on the live stream like any other; a rebalanced lane needs a reload.
+            if (r.rebalanced) reload();
             toast(r.rebalanced ? 'Restored. The board has been reloaded.' : 'Restored. History shows it as a new change.');
           }}
         />
       )}
-      {sheet?.mode === 'delete' && sheetCard && (
+      {sheet?.mode === 'delete' && liveCard && (
         <ConfirmDelete
-          card={sheetCard}
+          card={liveCard}
           paused={paused}
-          onDelete={() => remove(sheetCard)}
+          onDelete={() => remove(liveCard)}
           onClose={() => setSheet({ mode: sheet.back, id: sheet.id, back: sheet.back === 'edit' ? 'view' : undefined })}
         />
       )}
     </div>
+    </LiveContext.Provider>
   );
 }
+
+/**
+ * A live change applied to the board's cards: the card as the server has it now (or gone), and its lane's keys as
+ * they are now, so a rebalanced lane sorts right. Applying one twice changes nothing; one older than the card shown
+ * is ignored. A card this tab has dropped and is waiting to hear back about keeps its new place.
+ */
+function applyCard(d, { card, lane }, moving) {
+  if (!card) return d;
+  const { deleted, ...body } = card;
+  let cards = d.cards;
+  const at = cards.findIndex((c) => c.id === body.id);
+  if (deleted) {
+    if (at !== -1) cards = cards.filter((c) => c.id !== body.id);
+  } else if (at === -1) {
+    cards = [...cards, body];
+  } else if (body.version > cards[at].version || (body.version === cards[at].version && !moving.has(body.id))) {
+    cards = cards.map((c) => (c.id === body.id ? body : c));
+  }
+  if (lane) {
+    const keys = new Map(lane.cards);
+    cards = cards.map((c) =>
+      c.lane === lane.id && keys.has(c.id) && keys.get(c.id) !== c.position && !moving.has(c.id) ? { ...c, position: keys.get(c.id) } : c,
+    );
+  }
+  return cards === d.cards ? d : { ...d, cards };
+}
+
+const withoutDeleted = ({ deleted, ...card }) => card; // eslint-disable-line no-unused-vars
 
 /**
  * A lane. During a drag (`drag`) nothing in it re-orders: each card slides by whole card pitches to where it will
  * be (--shift), the list grows or shrinks by --extra pitches, and the slot is drawn absolutely at --at. On drop the
  * real order changes and the shifts drop to zero in the same frame, so nothing jumps.
  */
-function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen, dnd, drag, phone, describedBy }) {
+function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen, dnd, drag, phone, describedBy, flashes }) {
   const headId = `lane-${lane.id}`;
   const n = cards.length;
   const isSource = Boolean(drag && cards.some((c) => c.id === drag.id));
@@ -386,6 +555,7 @@ function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen, dnd, drag, phone
         <ol className="lane-cards" data-lane-list style={drag ? { '--extra': others.length + (isTarget ? 1 : 0) - n } : undefined}>
           {cards.map((card, at) => {
             const lifted = card.id === drag?.id;
+            const flash = flashes.get(card.id);
             return (
               <li key={card.id} className={lifted ? 'is-dragged' : undefined} style={drag ? { '--shift': shiftOf(card, at) } : undefined}>
                 {lifted && moving && (
@@ -393,7 +563,15 @@ function Lane({ lane, cards, boardEmpty, canAdd, onAdd, onOpen, dnd, drag, phone
                     from {laneName(drag.from.lane)}
                   </span>
                 )}
-                <CardPill card={card} onOpen={onOpen} dnd={dnd} lifted={lifted} describedBy={describedBy} />
+                {flash && !lifted && (
+                  // Someone else's change (Card-States): the ring and "Bunzato moved this", for a moment. Read out
+                  // by the board's polite live region, so hidden here.
+                  <span key={flash.n} className="flash-tag" aria-hidden="true">
+                    <span className={`av ${flash.hue}`}>{flash.initials}</span>
+                    <span className="flash-tag-text">{flash.tag}</span>
+                  </span>
+                )}
+                <CardPill card={card} onOpen={onOpen} dnd={dnd} lifted={lifted} describedBy={describedBy} flash={lifted ? null : flash} />
               </li>
             );
           })}
@@ -440,6 +618,9 @@ function ArrowIcon({ down }) {
   );
 }
 
+// How long a card wears someone else's change: the ring fades over --dur-flash, the name tag a little longer.
+const FLASH_MS = 2600;
+
 const EMPTY = { up_next: 'Nothing up next', now_playing: 'Nothing on yet', played: 'Nothing played yet' };
 
 function Skeleton() {
@@ -479,14 +660,6 @@ function LoadError({ offline, onRetry }) {
         </button>
       </section>
     </div>
-  );
-}
-
-function OfflineIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-      <path d="M2 8.5a15 15 0 0 1 5-3M22 8.5a15 15 0 0 0-11-3.9M9 15.5a5 5 0 0 1 6 0M3 3l18 18" />
-    </svg>
   );
 }
 

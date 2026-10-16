@@ -1,6 +1,7 @@
 import express from 'express';
 import { createCardsRouter } from '../cards/routes.js';
 import { createHistoryRouter } from '../history/routes.js';
+import { liveStream, liveWrites } from '../live/routes.js';
 import { checkCode, checkNewPassword } from '../core/codes.js';
 import { appendEvent } from '../core/events.js';
 import { hashPassword, verifyPassword } from '../core/passwords.js';
@@ -21,12 +22,13 @@ export const MAX_BOARDS = 500;
  *   GET  /:code                 the board
  *   …    /:code/cards/…         its cards (cards/routes.js)
  *   …    /:code/history/…       its change log, and Restore (history/routes.js)
+ *   GET  /:code/live            its live stream of new changes, Server-Sent Events (live/routes.js, live/hub.js)
  *   ...                       every later board route goes here, after requireAccess, and is protected by
  *                               construction (server/test/boards.test.js checks an unknown sub-route stays locked)
  *
  * Responses never contain a password, a hash, or (for a locked board) anything but its code and that it's locked.
  */
-export function createBoardsRouter({ db, limits, networkOf, maxBoards = MAX_BOARDS }) {
+export function createBoardsRouter({ db, limits, networkOf, live, maxBoards = MAX_BOARDS }) {
   const router = express.Router();
   const grants = createGrants(db);
   const q = queries(db);
@@ -73,6 +75,8 @@ export function createBoardsRouter({ db, limits, networkOf, maxBoards = MAX_BOAR
   // ---------- one board ----------
   const board = express.Router({ mergeParams: true });
   router.use('/:code', resolveBoard, board);
+  // Every write tells the board's live streams (live/routes.js); a refused one writes nothing and sends nothing.
+  board.use(liveWrites({ hub: live }));
 
   // Synchronous from check to count, so concurrent misses can't slip past the limit.
   function resolveBoard(req, res, next) {
@@ -135,6 +139,7 @@ export function createBoardsRouter({ db, limits, networkOf, maxBoards = MAX_BOAR
   board.get('/', (req, res) => res.json(openBody(req.board)));
   board.use('/cards', createCardsRouter({ db }));
   board.use('/history', createHistoryRouter({ db }));
+  board.get('/live', liveStream({ hub: live, networkOf }));
 
   return router;
 }

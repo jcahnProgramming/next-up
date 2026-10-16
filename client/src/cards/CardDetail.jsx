@@ -3,6 +3,7 @@ import { CalendarIcon } from '../chrome/DatePicker.jsx';
 import { CloseIcon, CopyIcon, ErrorIcon, PlusIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
 import { copyText } from '../chrome/copyText.js';
 import { usePhone } from '../chrome/usePhone.js';
+import { useLiveChanges } from '../live/Live.jsx';
 import { useAskName } from '../prefs/NamePrompt.jsx';
 import { readDisplayName } from '../prefs/displayName.js';
 import { MAX_PLAYERS, PLAYER_NAME_MAX, checkPlayerName, playerExistsMessage, playerKey, playerLimitMessage } from '../../../server/core/cardDetail.js';
@@ -100,6 +101,9 @@ export function ServerInfo({ value, paused, onSet, toast }) {
  * box open for the next name. A name already on the card (ignoring case) is refused inline before anything is sent,
  * and again by the server. Each chip's × removes that player at once, with no confirmation: History can put
  * them back.
+ *
+ * Other people's sign-ups and removals arrive live (live/): each carries the player as they are now, so applying one
+ * twice changes nothing. Ones that arrive while the list is loading are applied on top of it once it has.
  */
 export function Players({ code, card, paused, onCount, onLocked, onGone }) {
   const askName = useAskName();
@@ -118,14 +122,18 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
   const latest = useRef({ card, onCount, onLocked, onGone });
   latest.current = { card, onCount, onLocked, onGone };
 
+  const arrived = useRef(null); // live changes that came while the list was loading
   useEffect(() => {
     let live = true;
     setLoad({ kind: 'loading' });
+    arrived.current = [];
     loadPlayers(code, latest.current.card).then((r) => {
       if (!live) return;
       const { onCount: count, onLocked: locked, onGone: gone } = latest.current;
+      const later = arrived.current ?? [];
+      arrived.current = null;
       if (r.kind === 'ok') {
-        setList(r.players);
+        setList(later.reduce(applyPlayer, r.players));
         setLoad({ kind: 'ready' });
         count(r.players.length);
       } else if (r.kind === 'locked') locked(r.changed);
@@ -136,6 +144,14 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
       live = false;
     };
   }, [code, card.id, attempt]);
+
+  useLiveChanges((m) => {
+    if (m.reset) return setAttempt((n) => n + 1);
+    if (!m.player || m.entry.cardId !== card.id) return undefined;
+    if (arrived.current) arrived.current.push(m.player);
+    else setList((l) => applyPlayer(l, m.player));
+    return undefined;
+  });
 
   const boxOpen = box !== null;
   const boxBusy = box?.busy ?? false;
@@ -339,6 +355,15 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
       </p>
     </section>
   );
+}
+
+/** A player as the live stream says they are now, applied to the list: gone if removed, else in sign-up order. */
+function applyPlayer(list, player) {
+  const { removed, ...p } = player;
+  const rest = list.filter((x) => x.id !== p.id);
+  if (removed) return rest.length === list.length ? list : rest;
+  if (rest.length < list.length) return list; // already shown
+  return [...rest, p].sort((a, b) => (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : a.id - b.id));
 }
 
 /** Two letters for the avatar: the first of two words, or the first two of one. */

@@ -1,0 +1,120 @@
+/* Live sync: the sync pill (design/v1 nu.css .sync, Components "Live sync", Topbar-Options) and the live-update
+   flash and name tag on a card (nu.css .card.is-flash, .flash-tag; Card-States "changed by someone else").
+   Every colour is a theme token. */
+
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: var(--r-full);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sync-live { background: var(--success-soft); color: var(--success-text); }
+.sync-re { background: var(--warning-soft); color: var(--warning-text); }
+.sync-off { background: var(--error-soft); color: var(--error-text); }
+.sync-lock { background: var(--surface-3); color: var(--text-2); }
+.sync .spin { width: 11px; height: 11px; border-width: 1.6px; }
+.sync > svg { flex: none; }
+
+.dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+.dot-pulse {
+  animation: hd-pulse 2s ease-out infinite;
+}
+
+/* Phone (Topbar-Options, Board-Phone-States): no room for words beside the code chip, so the pill folds to its dot,
+   spinner or icon; the words stay for screen readers and the tooltip. */
+@media (max-width: 600px) {
+  .sync {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+  }
+  .sync-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- "changed by someone else" ---------- */
+.card.is-flash {
+  animation: nu-flash var(--dur-flash) var(--ease-out) both;
+}
+.card.is-flash-1 {
+  animation-name: nu-flash-again;
+}
+@keyframes nu-flash {
+  0%, 55% { box-shadow: var(--card-shadow), var(--flash-ring); }
+  100% { box-shadow: var(--card-shadow); }
+}
+@keyframes nu-flash-again {
+  0%, 55% { box-shadow: var(--card-shadow), var(--flash-ring); }
+  100% { box-shadow: var(--card-shadow); }
+}
+.flash-tag {
+  position: absolute;
+  top: -11px;
+  right: 26px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 52px);
+  height: 22px;
+  padding: 0 9px 0 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-solid);
+  color: var(--text-1);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--elev-2), var(--edge);
+  pointer-events: none;
+  animation: nu-tag var(--dur-flash) var(--ease-out) both;
+  animation-duration: calc(var(--dur-flash) * 1.6);
+}
+.flash-tag-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flash-tag .av {
+  width: 16px;
+  height: 16px;
+  font-size: 9px;
+}
+@keyframes nu-tag {
+  0% { opacity: 0; transform: translateY(4px); }
+  10%, 80% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+/* Reduce motion: the ring and the tag appear and go without moving or fading. */
+@media (prefers-reduced-motion: reduce) {
+  .card.is-flash { animation: none; box-shadow: var(--card-shadow), var(--flash-ring); }
+  .flash-tag { animation: none; }
+}
+[data-motion='off'] .card.is-flash { animation: none; box-shadow: var(--card-shadow), var(--flash-ring); }
+[data-motion='off'] .flash-tag { animation: none; }
+
+/* A card panel or edit sheet whose card someone else deleted: says so in place of stale details. */
+.sheet-gone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}

@@ -160,4 +160,11 @@ export const coreMigrations = [
       `);
     },
   },
+  {
+    // Live sync (live/hub.js) reads a board's events after the last one a browser saw, in id order: an index lookup.
+    id: '005_live_sync',
+    up(db) {
+      db.exec('CREATE INDEX events_board_seq ON events (board_id, id);');
+    },
+  },
 ];

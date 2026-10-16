@@ -14,12 +14,15 @@ if (!existsSync(config.clientDist)) {
 }
 
 // config.listenHost: loopback locally, the container's own interfaces in Docker (published on <LAN_IP> only).
-const httpServer = createApp().listen(config.port, config.listenHost, () => {
+const app = createApp();
+const httpServer = app.listen(config.port, config.listenHost, () => {
   console.log(`[web] Next Up ${APP_VERSION} listening on ${config.listenHost}:${config.port}`);
   console.log(`[web] Rate limits per network: ${describeTrust()}`);
 });
 
 function shutdown() {
+  // Open live streams would hold the server open: end them, and browsers reconnect to the next process.
+  app.locals.live.close();
   httpServer.close(() => {
     closeDb();
     process.exit(0);

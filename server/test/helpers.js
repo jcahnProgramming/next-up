@@ -19,12 +19,13 @@ export function memoryDb() {
 
 /**
  * Starts the web app on a random port with its own database and a clock the test moves.
- * Returns { base, db, clock, request, close }. request(path, { method, body, ip, cookie, headers }) → { status, body, headers, cookie }.
+ * Returns { base, db, clock, live, request, close } (live: the app's live-sync hub, live/hub.js). request(path, { method, body, ip, cookie, headers }) → { status, body, headers, cookie }.
  */
 export async function startApp(opts = {}) {
   const db = memoryDb();
   const clock = { t: Date.UTC(2026, 9, 15, 12), now: () => clock.t, advance: (ms) => (clock.t += ms) };
-  const server = createApp({ db: () => db, now: clock.now, ...opts }).listen(0, '127.0.0.1');
+  const app = createApp({ db: () => db, now: clock.now, ...opts });
+  const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -52,5 +53,12 @@ export async function startApp(opts = {}) {
     };
   }
 
-  return { base, db, clock, request, close: () => new Promise((r) => server.close(r)) };
+  const live = app.locals.live;
+  // Open live streams would keep the server from closing: end them first, as index.js does on shutdown.
+  return { base, db, clock, live, request, close: () =>
+      new Promise((r) => {
+        live.close();
+        server.close(r);
+        server.closeAllConnections();
+      }), };
 }

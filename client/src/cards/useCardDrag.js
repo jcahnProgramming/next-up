@@ -10,6 +10,7 @@ import { LANES, laneName } from '../../../server/core/cardRules.js';
  *                 { lane, index }, index counted among the lane's OTHER cards (0 = top)
  *   dnd.settling  true for the frame after a drop, while the lanes take their new order without animating
  *   dnd.onPointerDown(e, card) / dnd.onKeyDown(e, card) → true if it handled the key
+ *   dnd.cancel()  ends a drag as Escape would (live sync: someone else deleted the card being held)
  *
  * CLAUDE.md "Bugs that cost us": the dragged node never moves in the DOM during a drag. The board draws the drag
  * from `drag` with transforms only (neighbours slide by whole card pitches, the slot is absolutely placed), the
@@ -396,7 +397,11 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
     };
   }, [end]);
 
-  return { drag, settling, onPointerDown, onKeyDown };
+  const cancel = useCallback(() => {
+    if (session.current) end(session.current, 'cancel');
+  }, [end]);
+
+  return { drag, settling, onPointerDown, onKeyDown, cancel };
 }
 
 // The auto-scroll band's height (--autoscroll-zone), read once.

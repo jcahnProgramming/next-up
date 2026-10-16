@@ -49,6 +49,8 @@ function BoardView({ code, state, setState, retry }) {
   const { toast } = useTopbar();
   // History (history/HistoryPanel.jsx): null, or { cardId } (null: the whole board). Opened from the top bar or a card.
   const [history, setHistory] = useState(null);
+  // The board's live sync state, for the top bar's sync pill: { status, since }, or null when no board is open.
+  const [live, setLive] = useState(null);
 
   const relock = useCallback(async () => {
     const result = await lockBoard(code);
@@ -77,6 +79,7 @@ function BoardView({ code, state, setState, retry }) {
     plain: !open,
     onLock: open && state.board.hasPassword ? relock : undefined,
     onHistory: open ? openHistory : undefined,
+    live: open ? (live ?? { status: 'connecting', since: null }) : undefined,
   });
 
   switch (state.kind) {
@@ -92,7 +95,7 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
     case 'open':
-      return <Board board={state.board} onLocked={onLocked} history={history} onHistory={setHistory} />;
+      return <Board board={state.board} onLocked={onLocked} history={history} onHistory={setHistory} onLive={setLive} />;
     case 'locked':
       return (
         <Centered>

@@ -1,3 +1,4 @@
+import { TAB_ID } from '../live/tab.js';
 import { readDisplayName } from '../prefs/displayName.js';
 
 /**
@@ -26,7 +27,8 @@ export async function request(path, { method = 'GET', body } = {}) {
     res = await fetch(path, {
       method,
       credentials: 'same-origin',
-      headers: body ? { 'content-type': 'application/json' } : undefined,
+      // The tab id lets the live stream mark this tab's own changes (live/tab.js).
+      headers: { 'x-nu-tab': TAB_ID, ...(body ? { 'content-type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

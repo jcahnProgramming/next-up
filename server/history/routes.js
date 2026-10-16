@@ -43,25 +43,8 @@ export function createHistoryRouter({ db }) {
     }
 
     const page = listEvents(db(), boardId, { limit, before: before ?? null, cardId: card?.id ?? null });
-    const ids = page.events.map((e) => e.id);
-    const restoredBy = restorersOf(db(), boardId, ids);
-    const undone = eventsByIds(db(), boardId, [...new Set(page.events.map((e) => e.restores).filter((id) => id !== null))]);
-    const cardIds = [...new Set(page.events.map((e) => e.cardId).filter((id) => Number.isSafeInteger(id)))];
-    const titles = new Map(storeOf(db()).q.titles(boardId, cardIds).map((r) => [r.id, r.title]));
-    const cardTitle = (id) => titles.get(id) ?? 'a card';
-
     res.json({
-      events: page.events.map((e) => ({
-        id: e.id,
-        type: e.type,
-        actor: e.actor,
-        at: e.at,
-        cardId: Number.isSafeInteger(e.cardId) ? e.cardId : null,
-        line: lineOf(e, { cardTitle }),
-        restorable: e.restorable && !restoredBy.has(e.id),
-        restoredBy: restoredBy.get(e.id) ?? null,
-        restores: e.restores !== null ? (undone.get(e.restores) ?? null) : null,
-      })),
+      events: describeEvents(db(), boardId, page.events),
       next: page.next,
       ...(card ? { card: { id: card.id, title: card.title, deleted: card.deleted_at !== null } } : {}),
     });
@@ -107,6 +90,30 @@ export function createHistoryRouter({ db }) {
   });
 
   return router;
+}
+
+/**
+ * History's entries for these events (as listEvents or eventsAfter give them): who, when, the line, and whether each
+ * can still be restored. Shared with live sync (live/hub.js), which sends new changes in exactly this shape so an
+ * open History panel adds them in place. At most one page of events.
+ */
+export function describeEvents(db, boardId, events) {
+  const restoredBy = restorersOf(db, boardId, events.map((e) => e.id));
+  const undone = eventsByIds(db, boardId, [...new Set(events.map((e) => e.restores).filter((id) => id !== null))]);
+  const cardIds = [...new Set(events.map((e) => e.cardId).filter((id) => Number.isSafeInteger(id)))];
+  const titles = new Map(storeOf(db).q.titles(boardId, cardIds).map((r) => [r.id, r.title]));
+  const cardTitle = (id) => titles.get(id) ?? 'a card';
+  return events.map((e) => ({
+    id: e.id,
+    type: e.type,
+    actor: e.actor,
+    at: e.at,
+    cardId: Number.isSafeInteger(e.cardId) ? e.cardId : null,
+    line: lineOf(e, { cardTitle }),
+    restorable: e.restorable && !restoredBy.has(e.id),
+    restoredBy: restoredBy.get(e.id) ?? null,
+    restores: e.restores !== null ? (undone.get(e.restores) ?? null) : null,
+  }));
 }
 
 function idOf(raw) {

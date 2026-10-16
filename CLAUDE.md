@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.7.0 has boards, access, lanes, cards, drag and drop, card details, and history and restore; not live sync, board retiring or Settings' "This board" yet)
+## What Next Up will be (the agreed spec; 0.8.0 has boards, access, lanes, cards, drag and drop, card details, history and restore, and live sync; not board retiring or Settings' "This board" yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -72,7 +72,7 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   password version. A version older than the board's is "the board's password changed". Page script never sees it;
   the lock button asks the server to clear it.
 - **Every board route lives under `/api/boards/:code`** and, except `lock` and `unlock`, is registered after
-  `requireAccess` in `server/boards/routes.js`, so it is protected by construction. A password board without access
+  `requireAccess` in `server/boards/routes.js`, so it is protected by construction (the live stream included). A password board without access
   answers only `{ status: 'locked', code }` (plus `reason: 'password_changed'`), to every method and every path.
 - **The display name is per browser** (localStorage) and is a label, not an identity: anyone can type any name. The
   history says "changed by <name>", never implies it was verified. It is asked for at a browser's first change, never
@@ -177,6 +177,39 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   changed. A change to a card deleted since asks first and, with `withCard`, brings the card back too (refused at
   the 200-card cap). A removed player whose name has signed up again, or at the 100-player cap, is refused. A restore
   is a change: it needs access and asks the display name first. Password changes are logged but never restorable.
+- **Live sync** (`server/live/`, `client/src/live/`) rides on `events`; there is no second channel of truth.
+  `GET /api/boards/:code/live?since=<event id>&tab=<tab id>` is a Server-Sent Events stream, registered after
+  `requireAccess` like every board route (a password board without access gets only the 403 `locked` answer, and no
+  stream opens). It sends the board's events in id order, each as `id: <event id>` `event: change` with
+  `{ entry, card, lane, player, own }`: the History entry (`describeEvents`, shared with the history route), the card
+  and player as they are NOW (so applying one twice is harmless), the card's lane keys (a rebalanced lane re-sorts),
+  and `own` (this tab made it). Then `ready` once caught up; `reset { head }` when more than `REPLAY_MAX` = 200
+  behind (the client reloads the board); `locked { reason: 'password_changed' }` and the stream ends when the board's
+  `password_version` passes the one its access was granted at (checked on every write and heartbeat). The cards
+  answer carries `head` (the newest event id as of that read), where a freshly loaded board's stream starts.
+  - Every non-GET board request notifies its board's streams once its answer has gone (`liveWrites`), and runs inside
+    `appendContext` so the hub learns which tab (`X-NU-Tab`, random per page load, never stored) wrote each event.
+    Nothing in the hub knows one event type from another.
+  - A heartbeat comment every `HEARTBEAT_MS` = 25 s (Cloudflare cuts a connection after ~100 s of silence); the
+    stream is `Cache-Control: no-store, no-transform` and `X-Accel-Buffering: no`, never compressed (compression
+    holds events back). cloudflared flushes `text/event-stream` on every write.
+  - Limits (`LIVE_LIMITS`, in memory): 20 open streams per network, 100 per board, 2,000 in all; past one, 429
+    `too_many_streams` with Retry-After 30 and the client backs off. A board with no viewers holds nothing (its entry
+    goes with its last stream; the heartbeat timer runs only while a stream is open). index.js ends every stream on
+    shutdown, and browsers reconnect to the next process and catch up.
+  - The client (`client/src/live/connection.js`) reads the stream with fetch (EventSource can't see 403/429), resumes
+    after the last id it applied, skips any id at or below it, and is `live` only after `ready` and while bytes
+    arrive (60 s of silence counts as dropped). States: connecting, live, reconnecting (backoff 1–30 s; `busy` on
+    429), offline (the browser says so), down (still failing after 20 s). **Anything but live pauses editing
+    everywhere** ("Editing paused until we reconnect." with Retry, which reconnects now). It reconnects at once on
+    `online`, and on showing the page again after a quiet spell (sleep).
+  - Applying (`client/src/cards/Board.jsx`): mid-drag every change is held until the drop (a remote delete of the
+    held card cancels the drag and says who); an open edit sheet keeps what's typed, says "Changed by …" with Load
+    their changes, and saves against the version it opened (the server's conflict check does the rest); a panel or
+    edit sheet whose card was deleted says so. Someone else's change flashes the card with its name tag
+    (`.flash-tag`, Card-States); this tab's own changes (`own`) never flash. No presence, typing or cursors.
+  - The LAN port is HTTP/1.1: a browser allows ~6 connections per host there, so more than about five board tabs
+    open at once on the LAN starve each other. Through the tunnel (HTTP/2) there's no such limit.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
 - Every query takes limit/cursor. No unbounded selects, ever.
 - One SQLite file (`data/next-up.db`), shared by the web and MCP containers. On <HOST> it lives in
@@ -314,6 +347,9 @@ version on the left and the coffee link on the right.
   test moves (`clock.advance(ms)`), and `ip` per request as CF-Connecting-IP. Never point a test at `data/`.
 - Test the empty state with a fresh browser profile and an empty database.
 - Verify a fix's test catches the bug by running it against unfixed code.
+- Live sync: `server/test/live.test.js` reads real streams from `startApp()` (its `live` is the hub; `close()` ends
+  open streams first), and `server/test/live-client.test.js` runs the client's connection against a fake fetch and
+  clock.
 - Drag tests use real input (DevTools protocol) or a lost-capture simulation: events dispatched from page script never
   engage real pointer capture, so they hide drag bugs.
 - Visual pass in at least two themes, plus phone width (390 px), with no horizontal scroll.

@@ -7,6 +7,7 @@ import { getDb } from './core/db.js';
 import { createErrorHandler } from './core/errors.js';
 import { createNetworkResolver } from './core/network.js';
 import { createLimits } from './core/rateLimit.js';
+import { createLiveHub } from './live/hub.js';
 import { APP_VERSION } from './core/version.js';
 
 /**
@@ -18,8 +19,10 @@ import { APP_VERSION } from './core/version.js';
  * @param {() => number} [opts.now] the clock the rate limits run on
  * @param {number} [opts.maxBoards]
  * @param {string} [opts.trustedProxies] see core/network.js (default: TRUSTED_PROXIES)
+ * @param {object} [opts.live] live sync options for live/hub.js ({ heartbeatMs, limits, replayMax }); the hub is
+ *   app.locals.live (index.js closes its streams on shutdown)
  */
-export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxies } = {}) {
+export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxies, live: liveOpts = {} } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '100kb' }));
@@ -27,6 +30,9 @@ export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxie
   // One set of limits per app: the password limiter is the single counter every password check shares.
   const limits = createLimits({ now });
   const networkOf = createNetworkResolver({ trustedProxies });
+  // Live sync: the board streams, in this process (no broker; one web container writes every change).
+  const live = createLiveHub({ db, ...liveOpts });
+  app.locals.live = live;
 
   // The deploy probes this (and checks the version against CHANGELOG.json), as do the container healthcheck and
   // anyone curious. It says nothing but status and version: the app is public.
@@ -36,7 +42,7 @@ export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxie
     res.set('Cache-Control', 'no-store');
     next();
   });
-  app.use('/api/boards', createBoardsRouter({ db, limits, networkOf, maxBoards }));
+  app.use('/api/boards', createBoardsRouter({ db, limits, networkOf, live, maxBoards }));
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   // Serve the built client (production / Docker). In dev, Vite serves it instead.

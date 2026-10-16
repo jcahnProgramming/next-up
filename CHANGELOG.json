@@ -1,6 +1,27 @@
 {
   "releases": [
     {
+      "version": "0.8.0",
+      "date": "2026-10-16",
+      "title": "Live sync: everyone sees changes as they happen",
+      "sections": {
+        "New": [
+          "Boards update live. When anyone adds, edits, moves or deletes a card, changes a go-live date or server info, signs up or removes a player, or restores something from History, everyone else with the board open sees it within a moment, without reloading. An open card panel and an open History panel update in place too.",
+          "A card someone else just changed lights up for a couple of seconds with a name tag saying who and what, such as “Bunzato moved this” or “Kaelis added player Mo”. Screen readers hear the change read out. With reduced motion on, the highlight shows and goes without animating.",
+          "A sync pill next to the board code says whether the board is live: “Live”, “Connecting…”, “Reconnecting…”, “Offline · as of 14:32” or “Not connected · as of 14:32”. It only says Live while Next Up is actually getting through. On a phone it shrinks to a dot or an icon.",
+          "When the connection drops (a network change, a laptop waking from sleep, Next Up restarting for an update), the board says so, shows how old it is, and pauses editing with “Editing paused until we reconnect.” and a Retry button. It reconnects by itself, and when it's back it catches up on exactly the changes it missed, once each. If it has missed a great many, it reloads the board instead."
+        ],
+        "Improved": [
+          "If someone else changes a card while you're dragging, nothing moves under you: their changes wait until you let go. If they delete the card you're holding, the drag is cancelled and a message says who deleted it.",
+          "If someone else changes a card while you're editing it, what you've typed stays put. The edit sheet says “Changed by Bunzato” with a “Load their changes” button, and saving still checks for their change first, so nothing is overwritten without you seeing it.",
+          "If someone else deletes a card whose panel or edit sheet you have open, it says who deleted it, rather than showing details that are no longer there, and points to History to bring it back."
+        ],
+        "Fixed": [
+          "The edit sheet and the delete confirmation no longer say deleted cards can be restored “once History is built”. History has been here since 0.7.0."
+        ]
+      }
+    },
+    {
       "version": "0.7.0",
       "date": "2026-10-16",
       "title": "History and Restore, and glass that looks like glass",

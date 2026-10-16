@@ -84,7 +84,7 @@ export const CARD_EDITED = declareEventType({
     const relogo = p.before.logo !== p.after.logo;
     if (isRestore) return { verb: 'restored', subject: p.after.title, detail: ` · ${nounsOf(EDIT_FIELDS, p)}` };
     if (renamed) return { verb: 'renamed', subject: p.before.title, detail: ` to ${p.after.title}${relogo ? ' and changed its logo' : ''}` };
-    return { verb: 'changed the logo of', subject: p.after.title, detail: '' };
+    return { verb: 'changed the logo of', subject: p.after.title, detail: '', tag: 'changed the logo' };
   },
   restore: { plan: (ctx, event, opts) => planFields(ctx, event, opts, EDIT_FIELDS, 'card.edited') },
 });

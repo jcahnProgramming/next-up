@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
@@ -20,6 +21,8 @@ import { z } from 'zod';
  *   })
  *
  * line: History's sentence after the actor's name: "<actor> <verb> <subject><detail>". `tone: 'del'` marks a delete.
+ *   `tag`, optional, is the live-update name tag's wording after the actor ("changed the logo"); without it a card's
+ *   tag reads "<actor> <verb> this" (live/, client/src/live/).
  *   `cardTitle(id)` is the card's current name; `isRestore` says this event was written by a restore.
  * restorable: whether History offers Restore on it (then `restore` is required). Password events are never.
  * restore.plan(ctx, event, opts): what restoring `event` would do, worked out from the board as it is now. Returns
@@ -58,6 +61,14 @@ export function cleanActor(value) {
 }
 
 /**
+ * Who is writing, for live sync (live/hub.js): a board request runs inside appendContext.run(fn, …), and every event
+ * it appends is reported to fn(id, row) as it is written, so the stream can tell a browser tab which changes were its
+ * own. It is told before the transaction commits; `row` lets the hub check a reported id is the row it later reads
+ * (an id from a rolled-back transaction is reused by the next insert).
+ */
+export const appendContext = new AsyncLocalStorage();
+
+/**
  * Appends one event. Call it inside the same transaction as the change it records. Returns the event id.
  * `restores`: the id of the event this one undoes, set only by a restore's apply().
  */
@@ -65,10 +76,40 @@ export function appendEvent(db, { boardId, type, actor, payload = {}, restores =
   const def = registry.get(type);
   if (!def) throw new Error(`event type "${type}" was never declared`);
   const data = def.payload.parse(payload);
+  const row = { type, actor: cleanActor(actor), payload: JSON.stringify(data) };
   const { lastInsertRowid } = db
     .prepare('INSERT INTO events (board_id, type, actor, payload, restores) VALUES (?, ?, ?, ?, ?)')
-    .run(boardId, type, cleanActor(actor), JSON.stringify(data), restores);
-  return Number(lastInsertRowid);
+    .run(boardId, row.type, row.actor, row.payload, restores);
+  const id = Number(lastInsertRowid);
+  appendContext.getStore()?.(id, row);
+  return id;
+}
+
+/** The id of a board's newest event (0 if none): where a live stream starts for a board loaded now. */
+export function latestEventId(db, boardId) {
+  return db.prepare('SELECT MAX(id) FROM events WHERE board_id = ?').pluck().get(boardId) ?? 0;
+}
+
+/**
+ * A board's events after `afterId`, oldest first, at most `limit` (never more than MAX_PAGE): what a live stream
+ * sends next. Rows as listEvents gives them, plus `raw` (the payload as stored, for the hub's origin check).
+ */
+export function eventsAfter(db, boardId, afterId, limit) {
+  const n = Math.min(Math.max(1, Math.trunc(limit) || 1), MAX_PAGE + 1);
+  return db
+    .prepare('SELECT id, type, actor, payload, created_at, restores, card_id FROM events WHERE board_id = ? AND id > ? ORDER BY id LIMIT ?')
+    .all(boardId, afterId, n)
+    .map((r) => ({
+      id: r.id,
+      type: r.type,
+      actor: r.actor,
+      payload: JSON.parse(r.payload),
+      raw: r.payload,
+      at: r.created_at,
+      restores: r.restores,
+      cardId: r.card_id,
+      restorable: registry.get(r.type)?.restorable ?? false,
+    }));
 }
 
 /** The most events one page holds. */
@@ -143,7 +184,14 @@ export function lineOf(event, ctx) {
   const def = registry.get(event.type);
   if (!def) return { verb: 'made a change', subject: '', detail: '' };
   const line = def.line(event.payload, { ...ctx, isRestore: event.restores !== null });
-  return { verb: line.verb, subject: line.subject ?? '', detail: line.detail ?? '', ...(line.tone ? { tone: line.tone } : {}) };
+  return {
+    verb: line.verb,
+    subject: line.subject ?? '',
+    detail: line.detail ?? '',
+    ...(line.tone ? { tone: line.tone } : {}),
+    // The live-update name tag on a card ("Bunzato moved this"), when "<verb> this" wouldn't read right.
+    ...(line.tag ? { tag: line.tag } : {}),
+  };
 }
 
 /**

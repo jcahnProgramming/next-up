@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
+import { SyncPill } from '../live/Live.jsx';
 import { NamePromptProvider } from '../prefs/NamePrompt.jsx';
 import { APP_VERSION } from '../release.js';
 import { ArrowRight, CoffeeIcon, HistoryIcon, SettingsIcon } from './icons.jsx';
@@ -37,6 +38,7 @@ function Shell() {
             <>
               <span className="topbar-sep" aria-hidden="true" />
               <CodeChip board={board} />
+              {board.live && !board.plain && <SyncPill live={board.live} />}
             </>
           )}
           <div className="topbar-actions">

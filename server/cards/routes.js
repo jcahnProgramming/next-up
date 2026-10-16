@@ -1,7 +1,7 @@
 import express from 'express';
 import { checkGoLive, checkServerInfo } from '../core/cardDetail.js';
 import { MAX_CARDS, cardLimitMessage, checkLane, checkLogo, checkTitle } from '../core/cardRules.js';
-import { appendEvent } from '../core/events.js';
+import { appendEvent, latestEventId } from '../core/events.js';
 import { createPlayersRouter } from '../players/routes.js';
 import { CARD_CREATED, CARD_DELETED, CARD_DETAIL_EDITED, CARD_EDITED, CARD_MOVED } from './events.js';
 import { cardBody, cardStore, detailOf, editableOf, placeOf, stateOf, wholeStateOf } from './store.js';
@@ -10,7 +10,8 @@ import { cardBody, cardStore, detailOf, editableOf, placeOf, stateOf, wholeState
  * /api/boards/:code/cards. Mounted by boards/routes.js AFTER requireAccess, so a password board without access never
  * reaches here: every method and path answers only { status: 'locked', code }.
  *
- *   GET    /             a page of the board's live cards, in lane order: { cards, next, limit }   ?limit=&after=
+ *   GET    /             a page of the board's live cards, in lane order: { cards, next, limit, head }   ?limit=&after=
+ *                        head: the board's newest event id as of this read, where its live stream picks up
  *   POST   /             add { title, logo?, lane, goLive?, serverInfo?, actor? } to the bottom of the lane → 201 { card }
  *   PATCH  /:id          edit { version, title?, logo?, lane?, goLive?, serverInfo?, actor? } → { card }; a new lane
  *                        puts it at the bottom
@@ -36,6 +37,9 @@ export function createCardsRouter({ db }) {
     const limit = Math.min(Math.max(1, Number.parseInt(req.query.limit, 10) || MAX_CARDS), MAX_CARDS);
     const after = parseCursor(req.query.after);
     if (after === false) return res.status(400).json({ error: 'That page cursor isn’t valid.', field: 'after' });
+    // Read before the cards: a change after it is replayed by the stream (applying one twice is harmless); none
+    // can fall between the two reads, which run in one synchronous handler on the one connection.
+    const head = latestEventId(db(), req.board.id);
     const rows = q.page(req.board.id, after, limit + 1);
     const page = rows.slice(0, limit);
     const last = page[page.length - 1];
@@ -43,6 +47,7 @@ export function createCardsRouter({ db }) {
       cards: page.map(cardBody),
       next: rows.length > limit ? `${last.lane}~${last.position}~${last.id}` : null,
       limit: MAX_CARDS,
+      head,
     });
   });
 

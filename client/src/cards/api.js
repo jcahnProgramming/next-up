@@ -22,7 +22,7 @@ function read(r) {
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
   if (status === 200 || status === 201) {
     if (data?.card) return { kind: 'ok', card: data.card, rebalanced: data.rebalanced === true };
-    if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit };
+    if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit, head: data.head };
   }
   if (data?.code === 'conflict' && data.card) return { kind: 'conflict', card: data.card };
   if (data?.code === 'card_gone') return { kind: 'gone' };
@@ -31,17 +31,23 @@ function read(r) {
   return { kind: 'error', offline: false };
 }
 
-/** Every live card on the board, following the server's pages (a board holds at most its limit, so a page or two). */
+/**
+ * Every live card on the board, following the server's pages (a board holds at most its limit, so a page or two).
+ * `head` is the board's newest event id as of the first page: where its live stream picks up (changes after it are
+ * replayed, and applying one the cards already show is harmless).
+ */
 export async function loadCards(code) {
   const cards = [];
   let after = null;
   let limit = null;
+  let head = null;
   for (let page = 0; page < 20; page++) {
     const r = read(await request(`${base(code)}${after ? `?after=${encodeURIComponent(after)}` : ''}`));
     if (r.kind !== 'ok') return r;
     cards.push(...r.cards);
     limit = r.limit;
-    if (!r.next) return { kind: 'ok', cards, limit };
+    head ??= Number.isSafeInteger(r.head) ? r.head : null;
+    if (!r.next) return { kind: 'ok', cards, limit, head };
     after = r.next;
   }
   return { kind: 'error', offline: false };

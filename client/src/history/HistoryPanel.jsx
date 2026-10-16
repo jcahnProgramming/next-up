@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { CloseIcon, RestoreIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
 import { Overlay } from '../chrome/Overlay.jsx';
-import { useOnline } from '../chrome/useOnline.js';
 import { usePhone } from '../chrome/usePhone.js';
+import { PausedBanner, useLiveChanges, usePaused } from '../live/Live.jsx';
 import { useAskName } from '../prefs/NamePrompt.jsx';
 import { readDisplayName } from '../prefs/displayName.js';
 import { laneName } from '../../../server/core/cardRules.js';
@@ -22,10 +22,13 @@ import './history.css';
  *
  * Restore asks for this browser's display name first if it never has (a restore is a change), then shows what will
  * change (RestoreSheet) before doing anything. A change that has been restored says so, with no second Restore.
+ *
+ * New changes, anyone's, arrive live (live/) in History's own shape and go on top; a restore among them marks the
+ * change it undid as restored. Ones that arrive while a page is loading are added once it has.
  */
 export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestored, onLocked }) {
   const titleId = useId();
-  const online = useOnline();
+  const paused = usePaused();
   const askName = useAskName();
   const now = useNow();
   const [cardId, setCardId] = useState(startCard);
@@ -36,13 +39,17 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
   const latest = useRef({ onLocked });
   latest.current = { onLocked };
 
+  const arrived = useRef(null); // live entries that came while the list was loading
   useEffect(() => {
     let live = true;
     setList({ kind: 'loading' });
     setMore(null);
+    arrived.current = [];
     loadHistory(code, { cardId }).then((r) => {
       if (!live) return;
-      if (r.kind === 'ok') setList({ kind: 'ready', events: r.events, next: r.next, card: r.card });
+      const later = arrived.current ?? [];
+      arrived.current = null;
+      if (r.kind === 'ok') setList({ kind: 'ready', events: later.reduce(addEntry, r.events), next: r.next, card: r.card });
       else if (r.kind === 'locked') latest.current.onLocked(r.changed);
       else if (r.kind === 'gone') setCardId(null); // the card isn't on this board: show the whole board's history
       else setList({ kind: 'error', offline: r.offline });
@@ -53,6 +60,14 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
   }, [code, cardId, attempt]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
+
+  useLiveChanges((m) => {
+    if (m.reset) return reload();
+    if (cardId !== null && m.entry.cardId !== cardId) return undefined;
+    if (arrived.current) arrived.current.push(m.entry);
+    else setList((l) => (l.kind === 'ready' ? { ...l, events: addEntry(l.events, m.entry) } : l));
+    return undefined;
+  });
 
   const loadMore = async () => {
     if (list.kind !== 'ready' || !list.next || more === 'loading') return;
@@ -94,17 +109,7 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
       )}
 
       <div className="sheet-body history-body">
-        {!online && (
-          <div className="banner banner-err" role="status">
-            <WarningIcon />
-            <span className="banner-text">
-              <b>You’re offline.</b> Editing paused until we reconnect.
-            </span>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={reload}>
-              Retry
-            </button>
-          </div>
-        )}
+        {paused && <PausedBanner />}
 
         {list.kind === 'loading' && (
           <div className="h-loading" aria-busy="true" aria-label="Loading the history">
@@ -143,7 +148,7 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
         )}
 
         {list.kind === 'ready' && list.events.length > 0 && (
-          <Days events={list.events} now={now} paused={!online} onRestore={startRestore} />
+          <Days events={list.events} now={now} paused={paused} onRestore={startRestore} />
         )}
 
         {list.kind === 'ready' && list.next && (
@@ -193,6 +198,19 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
       )}
     </Overlay>
   );
+}
+
+/**
+ * A live entry put on top of the list (newest first), once. If it's a restore, the change it undid (when it's in the
+ * list) now says who restored it, and offers no second Restore.
+ */
+function addEntry(events, entry) {
+  if (events.some((e) => e.id === entry.id)) return events;
+  const undone = entry.restores?.id;
+  const marked = undone
+    ? events.map((e) => (e.id === undone ? { ...e, restorable: false, restoredBy: { id: entry.id, actor: entry.actor, at: entry.at } } : e))
+    : events;
+  return [entry, ...marked];
 }
 
 /** The list, grouped under Today / Yesterday / the date. */
@@ -341,7 +359,7 @@ function When({ at, now, plain = false }) {
  */
 function RestoreSheet({ code, event, now, onClose, onDone, onStale, onLocked }) {
   const titleId = useId();
-  const online = useOnline();
+  const paused = usePaused();
   const [withCard, setWithCard] = useState(false);
   const [state, setState] = useState({ kind: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -449,7 +467,7 @@ function RestoreSheet({ code, event, now, onClose, onDone, onStale, onLocked }) 
         )}
         <div className="modal-actions">
           {cancel}
-          <button type="button" className="btn btn-primary" onClick={confirm} aria-disabled={busy || undefined} disabled={!online} data-autofocus>
+          <button type="button" className="btn btn-primary" onClick={confirm} aria-disabled={busy || undefined} disabled={paused} data-autofocus>
             {busy ? <span className="spin" aria-hidden="true" /> : <RestoreIcon size={18} />}
             {p.action}
           </button>
