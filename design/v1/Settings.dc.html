@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.set-sec{border-radius:var(--r-card);padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.set-h{display:flex;align-items:baseline;gap:10px;margin:0}
+.tp-name{font-size:13px;font-weight:600;padding:0 4px 4px;display:flex;align-items:center;gap:6px}
+.split{display:grid;grid-template-columns:1fr 1fr;border-radius:12px;overflow:hidden}
+.split .tp-shot{border-radius:0}
+.ph-themes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ph-themes .tp-shot{height:62px;padding:7px}
+.code{font-family:var(--font-mono);font-weight:600}
+.pw-state{display:flex;align-items:center;gap:12px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 3710px; height: 1140px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Desktop · opened from a password board <span>"This board" appears only while you're on a board you've opened</span></p>
+    <div class="nu frame frame-desk" data-theme="{{t1}}" style="width: 1440px; height: 1000px;">
+      <div class="shell" style="gap: 22px;">
+        <header class="topbar"><a class="wordmark" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round is-on" type="button" aria-label="Settings" aria-current="page"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; width: 100%; max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+          <div class="row" style="gap: 10px;"><a class="btn btn-ghost btn-sm" href="#"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Back to <span class="code">pnc-raids</span></a></div>
+          <h1 class="display t-large" tabindex="-1">Settings</h1>
+          <section class="set-sec glass" aria-labelledby="s-th">
+            <h2 id="s-th" class="set-h t-head">Theme <span class="t-cap c3" style="font-weight: 500;">this browser only</span></h2>
+            <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px;" role="radiogroup" aria-labelledby="s-th">
+              <button class="tp" type="button" role="radio" aria-checked="false"><span class="split"><span class="tp-shot" data-theme="light" style="height: 80px;"><span class="tp-bar"></span></span><span class="tp-shot" data-theme="dark" style="height: 80px;"><span class="tp-bar"></span></span></span><span class="tp-name">Match device</span></button>
+              <sc-for list="{{themes}}" as="t" hint-placeholder-count="5">
+                <button class="tp {{t.sel}}" type="button" role="radio" aria-checked="{{t.checked}}"><span class="tp-shot" data-theme="{{t.id}}" style="height: 80px;"><span class="tp-bar"></span><span class="tp-lanes"><span class="tp-lane"><span class="tp-card art-sun"></span></span><span class="tp-lane"><span class="tp-card art-forest"></span></span><span class="tp-lane"><span class="tp-btn"></span></span></span></span><span class="tp-name">{{t.name}}</span></button>
+              </sc-for>
+            </div>
+          </section>
+          <section class="set-sec glass" aria-labelledby="s-nm">
+            <h2 id="s-nm" class="set-h t-head">Display name <span class="t-cap c3" style="font-weight: 500;">this browser only</span></h2>
+            <div class="row" style="gap: 10px; align-items: flex-start;">
+              <label class="field grow"><input class="input" value="Larias" aria-labelledby="s-nm"><span class="field-hint">Shown in board history next to your changes. A label, not an account: anyone can type any name.</span></label>
+              <button class="btn btn-secondary" type="button" disabled>Saved</button>
+            </div>
+          </section>
+          <section class="set-sec glass" aria-labelledby="s-bd">
+            <h2 id="s-bd" class="set-h t-head">This board <span class="code t-foot c2">pnc-raids</span></h2>
+            <div class="pw-state">
+              <span class="icon-circle ic-accent" style="width: 40px; height: 40px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+              <div class="grow col" style="gap: 2px;"><span class="t-head" style="font-size: 15px;">Password is on</span><span class="t-foot c2">Anyone opening this board needs it. It applies to everyone, not just this browser.</span></div>
+              <button class="btn btn-quiet" type="button" aria-expanded="true" aria-controls="chg">Change password</button>
+              <button class="btn btn-danger" type="button">Remove password</button>
+            </div>
+            <form id="chg" class="col" style="gap: 12px; padding-top: 14px; border-top: 1px solid var(--separator);" action="#" aria-label="Change password">
+              <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+                <label class="field"><span class="field-label">Current password</span><span class="input is-focus"><span class="grow">••••••••</span></span><span class="field-hint">Needed to change or remove it.</span></label>
+                <label class="field"><span class="field-label">New password</span><span class="input"><span class="grow placeholder-text">New password</span></span></label>
+                <label class="field"><span class="field-label">Type it again</span><span class="input"><span class="grow placeholder-text">Same password</span></span></label>
+              </div>
+              <div class="row" style="justify-content: flex-end; gap: 10px;"><button class="btn btn-quiet" type="button">Cancel</button><button class="btn btn-primary" type="submit" disabled>Change password</button></div>
+            </form>
+          </section>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · open board: set a password</p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="shell shell-ph" style="height: 100%; gap: 12px;">
+        <header class="topbar"><a class="btn btn-ghost btn-sm" href="#"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="code">pnc-autumn</span></a><span class="grow"></span></header>
+        <h1 class="display t-title1" tabindex="-1">Settings</h1>
+        <section class="set-sec glass" style="padding: 14px; gap: 10px; opacity: 0.55;" aria-hidden="true"><span class="t-head">Theme</span><span class="t-foot c2">Dark</span></section>
+        <section class="set-sec glass" style="padding: 14px; gap: 10px; opacity: 0.55;" aria-hidden="true"><span class="t-head">Display name</span><span class="t-foot c2">Larias</span></section>
+        <section class="set-sec glass" style="padding: 16px; gap: 12px;" aria-labelledby="p2-bd">
+          <h2 id="p2-bd" class="set-h t-head">This board <span class="code t-foot c2">pnc-autumn</span></h2>
+          <div class="pw-state"><span class="icon-circle ic-neutral" style="width: 36px; height: 36px;"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.5-2"></path></svg></span><span class="t-foot c2 grow">No password. Anyone with the code can open and edit this board.</span></div>
+          <label class="field"><span class="field-label">New password</span><span class="input is-focus"><span class="grow">••••••••••</span><button class="icon-btn icon-btn-dot" type="button" aria-label="Show password"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span></label>
+          <label class="field"><span class="field-label">Type it again</span><span class="input"><span class="grow placeholder-text">Same password</span></span></label>
+          <span class="field-hint">Once set, the code alone shows only a lock screen. Other people will need this password next time they open the board.</span>
+          <button class="btn btn-primary btn-block" type="button" disabled>Set password</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · change: confirmation <span>after the current password checks out</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="shell shell-ph" style="height: 100%; gap: 12px;" aria-hidden="true">
+        <header class="topbar"><span class="btn btn-ghost btn-sm"><span class="code">pnc-raids</span></span></header>
+        <h1 class="display t-title1">Settings</h1>
+        <section class="set-sec glass" style="padding: 16px; gap: 10px;">
+          <span class="t-head">This board</span>
+          <span class="field-label">Current password</span><span class="input"><span class="grow">••••••••</span></span>
+          <span class="field-label">New password</span><span class="input"><span class="grow">••••••••••••</span></span>
+          <span class="field-label">Type it again</span><span class="input"><span class="grow">••••••••••••</span></span>
+        </section>
+      </div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="alertdialog" aria-labelledby="cc-t" aria-describedby="cc-d">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 14px;">
+          <span class="icon-circle ic-warn" style="width: 48px; height: 48px;"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.5"></path></svg></span>
+          <h2 id="cc-t" class="display t-title2">Change the password?</h2>
+          <p id="cc-d" class="c2" style="margin: 0;">Everyone else will need the new password for <span class="code">pnc-raids</span>. Browsers that saved the old one get the lock screen next time, including anyone who has it open now.</p>
+          <p class="t-foot c3" style="margin: 0;">Tell the guild the new one before you go.</p>
+          <button class="btn btn-primary btn-block" type="button">Change password</button>
+          <button class="btn btn-quiet btn-block" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · remove: wrong current password</p>
+    <div class="nu frame frame-ph" data-theme="{{t4}}">
+      <div class="shell shell-ph" style="height: 100%; gap: 12px;" aria-hidden="true">
+        <header class="topbar"><span class="btn btn-ghost btn-sm"><span class="code">pnc-raids</span></span></header>
+        <h1 class="display t-title1">Settings</h1>
+        <section class="set-sec glass" style="padding: 16px; gap: 12px;"><span class="t-head">This board</span><span class="t-foot c2">Password is on</span></section>
+      </div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="alertdialog" aria-labelledby="rc-t" aria-describedby="rc-d">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 14px;">
+          <span class="icon-circle ic-err" style="width: 48px; height: 48px;"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.5-2"></path></svg></span>
+          <h2 id="rc-t" class="display t-title2">Remove the password?</h2>
+          <p id="rc-d" class="c2" style="margin: 0;"><span class="code">pnc-raids</span> becomes open to anyone with its code. They'll see every card, player and note, and can change them.</p>
+          <label class="field"><span class="field-label">Current password</span><span class="input is-error"><span class="grow">•••••••</span></span>
+            <span class="field-error" role="alert"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16v.5"></path></svg>That password didn't work.</span></label>
+          <p class="t-foot c3" style="margin: 0;">Same limits as the lock screen: too many wrong tries pauses this for a few minutes. The change is logged in History.</p>
+          <button class="btn btn-danger btn-block" type="button">Remove password</button>
+          <button class="btn btn-quiet btn-block" type="button">Keep the password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · too many tries <span>same per-network limit as the lock screen</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t6}}">
+      <div class="shell shell-ph" style="height: 100%; gap: 12px;">
+        <header class="topbar"><a class="btn btn-ghost btn-sm" href="#"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg><span class="code">pnc-raids</span></a><span class="grow"></span></header>
+        <h1 class="display t-title1" tabindex="-1">Settings</h1>
+        <section class="set-sec glass" style="padding: 14px; gap: 10px; opacity: 0.55;" aria-hidden="true"><span class="t-head">Theme</span><span class="t-foot c2">Light</span></section>
+        <section class="set-sec glass" style="padding: 16px; gap: 12px;" aria-labelledby="p6-bd">
+          <h2 id="p6-bd" class="set-h t-head">This board <span class="code t-foot c2">pnc-raids</span></h2>
+          <div class="st-warn" style="padding: 18px 16px; gap: 8px;" role="alert">
+            <span class="icon-circle ic-warn" style="width: 44px; height: 44px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+            <span class="t-head">Too many tries for now</span>
+            <span class="t-foot c2">Your network has entered a wrong password too many times. The board itself still works.</span>
+            <span class="badge badge-warning badge-countdown">Try again in 2:40</span>
+          </div>
+          <label class="field" style="opacity: 0.5;"><span class="field-label">Current password</span><span class="input"><span class="grow placeholder-text">Paused</span></span></label>
+          <div class="row" style="gap: 8px; opacity: 0.5;"><button class="btn btn-quiet btn-sm grow" type="button" disabled>Change password</button><button class="btn btn-danger btn-sm grow" type="button" disabled>Remove password</button></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · from the landing page <span>no board open: no "This board"</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t5}}">
+      <div class="shell shell-ph" style="height: 100%; gap: 12px;">
+        <header class="topbar"><a class="btn btn-ghost btn-sm" href="#"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Back</a><span class="grow"></span></header>
+        <h1 class="display t-title1" tabindex="-1">Settings</h1>
+        <section class="set-sec glass" style="padding: 14px; gap: 10px;" aria-labelledby="p5-th">
+          <h2 id="p5-th" class="set-h t-head">Theme</h2>
+          <div class="ph-themes" role="radiogroup" aria-labelledby="p5-th">
+            <button class="tp" type="button" role="radio" aria-checked="false"><span class="split"><span class="tp-shot" data-theme="light" style="height: 62px;"></span><span class="tp-shot" data-theme="dark" style="height: 62px;"></span></span><span class="tp-name">Match device</span></button>
+            <sc-for list="{{themes}}" as="t" hint-placeholder-count="5">
+              <button class="tp {{t.sel5}}" type="button" role="radio" aria-checked="{{t.checked5}}"><span class="tp-shot" data-theme="{{t.id}}"><span class="tp-bar"></span><span class="tp-lanes"><span class="tp-lane"></span><span class="tp-lane"><span class="tp-btn" style="width: 70%;"></span></span></span></span><span class="tp-name">{{t.name}}</span></button>
+            </sc-for>
+          </div>
+        </section>
+        <section class="set-sec glass" style="padding: 14px; gap: 10px;" aria-labelledby="p5-nm">
+          <h2 id="p5-nm" class="set-h t-head">Display name</h2>
+          <input class="input" value="Larias" aria-labelledby="p5-nm">
+          <span class="field-hint">A label for board history, not an account.</span>
+        </section>
+        <span class="grow"></span>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"legacy"},"t5":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"t6":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"$preview":{"width":3710,"height":1140}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const t1 = p.t1 ?? 'light';
+    const t5 = p.t5 ?? 'cyberpunk';
+    const list = [['light', 'Light'], ['dark', 'Dark'], ['legacy', 'Legacy'], ['pastel', 'Pastel'], ['cyberpunk', 'Cyberpunk']];
+    const themes = list.map(([id, name]) => ({
+      id, name,
+      sel: id === t1 ? 'is-sel' : '', checked: id === t1 ? 'true' : 'false',
+      sel5: id === t5 ? 'is-sel' : '', checked5: id === t5 ? 'true' : 'false'
+    }));
+    return { t1, t2: p.t2 ?? 'dark', t3: p.t3 ?? 'pastel', t4: p.t4 ?? 'legacy', t5, t6: p.t6 ?? 'light', themes };
+  }
+}
+</script>
+</body>
+</html>

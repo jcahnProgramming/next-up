@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: components</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.k-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:0 0 10px}
+.k-sec{display:flex;flex-direction:column}
+.k-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.k-cap{font-size:11px;color:var(--text-3);text-align:center;margin-top:4px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1720px; height: 1900px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px;">
+  <sc-for list="{{themes}}" as="t" hint-placeholder-count="2">
+    <div class="nu frame" data-theme="{{t.id}}" style="border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 28px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.1);">
+      <h2 class="display t-title1">Components · {{t.name}}</h2>
+
+      <div class="k-sec">
+        <p class="k-h">Buttons</p>
+        <div class="k-row">
+          <button class="btn btn-primary" type="button">Create board</button>
+          <button class="btn btn-secondary" type="button">Cancel</button>
+          <button class="btn btn-quiet" type="button">Not now</button>
+          <button class="btn btn-danger" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>Delete card</button>
+          <button class="btn btn-ghost" type="button">Restore</button>
+        </div>
+        <div style="max-width: 380px; margin-top: 12px;"><button class="btn btn-primary btn-block" type="button">Unlock</button><div class="k-cap" style="text-align: left;">Unlock on the lock form: primary, full width</div></div>
+        <div class="k-row" style="margin-top: 12px;">
+          <button class="btn btn-primary" type="button">Save and continue</button>
+          <button class="btn btn-secondary btn-sm" type="button">Keep the password</button>
+          <button class="btn btn-quiet btn-sm" type="button">OK</button>
+          <button class="btn btn-tint" type="button">Add</button>
+          <span class="t-cap c3">Pills size to the label: 20 px sides (14 small), min width 88 (64 small). Never fixed widths, never shrink.</span>
+        </div>
+        <div class="k-row" style="margin-top: 12px;">
+          <div><button class="btn btn-primary btn-sm" type="button">Rest</button><div class="k-cap">rest</div></div>
+          <div><button class="btn btn-primary btn-sm is-hover" type="button">Hover</button><div class="k-cap">hover</div></div>
+          <div><button class="btn btn-primary btn-sm is-pressed" type="button">Pressed</button><div class="k-cap">pressed</div></div>
+          <div><button class="btn btn-primary btn-sm is-focus" type="button">Focus</button><div class="k-cap">keyboard focus</div></div>
+          <div><button class="btn btn-primary btn-sm" type="button" disabled>Disabled</button><div class="k-cap">disabled</div></div>
+          <div><button class="btn btn-primary btn-sm" type="button"><span class="spin"></span>Opening…</button><div class="k-cap">working</div></div>
+          <div style="display: flex; gap: 8px;">
+            <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg></button>
+            <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+            <button class="round is-on" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+        <div class="k-sec" style="gap: 14px;">
+          <p class="k-h" style="margin: 0;">Text fields</p>
+          <label class="field"><span class="field-label">Display name</span><input class="input" placeholder="What should the history call you?"></label>
+          <label class="field"><span class="field-label">Board password</span><span class="input is-focus"><span class="grow">••••••••</span><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></span><span class="field-hint">Optional. With one, the board shows nothing until it's entered.</span></label>
+          <label class="field"><span class="field-label">Password</span><span class="input is-error">••••</span><span class="field-error"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16v.5"></path></svg>That password didn't work.</span></label>
+        </div>
+        <div class="k-sec" style="gap: 14px;">
+          <p class="k-h" style="margin: 0;">Dropdown (themed, never native)</p>
+          <div class="field"><span class="field-label" id="k-lane-{{t.id}}">Lane</span>
+            <button class="dd is-open" type="button" aria-haspopup="listbox" aria-expanded="true" aria-labelledby="k-lane-{{t.id}}"><span class="lane-dot ld-now"></span><span class="grow">Now Playing</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          </div>
+          <div class="menu glass-2" role="listbox" aria-label="Lane">
+            <button class="menu-item" type="button" role="option"><span class="lane-dot ld-up"></span>Up Next</button>
+            <button class="menu-item is-selected is-active" type="button" role="option" aria-selected="true"><span class="lane-dot ld-now"></span>Now Playing<svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button>
+            <button class="menu-item" type="button" role="option"><span class="lane-dot ld-done"></span>Played</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 336px minmax(0, 1fr); gap: 24px; align-items: start;">
+        <div class="k-sec">
+          <p class="k-h">Date picker (themed)</p>
+          <div class="dp glass-2">
+            <div class="dp-head">
+              <button class="icon-btn" type="button" aria-label="Previous month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+              <span class="t-head">October 2026</span>
+              <button class="icon-btn" type="button" aria-label="Next month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+            </div>
+            <div class="dp-grid">
+              <span class="dp-dow">Mo</span><span class="dp-dow">Tu</span><span class="dp-dow">We</span><span class="dp-dow">Th</span><span class="dp-dow">Fr</span><span class="dp-dow">Sa</span><span class="dp-dow">Su</span>
+              <sc-for list="{{days}}" as="d" hint-placeholder-count="35"><button class="dp-day {{d.cls}}" type="button">{{d.n}}</button></sc-for>
+            </div>
+            <div class="dp-foot"><button class="btn btn-ghost btn-sm" type="button">Clear date</button><button class="btn btn-quiet btn-sm" type="button">Today</button></div>
+          </div>
+        </div>
+        <div class="k-sec" style="gap: 22px;">
+          <div class="k-sec"><p class="k-h">Code chip (top bar A)</p>
+            <div class="k-row" style="gap: 14px;">
+              <div><span class="codechip"><span class="codechip-code">pnc-autumn</span><button class="icon-btn" type="button" aria-label="Copy board link"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span><div class="k-cap">no password: no lock</div></div>
+              <div><span class="codechip"><span class="codechip-code">pnc-raids</span><button class="icon-btn" type="button" aria-label="Copy board link"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button><button class="icon-btn lock-btn" type="button" aria-label="Lock this board on this browser"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button></span><div class="k-cap">password board, unlocked here</div></div>
+            </div>
+          </div>
+          <div class="k-sec"><p class="k-h">Phone lane header (stacked)</p>
+            <div class="glass" style="border-radius: 18px; padding: 8px;"><div class="lane-head is-stuck"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div></div>
+          </div>
+          <div class="k-sec"><p class="k-h">Player chips</p>
+            <div class="k-row">
+              <span class="chip"><span class="av h3">PA</span>Path<button class="x" type="button" aria-label="Remove Path"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h6">BU</span>Bunzato<button class="x is-hover" type="button" aria-label="Remove Bunzato"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip is-new"><span class="av h1">LA</span>Larias<button class="x" type="button" aria-label="Remove Larias"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+            </div>
+            <div class="t-cap c3" style="margin-top: 6px;">rest · remove hover · just added by someone else</div>
+          </div>
+          <div class="k-sec"><p class="k-h">Live sync</p>
+            <div class="k-row">
+              <span class="sync sync-live"><span class="dot dot-pulse"></span>Live</span>
+              <span class="sync sync-re"><span class="spin"></span>Reconnecting…</span>
+              <span class="sync sync-off"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 5-3M22 8.5a15 15 0 0 0-11-3.9M9 15.5a5 5 0 0 1 6 0M3 3l18 18"></path></svg>Offline · as of 14:32</span>
+              <span class="sync sync-lock"><span class="spin"></span>Connecting…</span>
+            </div>
+          </div>
+          <div class="k-sec"><p class="k-h">Badges and avatars</p>
+            <div class="k-row">
+              <span class="badge">Not set</span><span class="badge badge-accent">Up Next</span><span class="badge badge-success">Live</span><span class="badge badge-warning badge-countdown">Try again in 4:12</span><span class="badge badge-error">Couldn't save</span>
+              <span class="av h1">A</span><span class="av h2">B</span><span class="av h3">C</span><span class="av h4">D</span><span class="av h5">E</span><span class="av h6">F</span><span class="av h7">G</span><span class="av h8">H</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="k-sec" style="gap: 10px;">
+        <p class="k-h" style="margin: 0;">Banners and toast</p>
+        <div class="banner banner-warn"><span class="spin" style="width: 14px; height: 14px;"></span><span class="grow"><b>Reconnecting…</b> Changes from others will appear when we're back.</span></div>
+        <div class="banner banner-err"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 5-3M22 8.5a15 15 0 0 0-11-3.9M9 15.5a5 5 0 0 1 6 0M3 3l18 18"></path></svg><span class="grow"><b>Offline.</b> Showing the board as of 14:32. Editing paused until we reconnect.</span><button class="btn btn-secondary btn-sm" type="button">Retry</button></div>
+        <div class="banner banner-info"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span class="grow"><b>Password set.</b> Anyone else opening this board now needs it.</span><button class="btn btn-ghost btn-sm" type="button">Dismiss</button></div>
+        <div style="display: flex; justify-content: center; padding-top: 6px;">
+          <div class="toast glass-2"><svg class="i" style="color: var(--success-text);" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>Link copied<button class="btn btn-ghost btn-sm" type="button">Dismiss</button></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+        <div class="st-empty" style="padding: 22px;"><span class="icon-circle ic-neutral" style="width: 44px; height: 44px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t-head">Nothing here yet</span><span class="t-foot c2">Dashed, patterned, neutral. Invites an action.</span></div>
+        <div class="st-error" style="padding: 22px;"><span class="icon-circle ic-err" style="width: 44px; height: 44px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.5"></path></svg></span><span class="t-head">Couldn't load</span><span class="t-foot c2">Solid tint, error icon, says what failed, offers Retry.</span></div>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"themeA":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"themeB":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"$preview":{"width":1720,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const names = { light: 'Light', dark: 'Dark', legacy: 'Legacy', pastel: 'Pastel', cyberpunk: 'Cyberpunk' };
+    const a = this.props.themeA ?? 'light';
+    const b = this.props.themeB ?? 'cyberpunk';
+    const days = [];
+    for (let i = 28; i <= 30; i++) days.push({ n: i, cls: 'is-out' });
+    for (let i = 1; i <= 31; i++) days.push({ n: i, cls: i === 15 ? 'is-today' : (i === 24 ? 'is-sel' : '') });
+    days.push({ n: 1, cls: 'is-out' });
+    return { themes: [{ id: a, name: names[a] }, { id: b, name: names[b] }], days };
+  }
+}
+</script>
+</body>
+</html>

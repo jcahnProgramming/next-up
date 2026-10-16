@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: board on a phone, stacked lanes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.scrolled{position:absolute;inset:0;padding:12px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.from-tag{position:absolute;top:-12px;left:18px;z-index:31;display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;background:var(--surface-solid);color:var(--text-2);font-size:11.5px;font-weight:600;box-shadow:var(--elev-2),var(--edge)}
+.dim .card:not(.is-lifted){opacity:.82}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1800px; height: 1000px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">1 · Stacked lanes <span>Up Next, Now Playing, Played, top to bottom</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t1}}">
+      <div class="shell shell-ph" style="height: auto;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          <span class="codechip is-ph is-plain"><span class="dot dot-pulse" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-autumn</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="stack">
+          <section class="lane glass" aria-label="Up Next, 5 games">
+            <div class="lane-head"><span class="lane-dot ld-up"></span><h2 class="lane-name" style="margin: 0;">Up Next</h2><span class="lane-n">5</span><span class="grow"></span><button class="icon-btn" type="button" aria-label="Add a game to Up Next"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip">Goes live Sat 17 Oct</span><span class="card-chip">8</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span><span class="card-chips"><span class="card-chip">Goes live Fri 23 Oct</span><span class="card-chip">5</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">AF</span><div class="card-body"><span class="card-title">Abiotic Factor</span><span class="card-chips"><span class="card-chip">2</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-neon"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Enshrouded</span><span class="card-chips"><span class="card-chip">12</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span></div></div>
+          </section>
+          <section class="lane glass" aria-label="Now Playing, 2 games">
+            <div class="lane-head"><span class="lane-dot ld-now"></span><h2 class="lane-name" style="margin: 0;">Now Playing</h2><span class="lane-n">2</span><span class="grow"></span><button class="icon-btn" type="button" aria-label="Add a game to Now Playing"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip is-live">Live since 3 Oct</span><span class="card-chip">6</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-snow"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Snowrunner</span></div></div>
+          </section>
+          <section class="lane glass" aria-label="Played, 3 games">
+            <div class="lane-head"><span class="lane-dot ld-done"></span><h2 class="lane-name" style="margin: 0;">Played</h2><span class="lane-n">3</span></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-lava"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Project Zomboid</span></div></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">2 · Long-press lifts <span>~350 ms hold; a small move cancels it so scrolling still works</span></p>
+    <div class="nu frame frame-ph dim" data-theme="{{t2}}">
+      <div class="shell shell-ph" style="height: auto;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          <span class="codechip is-ph is-plain"><span class="dot" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-autumn</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="stack">
+          <section class="lane glass">
+            <div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">5</span></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span></div></div>
+            <div class="card-wrap"><div class="card-slot is-phone"></div>
+              <div style="position: absolute; left: 10px; right: -10px; top: -12px;"><div role="button" tabindex="0" class="card is-phone is-lifted"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span><span class="card-chips"><span class="card-chip">5</span></span></div></div></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">AF</span><div class="card-body"><span class="card-title">Abiotic Factor</span></div></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-neon"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Enshrouded</span></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span></div></div>
+          </section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span></div></div></section>
+        </div>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 28px; display: flex; justify-content: center; z-index: 40;"><div class="toast glass-2" role="status" style="font-size: 13px; padding: 8px 18px;">Drag to any lane. Release to drop.</div></div>
+    </div>
+  </div>
+
+  <div><p class="lbl">3 · Dragging: the page auto-scrolls <span>hold near an edge; faster the closer you get</span></p>
+    <div class="nu frame frame-ph dim" data-theme="{{t3}}">
+      <div class="scrolled">
+        <section class="lane glass" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="lane-head is-stuck"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">4 + 1 moving</span></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span></div></div>
+        </section>
+        <section class="lane glass" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip is-live">Live since 3 Oct</span></span></div></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-snow"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Snowrunner</span></div></div>
+        </section>
+        <section class="lane glass" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">3</span></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-lava"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Project Zomboid</span></div></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-sand"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Conan Exiles</span></div></div>
+        </section>
+      </div>
+      <div class="autoscroll autoscroll-down"><span><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"></path></svg>Scrolling down</span></div>
+      <div style="position: absolute; left: 26px; right: 6px; bottom: 102px; z-index: 30;">
+        <span class="from-tag">from Up Next</span>
+        <div role="button" tabindex="0" class="card is-phone is-lifted"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span><span class="card-chips"><span class="card-chip">5</span></span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">4 · Over the target lane <span>header lights up, a slot opens, release drops</span></p>
+    <div class="nu frame frame-ph dim" data-theme="{{t4}}">
+      <div class="scrolled">
+        <section class="lane glass" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-snow"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Snowrunner</span></div></div>
+        </section>
+        <section class="lane glass is-drop" style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="lane-head is-target"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">3 → 4</span><span class="grow"></span><span class="t-cap" style="color: var(--accent-text); font-weight: 650;">Drop here</span></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-lava"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Project Zomboid</span></div></div>
+          <div class="card-slot is-phone"></div>
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-sand"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Conan Exiles</span></div></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">OH</span><div class="card-body"><span class="card-title">Once Human</span></div></div>
+        </section>
+        <span class="t-cap c3" style="text-align: center;">End of board</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 2px; top: 228px; z-index: 30;">
+        <span class="from-tag">from Up Next</span>
+        <div role="button" tabindex="0" class="card is-phone is-lifted"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span><span class="card-chips"><span class="card-chip">5</span></span></div></div>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 28px; display: flex; justify-content: center; z-index: 40;"><div class="toast glass-2" role="status" style="font-size: 13px; padding: 8px 18px;">Release to move V Rising to Played, 2nd</div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"$preview":{"width":1800,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { t1: p.t1 ?? 'dark', t2: p.t2 ?? 'light', t3: p.t3 ?? 'pastel', t4: p.t4 ?? 'cyberpunk' };
+  }
+}
+</script>
+</body>
+</html>

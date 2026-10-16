@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: token values</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.tk-row{display:grid;grid-template-columns:220px repeat(5,minmax(0,1fr));gap:10px;align-items:stretch;padding:6px 0;border-bottom:1px solid #d6d6dc}
+.tk-cell{display:flex;gap:8px;align-items:flex-start;min-width:0}
+.tk-sw{width:30px;height:30px;border-radius:8px;flex:none;position:relative;overflow:hidden}
+.tk-sw i{position:absolute;inset:0;border-radius:8px}
+.tk-v{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.4;color:#33333a;word-break:break-word;min-width:0;max-height:44px;overflow:hidden}
+.tk-n{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;color:#1d1d1f}
+.tk-r{font-size:11.5px;color:#6a6a72}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1720px; min-height: 2870px; display: flex; flex-direction: column; gap: 18px;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; font-size: 36px; font-weight: 750; letter-spacing: -0.025em; color: #1d1d1f;">Theme tokens</h1>
+    <p style="margin: 0; font-size: 15px; color: #55555d; max-width: 1100px;">Read live from the canvas stylesheet, so this table and the CSS cannot drift. Swatches sit on each theme's own --bg so translucent values show as they will render. Rows marked NEW are additions to the starter set; everything else is the home-dashboard baseline unchanged.</p>
+  </div>
+  <div class="tk-row" style="border-bottom: 2px solid #b9b9c2; font-size: 13px; font-weight: 700; color: #1d1d1f;">
+    <span>Token</span><span>Light</span><span>Dark</span><span>Legacy</span><span>Pastel</span><span>Cyberpunk</span>
+  </div>
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="8">
+    <div style="display: flex; flex-direction: column;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6a72; padding: 14px 0 4px;">{{g.name}}</div>
+      <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="5">
+        <div class="tk-row">
+          <div style="display: flex; flex-direction: column; gap: 2px;"><span class="tk-n">{{r.name}}</span><span class="tk-r">{{r.role}}</span></div>
+          <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+            <div class="tk-cell">
+              <sc-if value="{{c.swatch}}" hint-placeholder-val="{{true}}">
+                <span class="tk-sw" style="background: {{c.ground}}; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.1);"><i style="background: {{c.bg}}; box-shadow: {{c.shadow}};"></i></span>
+              </sc-if>
+              <span class="tk-v">{{c.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6a72; padding: 14px 0 4px;">Shared, theme-independent (NEW: card)</div>
+  <div class="mono" style="background: #fff; border-radius: 14px; padding: 16px 18px; color: #33333a; font-size: 12px; line-height: 1.7;">
+    --card-h 84px · --card-h-phone 72px · --card-pad-x 28px · --card-pad-x-phone 22px · --card-gap 10px · --card-text #fff · --card-text-2 rgb(255 255 255 / .82)<br>
+    --card-scrim: linear-gradient(90deg, rgb(8 8 12/.80) 0%, rgb(8 8 12/.58) 34%, rgb(8 8 12/.16) 68%, transparent 100%), linear-gradient(0deg, rgb(8 8 12/.28), transparent 55%)<br>
+    --card-title-shadow: 0 1px 2px rgb(0 0 0/.55), 0 0 12px rgb(0 0 0/.35) · --card-chip-bg rgb(12 12 16/.55) + blur(8px) · --card-chip-edge inset 0 0 0 .5px rgb(255 255 255/.22)<br>
+    --card-lift-scale 1.035 · --card-lift-rotate -1.2deg · --card-press-scale .98 · --card-hover-y -2px · --dur-flash 1600ms · --lane-w-min 320px · --lane-gap 20px<br>
+    Avatars: oklch(var(--avatar-l) var(--avatar-c) H), H from the name's hash into 8 hues (20 60 145 190 235 275 315 350), white initials.<br>
+    --fb-mark-size 40px (34 on phone) · --autoscroll-zone 96px (edge band that scrolls the page while a lifted card is held in it)
+  </div>
+  <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6a6a72; padding: 14px 0 4px;">Shared, theme-independent (NEW v2: buttons)</div>
+  <div class="mono" style="background: #fff; border-radius: 14px; padding: 16px 18px; color: #33333a; font-size: 12px; line-height: 1.7;">
+    --btn-h 44px · --btn-h-sm 36px · --hit-min 44px (small pills and in-chip icon buttons extend their hit area to this)<br>
+    --btn-pad-x 20px · --btn-pad-x-sm 14px · --btn-pad-x-icon 16px (leading-icon side) · --btn-min-w 88px · --btn-min-w-sm 64px<br>
+    --btn-gap 8px · --btn-fs 15px · --btn-fs-sm 13.5px · --btn-fw 600 · --icon-btn 44px · --icon-btn-dot 36px (drawn) · --control-h-sm 32 → 36px<br>
+    Rules: height fixed, width from the label (padding + min-width), flex: none so a pill never shrinks, white-space: nowrap, no fixed widths.<br>
+    Resets are wrapped in :where() so they carry zero specificity and can't override a component class.<br>
+    v3: .badge-countdown (30 px, 14 px text) for every rate-limit countdown · .icon-btn-ph = max(--icon-btn, --hit-min) for phone icon buttons, with .icon-btn-fill / .icon-btn-tint colourways
+  </div>
+  <div style="position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0;">
+    <div data-probe="light" data-theme="light"></div>
+    <div data-probe="dark" data-theme="dark"></div>
+    <div data-probe="legacy" data-theme="legacy"></div>
+    <div data-probe="pastel" data-theme="pastel"></div>
+    <div data-probe="cyberpunk" data-theme="cyberpunk"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1720,"height":2870}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { vals: null };
+    this.tries = 0;
+  }
+  componentDidMount() { this.read(); }
+  componentWillUnmount() { clearTimeout(this.timer); }
+  spec() {
+    return [
+      { name: 'Ground and glass', rows: [
+        ['--bg', 'page ground', 'c'], ['--surface-1', 'glass: lanes, top bar buttons', 'c'], ['--surface-2', 'strong glass: sheets, menus', 'c'],
+        ['--surface-3', 'wells: inputs, quiet buttons', 'c'], ['--surface-4', 'pressed / selected well', 'c'], ['--surface-solid', 'chips, secondary buttons', 'c'],
+        ['--scrim', 'behind modals', 'c'], ['--blur-md', 'glass blur', 't'], ['--saturate', 'glass saturation', 't'],
+        ['--glass-filter', 'NEW v3 · none in Legacy (flat)', 't'], ['--scrim-filter', 'NEW v3 · blur behind modals', 't'], ['--chip-filter', 'NEW v3 · blur under card chips', 't'],
+        ['--edge', 'glass edge (Legacy: 1 px border)', 's'], ['--r-card', 'lane / panel radius', 't'], ['--r-btn', 'NEW v3 · button radius', 't']] },
+      { name: 'Text', rows: [
+        ['--text-1', 'titles, body', 'c'], ['--text-2', 'supporting', 'c'], ['--text-3', 'captions, meta (AA on wells)', 'c'], ['--text-on-accent', 'on --accent-fill', 'c']] },
+      { name: 'Accent', rows: [
+        ['--accent', 'rings, dots (never under text)', 'c'], ['--accent-text', 'links, tinted labels', 'c'], ['--accent-soft', 'tinted fills', 'c'],
+        ['--accent-fill', 'primary buttons', 'c'], ['--focus-ring', 'keyboard focus', 's'], ['--glow-accent', 'primary button glow', 's']] },
+      { name: 'Lines', rows: [
+        ['--hairline', 'glass edge', 'c'], ['--highlight', 'glass top light', 'c'], ['--separator', 'dividers', 'c']] },
+      { name: 'Status', rows: [
+        ['--success', 'live dot', 'c'], ['--success-text', '', 'c'], ['--success-soft', '', 'c'],
+        ['--warning', 'reconnecting, rate-limited', 'c'], ['--warning-text', '', 'c'], ['--warning-soft', '', 'c'],
+        ['--error', 'offline, failed', 'c'], ['--error-text', '', 'c'], ['--error-soft', '', 'c'],
+        ['--unknown', 'not set / no coverage', 'c'], ['--unknown-text', '', 'c']] },
+      { name: 'NEW: lanes', rows: [
+        ['--lane-upnext', 'Up Next dot', 'c'], ['--lane-playing', 'Now Playing dot', 'c'], ['--lane-played', 'Played dot', 'c']] },
+      { name: 'NEW: card per theme', rows: [
+        ['--card-ring', 'inner edge over art', 's'], ['--card-shadow', 'resting', 's'], ['--card-shadow-lift', 'while dragging', 's'],
+        ['--placeholder-edge', 'drop slot outline', 'c'], ['--placeholder-fill', 'drop slot fill', 'c'], ['--flash-ring', 'changed by someone else', 's'],
+        ['--avatar-l', 'avatar lightness', 't'], ['--avatar-c', 'avatar chroma', 't']] },
+      { name: 'NEW v2: no-logo card', rows: [
+        ['--card-fb-bg', 'solid fill', 'c'], ['--card-fb-text', 'game name', 'c'], ['--card-fb-text-2', 'secondary', 'c'],
+        ['--card-fb-chip', 'chips, monogram disc', 'c'], ['--card-fb-mark', 'monogram letters', 'c'], ['--card-fb-ring', 'inner edge', 's']] },
+      { name: 'Elevation', rows: [
+        ['--elev-1', 'resting glass', 's'], ['--elev-2', 'hover', 's'], ['--elev-3', 'sheets, modals', 's']] },
+      { name: 'Display type', rows: [
+        ['--font-display', 'headings', 't'], ['--display-weight', '', 't'], ['--display-tracking', '', 't'], ['--display-transform', '', 't'], ['--label-transform', 'lane names, labels', 't']] }
+    ];
+  }
+  read() {
+    const ids = ['light', 'dark', 'legacy', 'pastel', 'cyberpunk'];
+    const vals = {};
+    let ok = true;
+    ids.forEach((id) => {
+      const el = document.querySelector('[data-probe="' + id + '"]');
+      if (!el) { ok = false; return; }
+      const cs = getComputedStyle(el);
+      const m = {};
+      this.spec().forEach((g) => g.rows.forEach((r) => { m[r[0]] = cs.getPropertyValue(r[0]).trim(); }));
+      m['--bg-ground'] = cs.getPropertyValue('--bg').trim();
+      if (!m['--bg']) ok = false;
+      vals[id] = m;
+    });
+    if (ok) { this.setState({ vals }); return; }
+    if (this.tries++ < 40) this.timer = setTimeout(() => this.read(), 250);
+  }
+  renderVals() {
+    const ids = ['light', 'dark', 'legacy', 'pastel', 'cyberpunk'];
+    const vals = this.state.vals;
+    const groups = this.spec().map((g) => ({
+      name: g.name,
+      rows: g.rows.map((r) => ({
+        name: r[0], role: r[1],
+        cells: ids.map((id) => {
+          const v = vals ? (vals[id][r[0]] || 'not set') : 'reading…';
+          const ground = vals ? vals[id]['--bg-ground'] : '#fff';
+          const isColor = r[2] === 'c' && vals && vals[id][r[0]];
+          const isShadow = r[2] === 's' && vals && vals[id][r[0]];
+          return {
+            v, ground, swatch: !!(isColor || isShadow),
+            bg: isColor ? v : 'transparent',
+            shadow: isShadow ? v.replace(/inset\s+/g, '') : 'none'
+          };
+        })
+      }))
+    }));
+    return { groups };
+  }
+}
+</script>
+</body>
+</html>

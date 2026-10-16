@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: edit card</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nu" data-theme="{{theme}}" style="width: 1440px; height: 900px; overflow: hidden;">
+  <div class="shell" style="gap: 24px;" aria-hidden="true">
+    <header class="topbar">
+      <span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span>
+      <span class="codechip" style="padding-right: 14px;">pnc-autumn</span><span class="sync sync-live"><span class="dot"></span>Live</span><span class="grow"></span>
+    </header>
+    <main class="lanes">
+      <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">3</span></div>
+        <div class="card"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span></div></div>
+        <div class="card"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span></div></div></section>
+      <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div>
+        <div class="card"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span></div></div></section>
+      <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">1</span></div></section>
+    </main>
+  </div>
+  <div class="scrim"></div>
+
+  <aside class="sheet-side glass-2" role="dialog" aria-labelledby="ed-title">
+    <div class="sheet-head" style="border-bottom: 1px solid var(--separator); padding-bottom: 14px;">
+      <h2 id="ed-title" class="display t-title3 grow">Edit card</h2>
+      <button class="btn btn-quiet btn-sm" type="button">Cancel</button>
+      <button class="btn btn-primary btn-sm" type="button">Save</button>
+    </div>
+    <div class="sheet-body" style="padding-top: 18px; gap: 18px;">
+      <label class="field"><span class="field-label">Game</span><span class="input is-focus">Sons of the Forest</span></label>
+
+      <div class="field"><span class="field-label" id="ed-logo-l">Logo</span>
+        <button class="lcb-field" type="button" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="ed-logo-l"><span class="lcb-thumb"><span class="art-ocean"></span></span><span class="grow">Sons of the Forest</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+        <span class="field-hint">From Next Up's logo library. Type to search when open.</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <div class="field"><span class="field-label" id="ed-lane-l">Lane</span>
+          <button class="dd" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="ed-lane-l"><span class="lane-dot ld-up"></span><span class="grow">Up Next</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+        <div class="field"><span class="field-label">Go-live date</span>
+          <button class="dd is-open" type="button" aria-haspopup="dialog" aria-expanded="true"><svg class="i c2" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span class="grow">Sat 7 Nov 2026</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+      </div>
+
+      <label class="field"><span class="field-label">Server info</span>
+        <span class="input textarea" style="min-height: 168px;">Host: Kaelis (dedicated, EU)
+198.51.100.7:8766
+Password: ask in #sons-of-the-forest
+Guide: https://example.org/pnc/sotf-setup
+Save wipes Sundays.</span>
+        <span class="field-hint">Free text. Links become clickable. Visible to anyone with the board code.</span></label>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-danger btn-sm" type="button"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>Delete card</button>
+      <span class="t-cap c3" style="align-self: center;">Deleted cards can be restored from History.</span>
+    </div>
+  </aside>
+
+  <div class="dp glass-2" style="position: absolute; left: 596px; top: 290px; z-index: 50;" role="dialog" aria-label="Choose go-live date">
+    <div class="dp-head">
+      <button class="icon-btn" type="button" aria-label="Previous month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+      <span class="t-head">November 2026</span>
+      <button class="icon-btn" type="button" aria-label="Next month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+    </div>
+    <div class="dp-grid">
+      <span class="dp-dow">Mo</span><span class="dp-dow">Tu</span><span class="dp-dow">We</span><span class="dp-dow">Th</span><span class="dp-dow">Fr</span><span class="dp-dow">Sa</span><span class="dp-dow">Su</span>
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="42"><button class="dp-day {{d.cls}}" type="button">{{d.n}}</button></sc-for>
+    </div>
+    <div class="dp-foot"><button class="btn btn-ghost btn-sm" type="button">Clear date</button><button class="btn btn-quiet btn-sm" type="button">Today</button></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"legacy"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const days = [];
+    for (let i = 26; i <= 31; i++) days.push({ n: i, cls: 'is-out' });
+    for (let i = 1; i <= 30; i++) days.push({ n: i, cls: i === 7 ? 'is-sel' : '' });
+    for (let i = 1; i <= 6; i++) days.push({ n: i, cls: 'is-out' });
+    return { theme: this.props.theme ?? 'legacy', days };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: card detail on a phone</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.under{padding:16px;display:flex;flex-direction:column;gap:10px}
+.full{top:44px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1800px; height: 1000px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Detail · nothing set yet <span>honest "not set"</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t1}}">
+      <div class="under" aria-hidden="true"><div class="lane glass" style="padding: 10px;"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">5</span></div><div class="card is-phone"><div class="card-art art-neon"></div></div></div></div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2 full" role="dialog" aria-labelledby="p1t">
+        <span class="grabber"></span>
+        <div style="padding: 12px 14px 0; position: relative;">
+          <div class="card" style="height: 88px; cursor: default;"><div class="card-art art-neon"></div><div class="card-scrim"></div>
+            <div class="card-body" style="padding: 0 24px;"><h2 id="p1t" class="card-title" style="font-size: 21px; margin: 0;">Enshrouded</h2><span class="card-chips"><span class="card-chip">Up Next</span></span></div></div>
+          <div style="position: absolute; right: 24px; top: 32px; display: flex; gap: 6px; z-index: 5;">
+            <button class="btn btn-sm" type="button" style="background: rgb(12 12 16 / 0.55); color: #fff;">Edit</button>
+            <button class="icon-btn" type="button" aria-label="Close" style="background: rgb(12 12 16 / 0.55); color: #fff;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+          </div>
+        </div>
+        <div class="sheet-body" style="padding-top: 20px;">
+          <div class="col" style="gap: 8px;"><span class="section-label">Go-live date</span>
+            <div class="row"><span class="badge" style="height: 30px; font-size: 14px; padding: 0 12px;">Not set</span><span class="grow"></span><button class="btn btn-tint btn-sm" type="button"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Set date</button></div></div>
+          <div class="col" style="gap: 8px;"><span class="section-label">Server info</span>
+            <div class="st-empty" style="padding: 18px; gap: 4px; border-radius: var(--r-lg);"><span class="t-foot c2">No server info yet.</span><button class="btn btn-ghost btn-sm" type="button">Add server info</button></div></div>
+          <div class="col" style="gap: 10px;"><span class="section-label">Players · 3</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span class="chip"><span class="av h3">PA</span>Path<button class="x" type="button" aria-label="Remove Path"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h6">BU</span>Bunzato<button class="x" type="button" aria-label="Remove Bunzato"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h2">KA</span>Kaelis<button class="x" type="button" aria-label="Remove Kaelis"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+            </div>
+            <button class="btn btn-tint btn-block" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add Player</button></div>
+        </div>
+        <div class="sheet-foot"><button class="btn btn-ghost btn-sm" type="button" style="color: var(--text-2);">Card history</button><span class="grow"></span><button class="btn btn-ghost btn-sm" type="button" style="color: var(--error-text);">Delete card</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Adding a player <span>button becomes an inline box</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="under" aria-hidden="true"><div class="card is-phone"><div class="card-art art-forest"></div></div></div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2 full" role="dialog" aria-labelledby="p2t">
+        <span class="grabber"></span>
+        <div style="padding: 12px 14px 0;">
+          <div class="card" style="height: 88px; cursor: default;"><div class="card-art art-forest"></div><div class="card-scrim"></div>
+            <div class="card-body" style="padding: 0 24px;"><h2 id="p2t" class="card-title" style="font-size: 21px; margin: 0;">Valheim</h2><span class="card-chips"><span class="card-chip is-live">Live since 3 Oct</span></span></div></div>
+        </div>
+        <div class="sheet-body" style="padding-top: 20px;">
+          <div class="col" style="gap: 8px;"><span class="section-label">Server info</span>
+            <div class="panel mono" style="white-space: pre-wrap; font-size: 12.5px;">203.0.113.42:2456
+Password: skål-and-sail
+<a class="u" href="#">https://thunderstore.io/c/valheim/p/pnc/modpack/</a></div></div>
+          <div class="col" style="gap: 10px;"><span class="section-label">Players · 7</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span class="chip"><span class="av h3">PA</span>Path<button class="x" type="button" aria-label="Remove Path"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h6">BU</span>Bunzato<button class="x" type="button" aria-label="Remove Bunzato"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h4">TH</span>Thornwick<button class="x" type="button" aria-label="Remove Thornwick"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h7">MO</span>Morrigan<button class="x" type="button" aria-label="Remove Morrigan"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip"><span class="av h2">KA</span>Kaelis<button class="x" type="button" aria-label="Remove Kaelis"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+              <span class="chip is-new"><span class="av h1">LA</span>Larias<button class="x" type="button" aria-label="Remove Larias"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
+            </div>
+            <form class="row" style="gap: 8px;" action="#">
+              <label class="sr-only" for="np" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Player name</label>
+              <input id="np" class="input is-focus" value="Grimtusk" style="border-radius: var(--r-full); padding-left: 18px;">
+              <button class="btn btn-primary" type="submit">Add</button>
+              <button class="icon-btn icon-btn-ph icon-btn-fill" type="button" aria-label="Cancel adding a player"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </form>
+            <span class="t-cap c3">Enter adds and keeps the box open for the next name. Larias just added by Path.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Edit · lane dropdown open</p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="scrim" style="background: transparent;"></div>
+      <div class="bsheet glass-2" style="top: 44px;" role="dialog" aria-labelledby="p3t">
+        <span class="grabber"></span>
+        <div class="sheet-head"><button class="btn btn-quiet btn-sm" type="button">Cancel</button><h2 id="p3t" class="display t-head grow" style="text-align: center;">Edit card</h2><button class="btn btn-primary btn-sm" type="button">Save</button></div>
+        <div class="sheet-body" style="gap: 16px;">
+          <label class="field"><span class="field-label">Game</span><span class="input">Enshrouded</span></label>
+          <div class="field"><span class="field-label" id="p3-logo-l">Logo</span><button class="lcb-field" type="button" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="p3-logo-l"><span class="lcb-thumb"><span class="art-neon"></span></span><span class="grow">Enshrouded</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+          <div class="field" style="position: relative;"><span class="field-label" id="p3-lane-l">Lane</span>
+            <button class="dd is-open" type="button" aria-haspopup="listbox" aria-expanded="true" aria-labelledby="p3-lane-l"><span class="lane-dot ld-up"></span><span class="grow">Up Next</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+            <div class="menu glass-2" role="listbox" aria-label="Lane" style="position: absolute; left: 0; right: 0; top: 76px; z-index: 10;">
+              <button class="menu-item is-selected" type="button" role="option" aria-selected="true"><span class="lane-dot ld-up"></span>Up Next<svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button>
+              <button class="menu-item is-active" type="button" role="option"><span class="lane-dot ld-now"></span>Now Playing</button>
+              <button class="menu-item" type="button" role="option"><span class="lane-dot ld-done"></span>Played</button>
+            </div></div>
+          <div class="field"><span class="field-label" id="p3-date-l">Go-live date</span><button class="dd" type="button" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="p3-date-l"><svg class="i c2" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg><span class="grow placeholder-text">Not set</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+          <label class="field"><span class="field-label">Server info</span><span class="input textarea placeholder-text" style="min-height: 110px;">IP, port, password, links…</span></label>
+        </div>
+        <div class="sheet-foot"><button class="btn btn-danger btn-sm" type="button">Delete card</button><span class="t-cap c3" style="align-self: center;">Restorable from History</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Edit · date picker sheet</p>
+    <div class="nu frame frame-ph" data-theme="{{t4}}">
+      <div class="bsheet glass-2" style="top: 44px; opacity: 0.6;" aria-hidden="true">
+        <span class="grabber"></span>
+        <div class="sheet-head"><span class="btn btn-quiet btn-sm">Cancel</span><span class="display t-head grow" style="text-align: center;">Edit card</span><span class="btn btn-primary btn-sm">Save</span></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="dialog" aria-labelledby="p4t" style="z-index: 45;">
+        <span class="grabber"></span>
+        <div class="sheet-head"><h2 id="p4t" class="display t-head grow">Go-live date</h2><button class="btn btn-primary btn-sm" type="button">Done</button></div>
+        <div style="padding: 0 18px 24px;">
+          <div class="dp" style="width: 100%; padding: 0;">
+            <div class="dp-head">
+              <button class="icon-btn icon-btn-ph" type="button" aria-label="Previous month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+              <span class="t-head">October 2026</span>
+              <button class="icon-btn icon-btn-ph" type="button" aria-label="Next month"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+            </div>
+            <div class="dp-grid" style="gap: 4px;">
+              <span class="dp-dow">Mo</span><span class="dp-dow">Tu</span><span class="dp-dow">We</span><span class="dp-dow">Th</span><span class="dp-dow">Fr</span><span class="dp-dow">Sa</span><span class="dp-dow">Su</span>
+              <sc-for list="{{days}}" as="d" hint-placeholder-count="35"><button class="dp-day {{d.cls}}" type="button">{{d.n}}</button></sc-for>
+            </div>
+            <div class="dp-foot"><button class="btn btn-ghost btn-sm" type="button">Clear date</button><span class="t-foot c2" style="align-self: center;">Sat 31 Oct · in 16 days</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"$preview":{"width":1800,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const days = [];
+    for (let i = 28; i <= 30; i++) days.push({ n: i, cls: 'is-out' });
+    for (let i = 1; i <= 31; i++) days.push({ n: i, cls: i === 15 ? 'is-today' : (i === 31 ? 'is-sel' : '') });
+    days.push({ n: 1, cls: 'is-out' });
+    return { t1: this.props.t1 ?? 'dark', t2: this.props.t2 ?? 'pastel', t3: this.props.t3 ?? 'light', t4: this.props.t4 ?? 'cyberpunk', days };
+  }
+}
+</script>
+</body>
+</html>

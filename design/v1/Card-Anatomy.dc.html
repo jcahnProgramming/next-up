@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: card anatomy</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.an-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6a6a72;margin:0 0 12px}
+.an-tag{position:absolute;font-size:12px;font-weight:600;color:#1d1d1f;background:#fff;border-radius:8px;padding:4px 8px;box-shadow:0 1px 3px rgb(0 0 0/.12);white-space:nowrap}
+.an-line{position:absolute;background:#0a6fe0}
+.an-p{margin:0;font-size:13.5px;color:#44444c;line-height:1.55}
+.an-box{background:#fff;border-radius:18px;padding:20px 22px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1720px; height: 1400px; display: grid; grid-template-columns: 900px minmax(0, 1fr); gap: 40px;">
+  <div style="display: flex; flex-direction: column; gap: 34px;">
+    <div>
+      <p class="an-h">Anatomy · shown at 2×</p>
+      <div class="nu" data-theme="dark" style="position: relative; background: #1c1c20; border-radius: 22px; padding: 60px 40px 70px; height: 330px;">
+        <div style="width: 412px; transform: scale(2); transform-origin: top left;">
+          <div role="button" tabindex="0" class="card">
+            <div class="card-art art-forest"></div><div class="card-scrim"></div>
+            <div class="card-body"><span class="card-title">Valheim</span>
+              <span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Sat 24 Oct</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>6</span></span></div>
+          </div>
+        </div>
+        <span class="an-tag" style="left: 96px; top: 18px;">Title · 17/700 white, 1 line, ellipsis at 62% width</span>
+        <span class="an-tag" style="left: 96px; top: 262px;">Chips · 22 h, rgb(12 12 16/.55) + blur 8, white 11.5/600</span>
+        <span class="an-tag" style="left: 560px; top: 262px;">Art · cover, centred, behind scrim</span>
+        <span class="an-tag" style="right: 40px; top: 18px;">Ring · --card-ring (per theme)</span>
+        <span class="an-line" style="left: 40px; top: 60px; width: 56px; height: 2px;"></span>
+        <span class="an-tag" style="left: 8px; top: 140px; background: #0a6fe0; color: #fff;">84</span>
+        <span class="an-tag" style="left: 40px; top: 236px; background: #0a6fe0; color: #fff;">pad 28</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="an-h">Logo art: 1200 × 300 px, WebP, ≤ 200 KB (shown at ½)</p>
+      <div style="display: flex; gap: 28px; align-items: flex-start;">
+        <div style="position: relative; width: 600px; height: 150px; border-radius: 6px; overflow: hidden;" class="art-ocean">
+          <div style="position: absolute; left: 20%; right: 20%; top: 10%; bottom: 10%; box-shadow: inset 0 0 0 2px #fff; border-radius: 4px;"></div>
+          <div style="position: absolute; left: 20%; top: 10%; padding: 3px 7px; font-size: 11px; font-weight: 700; color: #0d4c8c; background: #fff; border-radius: 0 0 4px 0;">Logo safe zone · middle 60% × 80%</div>
+          <div style="position: absolute; inset: 0; border-radius: 75px; box-shadow: 0 0 0 200px rgb(255 255 255 / 0.45);"></div>
+          <div style="position: absolute; left: 0; right: 0; top: 9.5%; bottom: 9.5%; border-top: 1.5px dashed #ffd13b; border-bottom: 1.5px dashed #ffd13b;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 270px;">
+          <p class="an-p"><b>White wash</b> = pill corners cut away.</p>
+          <p class="an-p"><b>Yellow dashes</b> = lane-card crop (≈ 4.9 : 1 at desktop and phone): about 9% off top and bottom, inside the safe zone.</p>
+          <p class="an-p">Fill edge to edge with the game's own art. No text, no darkening: the card adds both.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 16px; margin-top: 18px; align-items: center;">
+        <div class="mono" style="color: #44444c; width: 210px;">Rendered sizes<br>lane card 412 × 84 (desktop)<br>lane card 358 × 72 (phone)<br>detail header 448 × 112 (4 : 1)</div>
+        <div class="nu" data-theme="light" style="display: flex; gap: 16px; align-items: center; background: transparent;">
+          <div class="card" aria-hidden="true" style="width: 206px; height: 42px;"><div class="card-art art-ocean"></div></div>
+          <div class="card" aria-hidden="true" style="width: 179px; height: 36px;"><div class="card-art art-ocean"></div></div>
+          <div class="card" aria-hidden="true" style="width: 224px; height: 56px; border-radius: 28px;"><div class="card-art art-ocean"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="an-h">No logo: solid, theme-coloured, from its own --card-fb-* tokens</p>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <sc-for list="{{fbThemes}}" as="t" hint-placeholder-count="5">
+          <div class="nu" data-theme="{{t.id}}" style="border-radius: 18px; padding: 10px 14px; display: grid; grid-template-columns: 90px minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center;">
+            <span class="t-foot" style="font-weight: 650;">{{t.name}}</span>
+            <div role="button" tabindex="0" class="card is-fb"><span class="fb-mark" aria-hidden="true">AF</span>
+              <div class="card-body"><span class="card-title">Abiotic Factor</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Fri 6 Nov</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>4</span></span></div></div>
+            <div role="button" tabindex="0" class="card"><div class="card-art art-forest"></div><div class="card-scrim"></div>
+              <div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">6</span></span></div></div>
+          </div>
+        </sc-for>
+      </div>
+      <p class="an-p" style="margin-top: 10px;">Left: no logo. Right: a logo card for comparison. The no-logo card has a solid fill, the theme's own text colour (dark text in Light and Pastel), no scrim and no shadowed white type, plus a monogram disc where the logo would sit. Monogram = first letters of the first two words.</p>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 28px;">
+    <div>
+      <p class="an-h">Scrim stress test: the same treatment over the brightest, darkest and busiest art</p>
+      <div class="nu" data-theme="light" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; background: #f2f2f6; border-radius: 22px; padding: 20px;">
+        <sc-for list="{{samples}}" as="s" hint-placeholder-count="8">
+          <div role="button" tabindex="0" class="card"><div class="card-art {{s.art}}"></div><div class="card-scrim"></div>
+            <div class="card-body"><span class="card-title">{{s.title}}</span>
+              <span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>{{s.date}}</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>{{s.n}}</span></span></div></div>
+        </sc-for>
+      </div>
+      <p class="an-p" style="margin-top: 10px;">Sample art only: abstract stand-ins chosen to stress contrast. Real cards use files from <span class="mono">logos/</span>.</p>
+    </div>
+    <div>
+      <p class="an-h">Why the scrim: the two worst cases without it</p>
+      <div class="nu" data-theme="light" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; background: #f2f2f6; border-radius: 22px; padding: 20px;">
+        <div role="button" tabindex="0" class="card"><div class="card-art art-snow"></div><div class="card-body"><span class="card-title">Snowrunner</span><span class="card-chips"><span class="card-chip">3</span></span></div></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-sun"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip">8</span></span></div></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-snow"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Snowrunner</span><span class="card-chips"><span class="card-chip">3</span></span></div></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip">8</span></span></div></div>
+      </div>
+    </div>
+    <div class="an-box" style="display: flex; flex-direction: column; gap: 8px;">
+      <p class="an-h" style="margin: 0;">Content rules</p>
+      <p class="an-p"><b>Left-weighted scrim</b>: 80% black at the text edge fading to 0 by 68% width, plus a light bottom vignette. The logo's centre stays clean; white title text measures ≥ 7 : 1 over pure-white art at the text position.</p>
+      <p class="an-p"><b>Chips carry their own backing</b>, so they read even where the scrim has faded.</p>
+      <p class="an-p"><b>Go-live chip</b>: future "Goes live Sat 24 Oct"; past "Live since 3 Oct" (green); unset shows no chip on the card (the detail panel says "Not set").</p>
+      <p class="an-p"><b>Players chip</b>: count only; hidden at zero.</p>
+      <p class="an-p"><b>Phone</b>: 72 tall, 22 side padding, 16 px title.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1720,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      fbThemes: [
+        { id: 'light', name: 'Light' }, { id: 'dark', name: 'Dark' }, { id: 'legacy', name: 'Legacy' },
+        { id: 'pastel', name: 'Pastel' }, { id: 'cyberpunk', name: 'Cyberpunk' }
+      ],
+      samples: [
+        { art: 'art-snow', title: 'Snowrunner', date: 'Goes live Fri 16 Oct', n: 3 },
+        { art: 'art-sun', title: 'Palworld', date: 'Goes live Sat 17 Oct', n: 8 },
+        { art: 'art-night', title: 'V Rising', date: 'Goes live Fri 23 Oct', n: 5 },
+        { art: 'art-neon', title: 'Enshrouded', date: 'Goes live Sat 31 Oct', n: 12 },
+        { art: 'art-sand', title: 'Conan Exiles', date: 'Goes live Fri 30 Oct', n: 4 },
+        { art: 'art-ocean', title: 'Sons of the Forest', date: 'Goes live Sat 7 Nov', n: 6 },
+        { art: 'art-lava', title: 'Project Zomboid', date: 'Goes live Fri 13 Nov', n: 7 },
+        { art: 'art-forest', title: 'Valheim', date: 'Goes live Sat 24 Oct', n: 6 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

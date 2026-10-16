@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: board on a phone, states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1800px; height: 1000px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Empty board</p>
+    <div class="nu frame frame-ph" data-theme="{{t1}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph is-plain"><span class="dot" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-autumn</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button><button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button><button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="stack" style="flex: 1;">
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">0</span></div>
+            <div class="st-empty" style="padding: 28px 20px; gap: 10px;">
+              <span class="icon-circle ic-accent" style="width: 48px; height: 48px;"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+              <span class="display t-title3">A fresh board</span>
+              <span class="c2 t-foot">Add the first game the guild is thinking about.</span>
+              <button class="btn btn-primary" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add a game</button>
+            </div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">0</span></div><div class="lane-empty" style="height: 56px;">Nothing on yet</div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">0</span></div><div class="lane-empty" style="height: 56px;">Nothing played yet</div></section>
+        </div>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Password board, unlocked here <span>lock button on the chip</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph"><span class="dot dot-pulse" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-raids</span><button class="icon-btn lock-btn" type="button" aria-label="Lock this board on this browser"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button><button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button><button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="stack" style="flex: 1; overflow: hidden;">
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">3</span></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-ocean"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Sons of the Forest</span><span class="card-chips"><span class="card-chip">Goes live Sat 7 Nov</span><span class="card-chip">6</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip">8</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span></div></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">1</span></div>
+            <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip is-live">Live since 3 Oct</span></span></div></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">2</span></div></section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Offline · stale</p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph is-plain"><span class="codechip-code">pnc-autumn</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button><button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="banner banner-err" role="status" style="align-items: flex-start;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="margin-top: 2px;"><path d="M2 8.5a15 15 0 0 1 5-3M22 8.5a15 15 0 0 0-11-3.9M9 15.5a5 5 0 0 1 6 0M3 3l18 18"></path></svg><span class="grow t-foot"><b>Offline.</b> As of 14:32 (6 min ago). Editing paused until we reconnect.</span><button class="btn btn-secondary btn-sm" type="button">Retry</button></div>
+        <div class="stack is-stale" style="flex: 1; overflow: hidden;">
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">2</span></div>
+            <div role="button" tabindex="0" class="card is-phone is-static"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip">8</span></span></div></div>
+            <div role="button" tabindex="0" class="card is-phone is-static is-fb"><span class="fb-mark" aria-hidden="true">AF</span><div class="card-body"><span class="card-title">Abiotic Factor</span></div></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">1</span></div>
+            <div role="button" tabindex="0" class="card is-phone is-static"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span></div></div></section>
+        </div>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Loading</p>
+    <div class="nu frame frame-ph" data-theme="{{t4}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph is-plain"><span class="spin" style="width: 11px; height: 11px; border-width: 1.6px; margin-right: 8px;"></span><span class="codechip-code">pnc-autumn</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <div class="stack" aria-busy="true" style="flex: 1; overflow: hidden;">
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span></div><div class="sk" style="height: 72px;"></div><div class="sk" style="height: 72px;"></div><div class="sk" style="height: 72px;"></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span></div><div class="sk" style="height: 72px;"></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span></div><div class="sk" style="height: 72px; opacity: 0.5;"></div></section>
+        </div>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"legacy"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"$preview":{"width":1800,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { t1: p.t1 ?? 'light', t2: p.t2 ?? 'legacy', t3: p.t3 ?? 'dark', t4: p.t4 ?? 'pastel' };
+  }
+}
+</script>
+</body>
+</html>

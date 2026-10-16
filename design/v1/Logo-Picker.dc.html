@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: logo picker</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="sheet-canvas" style="width: 2060px; height: 980px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Desktop · open from the edit sheet <span>No logo is pinned first and previews the fallback</span></p>
+    <div class="nu frame frame-desk" data-theme="{{t1}}" style="width: 1100px; height: 844px;">
+      <div class="scrim"></div>
+      <aside class="sheet-side glass-2" role="dialog" aria-labelledby="lp-t" style="width: 480px;">
+        <div class="sheet-head" style="border-bottom: 1px solid var(--separator); padding-bottom: 14px;"><h2 id="lp-t" class="display t-title3 grow">Edit card</h2><button class="btn btn-quiet btn-sm" type="button">Cancel</button><button class="btn btn-primary btn-sm" type="button">Save</button></div>
+        <div class="sheet-body" style="padding-top: 18px; gap: 18px; overflow: visible;">
+          <label class="field"><span class="field-label">Game</span><span class="input">Sons of the Forest</span></label>
+          <div class="field" style="position: relative;"><span class="field-label" id="lg-l">Logo</span>
+            <button class="lcb-field is-open" type="button" role="combobox" aria-expanded="true" aria-controls="lg-list" aria-labelledby="lg-l"><span class="lcb-thumb"><span class="art-ocean"></span></span><span class="grow">Sons of the Forest</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+            <div class="lcb-pop glass-2" style="position: absolute; left: 0; right: 0; top: 84px; z-index: 10; max-height: 560px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent);">
+              <label class="lcb-search is-focus"><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><input class="grow" placeholder="Search logos" aria-label="Search logos" style="border: 0; outline: none; background: transparent; height: 40px;"></label>
+              <div id="lg-list" class="lcb-list" role="listbox" aria-label="Logos">
+                <button class="lcb-row" type="button" role="option"><span class="lcb-thumb is-fb" aria-hidden="true">SO</span><span class="col"><span>No logo</span><span class="lcb-sub">Solid colour with the game's initials</span></span></button>
+                <span class="hr" style="margin: 2px 6px;"></span>
+                <sc-for list="{{logos}}" as="l" hint-placeholder-count="8">
+                  <button class="lcb-row {{l.cls}}" type="button" role="option" aria-selected="{{l.aria}}"><span class="lcb-thumb"><span class="{{l.art}}"></span></span>{{l.name}}<sc-if value="{{l.isSel}}" hint-placeholder-val="{{false}}"><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></sc-if></button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · searching</p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="scrim" style="background: transparent;"></div>
+      <div class="bsheet glass-2" style="top: 44px;" role="dialog" aria-labelledby="lp2-t">
+        <span class="grabber"></span>
+        <div class="sheet-head"><button class="btn btn-quiet btn-sm" type="button">Cancel</button><h2 id="lp2-t" class="display t-head grow" style="text-align: center;">Edit card</h2><button class="btn btn-primary btn-sm" type="button">Save</button></div>
+        <div class="sheet-body" style="gap: 16px; overflow: visible;">
+          <label class="field"><span class="field-label">Game</span><span class="input">Sons of the Forest</span></label>
+          <div class="field" style="position: relative;"><span class="field-label" id="lp2-l">Logo</span>
+            <button class="lcb-field is-open" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="true" aria-controls="lp2-list" aria-labelledby="lp2-l"><span class="lcb-thumb"><span class="art-ocean"></span></span><span class="grow">Sons of the Forest</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+            <div class="lcb-pop glass-2" style="position: absolute; left: 0; right: 0; top: 84px; z-index: 10;">
+              <label class="lcb-search is-focus"><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><span class="grow">on</span><button class="icon-btn icon-btn-dot" type="button" aria-label="Clear search"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></label>
+              <div class="lcb-list" role="listbox" aria-label="Logos">
+                <button class="lcb-row" type="button" role="option"><span class="lcb-thumb is-fb" aria-hidden="true">SO</span><span class="col"><span>No logo</span><span class="lcb-sub">Solid colour with the game's initials</span></span></button>
+                <span class="hr" style="margin: 2px 6px;"></span>
+                <span class="lcb-count">2 matches</span>
+                <button class="lcb-row is-active" type="button" role="option"><span class="lcb-thumb"><span class="art-sand"></span></span>Conan Exiles</button>
+                <button class="lcb-row is-selected" type="button" role="option" aria-selected="true"><span class="lcb-thumb"><span class="art-ocean"></span></span>Sons of the Forest<svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · no matches; empty library</p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="bsheet glass-2" style="top: 44px;" role="dialog" aria-labelledby="lp3-t">
+        <span class="grabber"></span>
+        <div class="sheet-head"><button class="btn btn-quiet btn-sm" type="button">Cancel</button><h2 id="lp3-t" class="display t-head grow" style="text-align: center;">Edit card</h2><button class="btn btn-primary btn-sm" type="button">Save</button></div>
+        <div class="sheet-body" style="gap: 14px; overflow: visible;">
+          <div class="field"><span class="field-label" id="lp3-l">Logo</span>
+            <button class="lcb-field is-open" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="true" aria-controls="lp3-list" aria-labelledby="lp3-l"><span class="lcb-thumb is-fb" aria-hidden="true">HE</span><span class="grow">No logo</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+            <div class="lcb-pop glass-2">
+              <label class="lcb-search"><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><span class="grow">hellblade</span></label>
+              <div class="lcb-list" role="listbox" aria-label="Logos">
+                <button class="lcb-row is-selected" type="button" role="option" aria-selected="true"><span class="lcb-thumb is-fb" aria-hidden="true">HE</span><span class="col"><span>No logo</span><span class="lcb-sub">Solid colour with the game's initials</span></span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button>
+                <span class="hr" style="margin: 2px 6px;"></span>
+                <div class="st-empty" style="padding: 16px; gap: 4px; border-radius: var(--r-md);"><span class="t-foot" style="font-weight: 650;">No logos match "hellblade"</span><span class="t-cap c2">Logos are added to the library by Path.</span></div>
+              </div>
+            </div>
+          </div>
+          <span class="section-label" style="margin-top: 6px;">If the library is empty</span>
+          <div class="lcb-pop glass-2">
+            <div class="lcb-list">
+              <button class="lcb-row is-selected" type="button"><span class="lcb-thumb is-fb" aria-hidden="true">HE</span><span class="col"><span>No logo</span><span class="lcb-sub">Solid colour with the game's initials</span></span><svg class="i check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></button>
+              <div class="st-empty" style="padding: 14px; gap: 4px; border-radius: var(--r-md);"><span class="t-foot" style="font-weight: 650;">No logos in the library yet</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"$preview":{"width":2060,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      ['Conan Exiles', 'art-sand'], ['Enshrouded', 'art-neon'], ['Palworld', 'art-sun'], ['Project Zomboid', 'art-lava'],
+      ['Snowrunner', 'art-snow'], ['Sons of the Forest', 'art-ocean'], ['V Rising', 'art-night'], ['Valheim', 'art-forest']
+    ];
+    const logos = raw.map(([name, art]) => {
+      const sel = name === 'Sons of the Forest';
+      return { name, art, isSel: sel, aria: sel ? 'true' : 'false', cls: sel ? 'is-selected is-active' : '' };
+    });
+    const p = this.props;
+    return { t1: p.t1 ?? 'dark', t2: p.t2 ?? 'pastel', t3: p.t3 ?? 'light', logos };
+  }
+}
+</script>
+</body>
+</html>

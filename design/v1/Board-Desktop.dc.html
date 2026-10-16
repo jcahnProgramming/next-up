@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: board</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nu" data-theme="{{theme}}" style="width: 1440px; height: 900px; overflow: hidden;">
+  <div class="shell" style="gap: 24px;">
+    <header class="topbar">
+      <a class="wordmark" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a>
+      <span style="width: 1px; height: 22px; background: var(--separator);"></span>
+      <span class="codechip"><span class="codechip-code">pnc-autumn</span><button class="icon-btn" type="button" aria-label="Copy board link"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
+      <span class="sync sync-live"><span class="dot dot-pulse"></span>Live</span>
+      <span class="grow"></span>
+      <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+      <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+      <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+    </header>
+
+    <main class="lanes" style="flex: 1; min-height: 0;">
+      <section class="lane glass" aria-label="Up Next" style="max-height: 100%; overflow: hidden;">
+        <div class="lane-head"><span class="lane-dot ld-up"></span><h2 class="lane-name" style="margin: 0;">Up Next</h2><span class="lane-n">7</span><span class="grow"></span>
+          <button class="icon-btn" type="button" aria-label="Add a game to Up Next"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-sun"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Palworld</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Sat 17 Oct</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>8</span></span></div></div>
+        <div class="card-wrap"><span class="flash-tag"><span class="av h3">P</span>Path added a player</span>
+          <div role="button" tabindex="0" class="card is-flash"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Fri 23 Oct</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>5</span></span></div></div></div>
+        <div role="button" tabindex="0" class="card is-hover"><div class="card-art art-neon"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Enshrouded</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>12</span></span></div></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-sand"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Conan Exiles</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Fri 30 Oct</span></span></div></div>
+        <div role="button" tabindex="0" class="card is-fb"><span class="fb-mark" aria-hidden="true">AF</span><div class="card-body"><span class="card-title">Abiotic Factor</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>2</span></span></div></div>
+        <div role="button" tabindex="0" class="card is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>3</span></span></div></div>
+        <div role="button" tabindex="0" class="card" style="opacity: 0.6; height: 40px; -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent);"><div class="card-art art-lava"></div><div class="card-scrim"></div></div>
+      </section>
+
+      <section class="lane glass is-drop" aria-label="Now Playing">
+        <div class="lane-head"><span class="lane-dot ld-now"></span><h2 class="lane-name" style="margin: 0;">Now Playing</h2><span class="lane-n">2</span><span class="grow"></span>
+          <button class="icon-btn" type="button" aria-label="Add a game to Now Playing"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip is-live">Live since 3 Oct</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>6</span></span></div></div>
+        <div class="card-slot"></div>
+        <div role="button" tabindex="0" class="card"><div class="card-art art-snow"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Snowrunner</span><span class="card-chips"><span class="card-chip is-live">Live since 9 Oct</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>3</span></span></div></div>
+        <button class="lane-add" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add a game</button>
+      </section>
+
+      <section class="lane glass" aria-label="Played">
+        <div class="lane-head"><span class="lane-dot ld-done"></span><h2 class="lane-name" style="margin: 0;">Played</h2><span class="lane-n">0</span><span class="grow"></span>
+          <button class="icon-btn" type="button" aria-label="Add a game to Played"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+        <div class="lane-empty">Nothing played yet. Drag a game here when you're done with it.</div>
+      </section>
+    </main>
+    <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+  </div>
+
+  <div style="position: absolute; left: 520px; top: 268px; width: 412px; z-index: 30; pointer-events: none;">
+    <div role="button" tabindex="0" class="card is-lifted"><div class="card-art art-lava"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Project Zomboid</span><span class="card-chips"><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>Goes live Fri 13 Nov</span><span class="card-chip"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>7</span></span></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'dark' }; }
+}
+</script>
+</body>
+</html>

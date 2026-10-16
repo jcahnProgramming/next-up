@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: what's new</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.badge-removed{background:var(--surface-3);color:var(--text-2)}
+.rel-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ph-mute{color:var(--text-3);font-style:italic}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1980px; height: 1020px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Desktop <span>real 0.1.0 entry, then a template showing every section style</span></p>
+    <div class="nu frame frame-desk" data-theme="{{t1}}" style="width: 1440px; height: 900px;">
+      <div class="shell" style="gap: 24px;">
+        <header class="topbar"><a class="wordmark" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; width: 100%; max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; overflow: hidden;">
+          <div class="row" style="gap: 12px;"><button class="icon-btn" type="button" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button><h1 class="display t-large" tabindex="-1">What's new</h1></div>
+          <article class="rel glass">
+            <div class="rel-head"><span class="badge badge-accent mono" style="font-size: 12.5px;">v0.1.0</span><h2 class="display t-title2">Skeleton</h2><span class="t-foot c3 tab">15 Oct 2026 · current</span></div>
+            <div class="rel-sec"><span class="badge badge-accent rel-tag">New</span>
+              <ul>
+                <li>Next Up exists, but boards don't yet. The front page has the box where you'll type a board's code; pressing Enter goes to that board's address, which says plainly that boards are coming soon.</li>
+                <li>Every page has a bottom bar with the version number. Clicking it opens What's new: this list.</li>
+                <li>A settings button in the top right opens a Settings page that says what will live there: your theme and your display name, both kept in this browser only.</li>
+                <li>An AI access point (MCP) that reads and never changes anything.</li>
+              </ul></div>
+          </article>
+          <article class="rel glass" style="opacity: 0.9;">
+            <div class="rel-head"><span class="badge mono" style="font-size: 12.5px;">v0.x.y</span><h2 class="display t-title3">[Release title]</h2><span class="t-foot c3 tab">[DD Mon YYYY]</span></div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+              <div class="rel-sec"><span class="badge badge-accent rel-tag">New</span><ul><li class="ph-mute">[A new capability, from a player's point of view]</li></ul></div>
+              <div class="rel-sec"><span class="badge badge-success rel-tag">Improved</span><ul><li class="ph-mute">[Something that works better]</li></ul></div>
+              <div class="rel-sec"><span class="badge badge-warning rel-tag">Fixed</span><ul><li class="ph-mute">[A bug, described by its symptom]</li></ul></div>
+              <div class="rel-sec"><span class="badge badge-removed rel-tag">Removed</span><ul><li class="ph-mute">[What's gone and why]</li></ul></div>
+            </div>
+          </article>
+        </main>
+        <footer class="bottombar"><a class="version-link is-hover" href="#" aria-current="page"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone</p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="topbar"><button class="icon-btn icon-btn-ph" type="button" aria-label="Back"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button><h1 class="display t-title1 grow" tabindex="-1">What's new</h1></header>
+        <article class="rel glass" style="padding: 18px; flex: 1; overflow: hidden;">
+          <div class="col" style="gap: 6px;"><div class="row"><span class="badge badge-accent mono" style="font-size: 12.5px;">v0.1.0</span><span class="t-foot c3 tab">15 Oct 2026</span></div><h2 class="display t-title2">Skeleton</h2></div>
+          <div class="rel-sec"><span class="badge badge-accent rel-tag">New</span>
+            <ul style="font-size: 14px;">
+              <li>Next Up exists, but boards don't yet. The front page has the box where you'll type a board's code; pressing Enter goes to that board's address, which says plainly that boards are coming soon.</li>
+              <li>Every page has a bottom bar with the version number. Clicking it opens What's new: this list.</li>
+              <li>A settings button in the top right opens a Settings page that says what will live there.</li>
+            </ul></div>
+        </article>
+        <footer class="bottombar"><a class="version-link" href="#" aria-current="page"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"legacy"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1980,"height":1020}}'>
+class Component extends DCLogic {
+  renderVals() { return { t1: this.props.t1 ?? 'legacy', t2: this.props.t2 ?? 'dark' }; }
+}
+</script>
+</body>
+</html>

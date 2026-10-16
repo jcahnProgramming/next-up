@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: card states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.cs-grid{display:grid;grid-template-columns:110px repeat(7,minmax(0,1fr));gap:0 14px}
+.cs-h{font-size:13px;font-weight:700;color:#1d1d1f;padding:0 4px 2px}
+.cs-hn{font-size:11.5px;color:#6a6a72;padding:0 4px 10px;line-height:1.35}
+.cs-band{grid-column:1 / -1;display:grid;grid-template-columns:110px repeat(7,minmax(0,1fr));gap:14px;border-radius:22px;padding:16px 14px;margin-bottom:14px;align-items:start}
+.cs-cell{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cs-name{font-size:15px;font-weight:700;align-self:center}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 2400px; height: 1480px;">
+  <div class="cs-grid">
+    <span></span>
+    <span class="cs-h">Resting</span><span class="cs-h">Hover</span><span class="cs-h">Pressed</span><span class="cs-h">Keyboard focus</span><span class="cs-h">Lifted, over its slot</span><span class="cs-h">Drop target in a lane</span><span class="cs-h">Changed by someone else</span>
+    <span></span>
+    <span class="cs-hn">top: logo card · bottom: no logo</span><span class="cs-hn">rises 2 px, deeper shadow; logo art zooms 4%</span><span class="cs-hn">scale .98; release without moving opens detail</span><span class="cs-hn">Enter opens · Space lifts · arrows move</span><span class="cs-hn">tilt −1.2°, scale 1.035, lift shadow</span><span class="cs-hn">neighbours slide apart on a spring</span><span class="cs-hn">ring + tag fade over 1.6 s</span>
+
+    <sc-for list="{{themes}}" as="t" hint-placeholder-count="5">
+      <div class="nu cs-band" data-theme="{{t.id}}">
+        <span class="cs-name display">{{t.name}}</span>
+
+        <div class="cs-cell">
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">Sat 24 Oct</span><span class="card-chip">6</span></span></div></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">Fri 6 Nov</span><span class="card-chip">4</span></span></div></div>
+        </div>
+
+        <div class="cs-cell">
+          <div role="button" tabindex="0" class="card is-phone is-hover"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">Sat 24 Oct</span><span class="card-chip">6</span></span></div></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb is-hover"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">Fri 6 Nov</span><span class="card-chip">4</span></span></div></div>
+        </div>
+
+        <div class="cs-cell">
+          <div role="button" tabindex="0" class="card is-phone is-pressed"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">Sat 24 Oct</span><span class="card-chip">6</span></span></div></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb is-pressed"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">Fri 6 Nov</span><span class="card-chip">4</span></span></div></div>
+        </div>
+
+        <div class="cs-cell">
+          <div role="button" tabindex="0" class="card is-phone is-focus"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">Sat 24 Oct</span><span class="card-chip">6</span></span></div></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb is-focus"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">Fri 6 Nov</span><span class="card-chip">4</span></span></div></div>
+        </div>
+
+        <div class="cs-cell" style="gap: 22px; padding-top: 10px;">
+          <div class="card-wrap"><div class="card-slot is-phone"></div>
+            <div style="position: absolute; left: 8px; right: -8px; top: -10px;"><div role="button" tabindex="0" class="card is-phone is-lifted"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span><span class="card-chips"><span class="card-chip">6</span></span></div></div></div></div>
+          <div class="card-wrap"><div class="card-slot is-phone"></div>
+            <div style="position: absolute; left: 8px; right: -8px; top: -10px;"><div role="button" tabindex="0" class="card is-phone is-fb is-lifted"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">4</span></span></div></div></div></div>
+        </div>
+
+        <div class="cs-cell" style="gap: 8px;">
+          <div role="button" tabindex="0" class="card is-phone"><div class="card-art art-night"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">V Rising</span></div></div>
+          <div class="card-slot is-phone"></div>
+          <div role="button" tabindex="0" class="card is-phone is-fb"><span class="fb-mark" aria-hidden="true">DA</span><div class="card-body"><span class="card-title">Dune Awakening</span></div></div>
+        </div>
+
+        <div class="cs-cell" style="gap: 18px; padding-top: 8px;">
+          <div class="card-wrap"><span class="flash-tag"><span class="av h6">B</span>Bunzato moved this</span>
+            <div role="button" tabindex="0" class="card is-phone is-flash"><div class="card-art art-neon"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Enshrouded</span><span class="card-chips"><span class="card-chip">12</span></span></div></div></div>
+          <div class="card-wrap"><span class="flash-tag"><span class="av h3">P</span>Path edited this</span>
+            <div role="button" tabindex="0" class="card is-phone is-fb is-flash"><span class="fb-mark" aria-hidden="true">SO</span><div class="card-body"><span class="card-title">Soulmask</span><span class="card-chips"><span class="card-chip">5</span></span></div></div></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2400,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themes: [
+        { id: 'light', name: 'Light' }, { id: 'dark', name: 'Dark' }, { id: 'legacy', name: 'Legacy' },
+        { id: 'pastel', name: 'Pastel' }, { id: 'cyberpunk', name: 'Cyberpunk' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

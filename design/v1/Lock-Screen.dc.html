@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: lock screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.bs-box{width:792px;height:495px;border-radius:14px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgb(0 0 0/.12),0 20px 50px rgb(0 0 0/.14)}
+.bs-in{width:1440px;height:900px;transform:scale(.55);transform-origin:top left;overflow:hidden}
+.code{font-family:var(--font-mono);text-transform:none;letter-spacing:-.01em}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 2580px; height: 1200px; display: flex; gap: 48px;">
+  <div style="display: grid; grid-template-columns: repeat(2, 792px); gap: 36px 40px; align-content: start;">
+
+    <div><p class="lbl">Entering <span>the code alone shows only this</span></p>
+      <div class="bs-box"><div class="bs-in nu" data-theme="{{t1}}"><div class="shell">
+        <header class="topbar"><span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span><span style="width: 1px; height: 22px; background: var(--separator);"></span><span class="codechip is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: grid; place-items: center;">
+          <form class="lock glass-2" action="#" aria-labelledby="l1">
+            <span class="icon-circle ic-accent"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+            <h1 id="l1" class="display t-title2"><span class="code">pnc-raids</span> is locked</h1>
+            <p class="c2" style="margin: 0;">This board has a password. Enter it to open the board.</p>
+            <div class="lock-form">
+              <label class="field"><span class="field-label">Board password</span><span class="input is-focus"><span class="grow">••••••••</span><button class="icon-btn icon-btn-dot" type="button" aria-label="Show password"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span></label>
+              <button class="btn btn-primary btn-block" type="submit">Unlock</button>
+            </div>
+            <span class="t-cap c3">This browser remembers it until you tap the lock on the code chip.</span>
+          </form>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div></div></div>
+    </div>
+
+    <div><p class="lbl">Wrong password</p>
+      <div class="bs-box"><div class="bs-in nu" data-theme="{{t2}}"><div class="shell">
+        <header class="topbar"><span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span><span style="width: 1px; height: 22px; background: var(--separator);"></span><span class="codechip is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: grid; place-items: center;">
+          <form class="lock glass-2" action="#" aria-labelledby="l2">
+            <span class="icon-circle ic-accent"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+            <h1 id="l2" class="display t-title2"><span class="code">pnc-raids</span> is locked</h1>
+            <p class="c2" style="margin: 0;">This board has a password. Enter it to open the board.</p>
+            <div class="lock-form">
+              <label class="field"><span class="field-label">Board password</span><span class="input is-error"><span class="grow">•••••••</span></span>
+                <span class="field-error" role="alert"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16v.5"></path></svg>That password didn't work. Check with whoever runs the board.</span></label>
+              <button class="btn btn-primary btn-block" type="submit">Unlock</button>
+            </div>
+          </form>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div></div></div>
+    </div>
+
+    <div><p class="lbl">Too many attempts <span>per network; countdown</span></p>
+      <div class="bs-box"><div class="bs-in nu" data-theme="{{t3}}"><div class="shell">
+        <header class="topbar"><span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span><span style="width: 1px; height: 22px; background: var(--separator);"></span><span class="codechip is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: grid; place-items: center;">
+          <div class="lock glass-2" role="alert" aria-labelledby="l3">
+            <span class="icon-circle ic-warn"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+            <h1 id="l3" class="display t-title2">Too many tries for now</h1>
+            <p class="c2" style="margin: 0;">Your network has entered a wrong password too many times. Wait a few minutes, then try again.</p>
+            <span class="badge badge-warning badge-countdown">Try again in 2:40</span>
+            <div class="lock-form" style="opacity: 0.5;">
+              <label class="field"><span class="field-label">Board password</span><span class="input"><span class="grow placeholder-text">Paused</span></span></label>
+              <button class="btn btn-primary btn-block" type="button" disabled>Unlock</button>
+            </div>
+          </div>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div></div></div>
+    </div>
+
+    <div><p class="lbl">Unlocking <span>then the board loads in place</span></p>
+      <div class="bs-box"><div class="bs-in nu" data-theme="{{t4}}"><div class="shell">
+        <header class="topbar"><span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span><span style="width: 1px; height: 22px; background: var(--separator);"></span><span class="codechip is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: grid; place-items: center;">
+          <div class="lock glass-2" aria-busy="true" aria-labelledby="l4">
+            <span class="icon-circle ic-ok"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.5-2"></path></svg></span>
+            <h1 id="l4" class="display t-title2"><span class="code">pnc-raids</span> is locked</h1>
+            <p class="c2" style="margin: 0;">This board has a password. Enter it to open the board.</p>
+            <div class="lock-form">
+              <label class="field"><span class="field-label">Board password</span><span class="input" style="opacity: 0.6;"><span class="grow">••••••••••</span></span></label>
+              <button class="btn btn-primary btn-block" type="button" aria-disabled="true"><span class="spin"></span>Unlocking…</button>
+            </div>
+          </div>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · entering</p>
+    <div class="nu frame frame-ph" data-theme="{{t5}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <form class="lock glass-2" action="#" aria-labelledby="l5" style="padding: 32px 22px 26px;">
+            <span class="icon-circle ic-accent"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+            <h1 id="l5" class="display t-title2"><span class="code">pnc-raids</span> is locked</h1>
+            <p class="c2" style="margin: 0;">This board has a password. Enter it to open the board.</p>
+            <div class="lock-form">
+              <label class="field"><span class="field-label">Board password</span><span class="input is-focus"><span class="grow">••••</span><button class="icon-btn icon-btn-dot" type="button" aria-label="Show password"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span></label>
+              <button class="btn btn-primary btn-block" type="submit">Unlock</button>
+            </div>
+          </form>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · the password was changed <span>this browser's saved one stopped working</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t6}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="ph-top"><span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span><span class="codechip is-ph is-plain"><span class="codechip-code">pnc-raids</span></span><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px;">
+          <div class="banner banner-info" role="status"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span class="grow t-foot"><b>The board's password changed.</b> Enter the new one to keep going.</span></div>
+          <form class="lock glass-2" action="#" aria-labelledby="l6" style="padding: 28px 22px 26px;">
+            <h1 id="l6" class="display t-title2"><span class="code">pnc-raids</span> is locked</h1>
+            <div class="lock-form">
+              <label class="field"><span class="field-label">New board password</span><span class="input"><span class="grow placeholder-text">Ask whoever runs the board</span></span></label>
+              <button class="btn btn-primary btn-block" type="submit" disabled>Unlock</button>
+            </div>
+          </form>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"legacy"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t5":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"t6":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":2580,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { t1: p.t1 ?? 'light', t2: p.t2 ?? 'dark', t3: p.t3 ?? 'legacy', t4: p.t4 ?? 'pastel', t5: p.t5 ?? 'cyberpunk', t6: p.t6 ?? 'dark' };
+  }
+}
+</script>
+</body>
+</html>

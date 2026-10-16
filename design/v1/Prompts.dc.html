@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: display name prompt</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.bg-board{position:absolute;inset:0;padding:28px 32px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-content:start}
+.bg-board .lane{height:520px;margin-top:72px}
+.bg-ph{position:absolute;inset:0;padding:80px 16px;display:flex;flex-direction:column;gap:10px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1620px; height: 980px; display: flex; gap: 48px;">
+  <div><p class="lbl">Display name · desktop <span>asked once, at this browser's first change; never just for opening a board</span></p>
+    <div class="nu frame frame-desk" data-theme="{{t1}}" style="width: 1100px; height: 844px;">
+      <div class="bg-board" aria-hidden="true"><div class="lane glass"><div class="card"><div class="card-art art-sun"></div></div></div><div class="lane glass"><div class="card"><div class="card-art art-forest"></div></div></div><div class="lane glass"></div></div>
+      <div class="scrim"></div>
+      <div class="overlay">
+        <form class="modal glass-2" role="dialog" aria-labelledby="dn-t" action="#" style="width: 440px;">
+          <div class="col" style="gap: 6px;">
+            <h2 id="dn-t" class="display t-title2">Who's this?</h2>
+            <p class="c2" style="margin: 0;">Pick a name for the board's history, so the guild can see who moved what.</p>
+          </div>
+          <label class="field"><span class="field-label">Your name</span><input class="input is-focus" value="Larias" autocomplete="nickname"><span class="field-hint">Just a label, not an account. Anyone can type any name, and you can change it in Settings.</span></label>
+          <div class="row" style="justify-content: flex-end; gap: 10px;"><button class="btn btn-quiet" type="button">Not now</button><button class="btn btn-primary" type="submit">Save and continue</button></div>
+          <span class="t-cap c3" style="text-align: right; margin-top: -8px;">Not now: your changes show as "Someone".</span>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div><p class="lbl">Display name · phone</p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="bg-ph" aria-hidden="true"><div class="card is-phone"><div class="card-art art-forest"></div></div><div class="card is-phone"><div class="card-art art-snow"></div></div></div>
+      <div class="scrim"></div>
+      <form class="bsheet glass-2" role="dialog" aria-labelledby="dn2-t" action="#">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 16px;">
+          <div class="col" style="gap: 6px;"><h2 id="dn2-t" class="display t-title2">Who's this?</h2><p class="c2" style="margin: 0;">A name for the board's history. Just a label, not an account.</p></div>
+          <div class="panel row t-foot c2" style="gap: 10px;"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path></svg>Then: add <b class="c1">Larias</b> to Valheim</div>
+          <label class="field"><span class="field-label">Your name</span><input class="input is-focus" value="" placeholder="e.g. Larias" autocomplete="nickname"></label>
+          <button class="btn btn-primary btn-block" type="submit" disabled>Save and continue</button>
+          <button class="btn btn-quiet btn-block" type="button">Not now</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1620,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return { t1: this.props.t1 ?? 'light', t2: this.props.t2 ?? 'dark' }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: landing</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="nu" data-theme="{{theme}}" style="width: 1440px; height: 900px; overflow: hidden;">
+  <div class="shell">
+    <header class="topbar">
+      <a class="wordmark" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a>
+      <span class="grow"></span>
+      <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+    </header>
+    <main style="flex: 1; display: grid; place-items: center;">
+      <div class="glass-2" style="width: 520px; border-radius: var(--r-sheet); padding: 52px 44px 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;">
+        <span class="mark" style="width: 64px; height: 64px; border-radius: 20px; margin-bottom: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width: 34px; height: 34px;" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+        <h1 class="display t-large">What are we playing next?</h1>
+        <p class="c2" style="margin: 0 0 18px; font-size: 16px;">Type your board's code to open it. A code nobody has used yet makes a new board.</p>
+        <form class="code-form is-focus" action="#">
+          <label class="sr-only" for="code" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Board code</label>
+          <input id="code" class="code-input" value="pnc-autumn" placeholder="Board code" autocomplete="off" spellcheck="false">
+          <button class="code-go" type="submit" aria-label="Open board"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+        </form>
+        <p class="t-foot c3" style="margin: 6px 0 0;">Letters, numbers and hyphens. A board without a password opens for anyone with its code, so share codes like keys.</p>
+      </div>
+    </main>
+    <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

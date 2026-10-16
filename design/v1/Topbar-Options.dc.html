@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: top bar A</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.opt{display:flex;flex-direction:column;gap:6px}
+.opt-t{font-size:22px;font-weight:750;letter-spacing:-.02em;color:#1d1d1f;margin:0}
+.opt-s{font-size:13.5px;color:#55555d;margin:0 0 8px}
+.peek{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.peek .lane{border-radius:22px 22px 0 0;padding-bottom:30px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1720px; height: 1380px; display: flex; flex-direction: column; gap: 30px;">
+
+  <div class="opt">
+    <p class="opt-t">Board without a password</p>
+    <p class="opt-s">Name, code chip with copy, live status; share, history and settings on the right. No lock button: there's nothing to lock.</p>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div class="nu frame frame-desk" data-theme="{{d}}" style="width: 1200px; height: 176px; padding: 22px 32px 0; display: flex; flex-direction: column; gap: 20px;">
+        <div class="topbar">
+          <span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span>
+          <span style="width: 1px; height: 22px; background: var(--separator);"></span>
+          <span class="codechip"><span class="codechip-code">pnc-autumn</span><button class="icon-btn" type="button" aria-label="Copy board link"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
+          <span class="sync sync-live"><span class="dot dot-pulse"></span>Live</span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+        <div class="peek"><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">5</span></div></div><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">2</span></div></div><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">9</span></div></div></div>
+      </div>
+      <div class="nu frame" data-theme="{{p}}" style="width: 390px; height: 176px; border-radius: 28px; padding: 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);">
+        <div class="ph-top">
+          <span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          <span class="codechip is-ph is-plain"><span class="dot dot-pulse" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-autumn</span></span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+        <div class="stack"><section class="lane glass"><div class="lane-head is-stuck"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">5</span></div></section></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <p class="opt-t">Password board, unlocked in this browser</p>
+    <p class="opt-s">A lock button joins the code chip. Tapping it forgets the password on this browser only and returns to the lock screen. No confirmation: getting back in only needs the password.</p>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div class="nu frame frame-desk" data-theme="{{d}}" style="width: 1200px; height: 176px; padding: 22px 32px 0; display: flex; flex-direction: column; gap: 20px; overflow: visible;">
+        <div class="topbar" style="position: relative;">
+          <span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span>
+          <span style="width: 1px; height: 22px; background: var(--separator);"></span>
+          <span class="codechip"><span class="codechip-code">pnc-raids</span><button class="icon-btn" type="button" aria-label="Copy board link"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button><button class="icon-btn lock-btn is-hover" type="button" aria-label="Lock this board on this browser"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button></span>
+          <span class="tip" style="left: 236px; top: 52px;">Lock: forget the password on this browser</span>
+          <span class="sync sync-live"><span class="dot dot-pulse"></span>Live</span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+        <div class="peek"><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">3</span></div></div><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span><span class="lane-n">1</span></div></div><div class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span><span class="lane-n">2</span></div></div></div>
+      </div>
+      <div class="nu frame" data-theme="{{p}}" style="width: 390px; height: 176px; border-radius: 28px; padding: 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);">
+        <div class="ph-top">
+          <span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          <span class="codechip is-ph"><span class="dot dot-pulse" style="color: var(--success);" aria-label="Live"></span><span class="codechip-code">pnc-raids</span><button class="icon-btn lock-btn" type="button" aria-label="Lock this board on this browser"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button></span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Share link"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"></path></svg></button>
+          <button class="round" type="button" aria-label="History"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></button>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+        <div class="stack"><section class="lane glass"><div class="lane-head is-stuck"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span><span class="lane-n">3</span></div></section></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <p class="opt-t">Lock screen (password board, not unlocked here)</p>
+    <p class="opt-s">Only the code that was typed. No live status, no share, no history: nothing about the board shows until the password is right.</p>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div class="nu frame frame-desk" data-theme="{{d}}" style="width: 1200px; height: 132px; padding: 22px 32px 0;">
+        <div class="topbar">
+          <span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span>
+          <span style="width: 1px; height: 22px; background: var(--separator);"></span>
+          <span class="codechip is-plain"><span class="codechip-code">pnc-raids</span></span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+      </div>
+      <div class="nu frame" data-theme="{{p}}" style="width: 390px; height: 132px; border-radius: 28px; padding: 16px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);">
+        <div class="ph-top">
+          <span class="mark" style="width: 30px; height: 30px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          <span class="codechip is-ph is-plain"><span class="codechip-code">pnc-raids</span></span>
+          <span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <p class="opt-t">No board open (landing, settings from landing, What's new)</p>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div class="nu frame frame-desk" data-theme="{{d}}" style="width: 1200px; height: 100px; padding: 22px 32px 0;">
+        <div class="topbar"><a class="wordmark" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></div>
+      </div>
+      <div class="nu frame" data-theme="{{p}}" style="width: 390px; height: 100px; border-radius: 28px; padding: 16px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);">
+        <div class="topbar"><a class="wordmark" href="#" style="font-size: 18px;"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <p class="opt-t">Bottom bar (every page)</p>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div class="nu frame frame-desk" data-theme="{{d}}" style="width: 1200px; height: 92px; display: flex; align-items: center; justify-content: center; gap: 30px;">
+        <a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a>
+        <a class="version-link is-hover" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a>
+        <span class="t-cap c3">rest · hover · 44 px tall target</span>
+      </div>
+      <div class="nu frame" data-theme="{{p}}" style="width: 390px; height: 92px; border-radius: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);">
+        <a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"desktopTheme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"phoneTheme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1720,"height":1380}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { d: this.props.desktopTheme ?? 'light', p: this.props.phoneTheme ?? 'dark' };
+  }
+}
+</script>
+</body>
+</html>

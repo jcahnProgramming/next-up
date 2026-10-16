@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: history and restore</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.h-list{display:flex;flex-direction:column}
+.h-row + .h-row{border-top:1px solid var(--separator)}
+.h-del{color:var(--error-text);font-weight:650}
+.h-hover{background:var(--surface-3);border-radius:14px;margin:0 -10px;padding:12px 10px}
+.diff{display:grid;grid-template-columns:96px minmax(0,1fr) minmax(0,1fr);gap:8px 10px;font-size:13px;align-items:start}
+.diff .k{color:var(--text-3);font-weight:600}
+.diff .old{color:var(--text-2);text-decoration:line-through;text-decoration-color:var(--text-3)}
+.diff .new{color:var(--text-1);font-weight:600}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 2840px; height: 1020px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Desktop · history panel <span>newest first, paged by cursor</span></p>
+    <div class="nu frame frame-desk" data-theme="{{t1}}" style="width: 1440px; height: 900px;">
+      <div class="shell" style="gap: 24px;" aria-hidden="true">
+        <header class="topbar"><span class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</span><span class="codechip" style="padding-right: 14px;">pnc-autumn</span><span class="sync sync-live"><span class="dot"></span>Live</span></header>
+        <main class="lanes">
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-up"></span><span class="lane-name">Up Next</span></div><div class="card"><div class="card-art art-ocean"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Sons of the Forest</span></div></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-now"></span><span class="lane-name">Now Playing</span></div><div class="card"><div class="card-art art-forest"></div><div class="card-scrim"></div><div class="card-body"><span class="card-title">Valheim</span></div></div></section>
+          <section class="lane glass"><div class="lane-head"><span class="lane-dot ld-done"></span><span class="lane-name">Played</span></div></section>
+        </main>
+      </div>
+      <div class="scrim" style="background: transparent; backdrop-filter: none;"></div>
+      <aside class="sheet-side glass-2" role="dialog" aria-labelledby="h-t" style="width: 460px;">
+        <div class="sheet-head"><h2 id="h-t" class="display t-title2 grow">History</h2><button class="icon-btn" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+        <div style="padding: 0 20px; flex: 1; overflow: hidden;">
+          <div class="h-list">
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="2">
+              <div class="h-day">{{d.day}}</div>
+              <sc-for list="{{d.items}}" as="e" hint-placeholder-count="4">
+                <div class="h-row {{e.hover}}">
+                  <span class="av {{e.h}}">{{e.ini}}</span>
+                  <div class="grow">
+                    <div class="h-text"><b>{{e.who}}</b> {{e.verb}} <b class="{{e.cls}}">{{e.what}}</b>{{e.tail}}</div>
+                    <div class="h-meta">{{e.meta}}</div>
+                  </div>
+                  <sc-if value="{{e.restorable}}" hint-placeholder-val="{{false}}"><button class="btn btn-tint btn-sm" type="button"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Restore</button></sc-if>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </div>
+        <div class="sheet-foot" style="flex-direction: column; gap: 8px; align-items: center;">
+          <button class="btn btn-quiet btn-sm" type="button">Load older changes</button>
+          <span class="t-cap c3" style="text-align: center;">Names are typed by each browser and aren't verified. Nothing is ever removed from this list.</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div><p class="lbl">Phone · history sheet</p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" style="top: 44px;" role="dialog" aria-labelledby="h2-t">
+        <span class="grabber"></span>
+        <div class="sheet-head"><h2 id="h2-t" class="display t-title3 grow">History</h2><button class="icon-btn" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+        <div style="padding: 0 16px; flex: 1; overflow: hidden;">
+          <div class="h-list">
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="2">
+              <div class="h-day">{{d.day}}</div>
+              <sc-for list="{{d.items}}" as="e" hint-placeholder-count="4">
+                <div class="h-row">
+                  <span class="av {{e.h}}">{{e.ini}}</span>
+                  <div class="grow">
+                    <div class="h-text" style="font-size: 13.5px;"><b>{{e.who}}</b> {{e.verb}} <b class="{{e.cls}}">{{e.what}}</b>{{e.tail}}</div>
+                    <div class="h-meta">{{e.meta}}</div>
+                  </div>
+                  <sc-if value="{{e.restorable}}" hint-placeholder-val="{{false}}"><button class="icon-btn icon-btn-ph icon-btn-tint" type="button" aria-label="Restore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></button></sc-if>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Restore confirmation</p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="dialog" aria-labelledby="r-t">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 16px;">
+          <div class="col" style="gap: 6px;">
+            <h2 id="r-t" class="display t-title2">Restore Sons of the Forest?</h2>
+            <p class="c2" style="margin: 0;">Puts the card back the way it was before Kaelis's edit at 13:05.</p>
+          </div>
+          <div class="panel diff">
+            <span></span><span class="k">Now</span><span class="k">After restore</span>
+            <span class="k">Go-live</span><span class="old">Sat 7 Nov</span><span class="new">Sat 31 Oct</span>
+            <span class="k">Server info</span><span class="old mono" style="font-size: 11.5px;">198.51.100.7:8766</span><span class="new mono" style="font-size: 11.5px;">198.51.100.7:8765</span>
+          </div>
+          <p class="t-foot c3" style="margin: 0;">The restore is logged as a new change by Larias. Nothing is lost: Kaelis's version stays in the history.</p>
+          <button class="btn btn-primary btn-block" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Restore</button>
+          <button class="btn btn-quiet btn-block" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Restore a move <span>back to its previous lane and position</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t4}}">
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="dialog" aria-labelledby="rm-t">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 16px;">
+          <div class="col" style="gap: 6px;">
+            <h2 id="rm-t" class="display t-title2">Move Valheim back?</h2>
+            <p class="c2" style="margin: 0;">Puts it back where it was before Bunzato moved it at 14:32.</p>
+          </div>
+          <div class="panel diff">
+            <span></span><span class="k">Now</span><span class="k">After restore</span>
+            <span class="k">Lane</span><span class="old">Now Playing</span><span class="new">Up Next</span>
+            <span class="k">Position</span><span class="old">1st</span><span class="new">2nd from top</span>
+          </div>
+          <p class="t-foot c3" style="margin: 0;">If Up Next has changed since, Valheim goes as close to 2nd as the lane allows. Logged as a new change by Larias.</p>
+          <button class="btn btn-primary btn-block" type="button"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Move it back</button>
+          <button class="btn btn-quiet btn-block" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t4":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"$preview":{"width":2840,"height":1020}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const e = (who, ini, h, verb, what, tail, meta, restorable, cls, hover) => ({ who, ini, h, verb, what, tail, meta, restorable: !!restorable, cls: cls || '', hover: hover || '' });
+    const days = [
+      { day: 'Today', items: [
+        e('Bunzato', 'BU', 'h6', 'moved', 'Valheim', ' · Up Next → Now Playing', '14:32', true),
+        e('Path', 'PA', 'h3', 'added player', 'Larias', ' to Valheim', '14:20', false),
+        e('Kaelis', 'KA', 'h2', 'edited', 'Sons of the Forest', ' · go-live date, server info', '13:05', true, '', 'h-hover'),
+        e('Someone', '?', 'h5', 'deleted', 'Conan Exiles', '', '12:40 · no display name set', true, 'h-del')
+      ] },
+      { day: 'Yesterday', items: [
+        e('Morrigan', 'MO', 'h7', 'removed player', 'Grimtusk', ' from V Rising', '21:12', false),
+        e('Path', 'PA', 'h3', 'removed the board password', '', '', '20:52 · the board is open to anyone with the code', false),
+        e('Path', 'PA', 'h3', 'restored', 'Palworld', ' to its 13 Oct version', '20:40', false),
+        e('Path', 'PA', 'h3', 'added', 'Enshrouded', ' to Up Next', '20:03', false),
+        e('Path', 'PA', 'h3', 'created the board', '', '', '19:58', false)
+      ] }
+    ];
+    return { t1: this.props.t1 ?? 'dark', t2: this.props.t2 ?? 'light', t3: this.props.t3 ?? 'pastel', t4: this.props.t4 ?? 'cyberpunk', days };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: system states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.mx{display:grid;grid-template-columns:130px repeat(7,minmax(0,1fr));gap:10px}
+.mx-h{font-size:13px;font-weight:700;color:#1d1d1f;padding:0 4px 4px}
+.mx-r{font-size:14px;font-weight:700;color:#1d1d1f;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.mx-r span{font-size:11.5px;font-weight:500;color:#6a6a72}
+.cellwrap{border-radius:18px;padding:10px;height:212px;display:flex}
+.cell{flex:1;min-width:0;border-radius:14px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
+.cell .icon-circle{width:34px;height:34px}
+.cell .ct{font-size:13px;font-weight:650;color:var(--text-1);line-height:1.25}
+.cell .cx{font-size:11.5px;color:var(--text-2);line-height:1.35}
+.cell .btn{margin-top:2px}
+.cell-na{align-items:flex-start;justify-content:flex-start;text-align:left}
+.cell-na .ct{color:var(--text-3);font-weight:600}
+.cell-na .cx{color:var(--text-3)}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1800px; height: 1380px; display: flex; flex-direction: column; gap: 18px;">
+  <div style="display: flex; align-items: flex-end; gap: 40px;">
+    <div class="col" style="gap: 6px;"><h1 style="margin: 0; font-size: 34px; font-weight: 750; letter-spacing: -0.025em; color: #1d1d1f;">System states, screen by screen</h1>
+      <p style="margin: 0; font-size: 14.5px; color: #55555d; max-width: 1100px;">One grammar everywhere. Loading = shimmer in the content's own shape. Nothing here yet = dashed, patterned, neutral, with an action. Couldn't load = solid error tint, says what failed, offers Retry. Offline = warning tint plus the data's age. Rate-limited = warning tint plus a countdown. Doesn't apply = plain grey text, no box.</p></div>
+  </div>
+  <div class="mx">
+    <span></span>
+    <sc-for list="{{cols}}" as="c" hint-placeholder-count="7"><span class="mx-h">{{c}}</span></sc-for>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+      <div class="mx-r">{{r.name}}<span>{{r.sub}}</span></div>
+      <sc-for list="{{r.cells}}" as="x" hint-placeholder-count="7">
+        <div class="nu cellwrap" data-theme="{{r.theme}}">
+          <sc-if value="{{x.load}}" hint-placeholder-val="{{false}}">
+            <div class="cell" aria-busy="true" style="gap: 8px;">
+              <span class="sk" style="height: 26px; width: 100%;"></span><span class="sk sk-line" style="width: 80%;"></span><span class="sk sk-line" style="width: 60%;"></span>
+              <span class="cx row" style="gap: 6px; margin-top: 4px;"><span class="spin" style="width: 11px; height: 11px; border-width: 1.6px;"></span>{{x.t}}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{x.empty}}" hint-placeholder-val="{{false}}">
+            <div class="cell st-empty" style="padding: 12px; border-radius: 14px;"><span class="icon-circle ic-neutral"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="ct">{{x.t}}</span><span class="cx">{{x.d}}</span>
+              <sc-if value="{{x.btn}}" hint-placeholder-val="{{false}}"><button class="btn btn-tint btn-sm" type="button">{{x.btn}}</button></sc-if></div>
+          </sc-if>
+          <sc-if value="{{x.err}}" hint-placeholder-val="{{false}}">
+            <div class="cell st-error" style="padding: 12px; border-radius: 14px;" role="alert"><span class="icon-circle ic-err"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.5"></path></svg></span><span class="ct">{{x.t}}</span><span class="cx">{{x.d}}</span>
+              <button class="btn btn-secondary btn-sm" type="button">Try again</button></div>
+          </sc-if>
+          <sc-if value="{{x.off}}" hint-placeholder-val="{{false}}">
+            <div class="cell st-warn" style="padding: 12px; border-radius: 14px;"><span class="icon-circle ic-warn"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 5-3M22 8.5a15 15 0 0 0-11-3.9M9 15.5a5 5 0 0 1 6 0M3 3l18 18"></path></svg></span><span class="ct">{{x.t}}</span><span class="cx">{{x.d}}</span><button class="btn btn-secondary btn-sm" type="button">Retry</button></div>
+          </sc-if>
+          <sc-if value="{{x.rate}}" hint-placeholder-val="{{false}}">
+            <div class="cell st-warn" style="padding: 12px; border-radius: 14px;"><span class="icon-circle ic-warn"><svg class="i i-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span><span class="ct">{{x.t}}</span><span class="badge badge-warning badge-countdown">{{x.d}}</span></div>
+          </sc-if>
+          <sc-if value="{{x.na}}" hint-placeholder-val="{{false}}">
+            <div class="cell cell-na"><span class="ct">Doesn't apply</span><span class="cx">{{x.d}}</span></div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-for>
+  </div>
+  <p style="margin: 4px 0 0; font-size: 13px; color: #55555d;">Not in the grid: What's new is built into the app (no loading or error states) and Settings is stored in the browser (nothing to fetch). Empty history for a brand-new board reads "No changes yet"; it is never shown as an error.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"themeA":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"light"},"themeB":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1800,"height":1380}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const A = this.props.themeA ?? 'light';
+    const B = this.props.themeB ?? 'dark';
+    const L = (t) => ({ load: true, t });
+    const E = (t, d, btn) => ({ empty: true, t, d, btn: btn || '' });
+    const X = (t, d) => ({ err: true, t, d });
+    const O = (t, d) => ({ off: true, t, d });
+    const R = (t, d) => ({ rate: true, t, d });
+    const N = (d) => ({ na: true, d });
+    const rows = [
+      { name: 'Loading', sub: 'shimmer in place', theme: A, cells: [
+        L('Opening…'), L('Loading board'), L('Loading card'), L('Loading players'), L('Loading history'), L('Loading logos'), L('Checking…')] },
+      { name: 'Nothing here yet', sub: 'honest empty', theme: B, cells: [
+        N('The empty box is the starting state.'), E('A fresh board', 'Add the first game.', 'Add a game'), E('Not set', 'No date or server info yet.', 'Edit card'),
+        E('Nobody signed up yet', 'Be the first.', 'Add Player'), E('No changes yet', 'Every edit will show up here.'), E('No logos yet', 'Cards use a colour until logos are added.'), N('There is always a field to fill.')] },
+      { name: "Couldn't load", sub: 'failed, says what', theme: A, cells: [
+        X("Couldn't reach Next Up", 'Your code is kept.'), X("Couldn't load this board", 'Timed out after 10 s.'), X("Couldn't load this card", 'The board is fine.'),
+        X("Couldn't add Larias", 'Nothing was saved.'), X("Couldn't load history", 'Board edits still work.'), X("Couldn't load logos", 'Keeping the current one.'), X("Couldn't check it", 'Not a wrong password.')] },
+      { name: 'Offline / reconnecting', sub: 'shows its age', theme: B, cells: [
+        O("You're offline", 'Boards need a connection to open.'), O('Offline · as of 14:32', 'Editing paused until we reconnect.'), O('As of 14:32', 'Editing paused until we reconnect.'),
+        O('Sign-ups paused', 'Editing paused until we reconnect.'), O('Up to 14:32', 'Newer changes load when back.'), O('Seen logos only', 'Others load when back.'), O('Needs a connection', 'Try again when back online.')] },
+      { name: 'Rate-limited', sub: 'per network', theme: A, cells: [
+        R('Too many unknown codes', 'Try again in 4:12'), N('Only codes and passwords are rate-limited.'), N('Only codes and passwords are rate-limited.'), N('Only codes and passwords are rate-limited.'),
+        N('Only codes and passwords are rate-limited.'), N('Only codes and passwords are rate-limited.'), R('Too many wrong passwords', 'Try again in 2:40')] }
+    ];
+    return { cols: ['Landing', 'Board', 'Card detail', 'Players', 'History', 'Logo picker', 'Lock screen'], rows };
+  }
+}
+</script>
+</body>
+</html>

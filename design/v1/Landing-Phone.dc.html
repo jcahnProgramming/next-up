@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: landing on a phone</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1350px; height: 1000px; display: flex; gap: 48px;">
+
+  <div><p class="lbl">Typing <span>{{t1}}</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t1}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="topbar"><a class="wordmark" href="#" style="font-size: 18px;"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; text-align: center; padding: 0 4px;">
+          <h1 class="display t-title1">What are we playing next?</h1>
+          <p class="c2" style="margin: 0 0 14px;">Type your board's code to open it. A code nobody has used yet makes a new board.</p>
+          <div class="code-form is-focus"><input class="code-input" value="pnc-autumn" aria-label="Board code"><button class="code-go" type="button" aria-label="Open board"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></div>
+          <p class="t-foot c3" style="margin: 4px 0 0;">A board without a password opens for anyone with its code, so share codes like keys.</p>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Create? as a bottom sheet <span>{{t2}}</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t2}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="topbar"><a class="wordmark" href="#" style="font-size: 18px;"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; text-align: center;">
+          <h1 class="display t-title1">What are we playing next?</h1>
+          <div class="code-form"><input class="code-input" value="pnc-autumn" aria-label="Board code"><span class="code-go"><span class="spin"></span></span></div>
+        </main>
+      </div>
+      <div class="scrim"></div>
+      <div class="bsheet glass-2" role="dialog" aria-labelledby="cr-t">
+        <span class="grabber"></span>
+        <div style="padding: 18px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+          <div class="row" style="gap: 12px;"><span class="icon-circle ic-accent" style="width: 44px; height: 44px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+            <div class="col"><h2 id="cr-t" class="display t-title3"><span style="font-family: var(--font-mono);">pnc-autumn</span> is free</h2><span class="t-foot c2">Nobody has made this board yet.</span></div></div>
+          <label class="field"><span class="field-label">Board password <span class="c3" style="font-weight: 500;">(optional)</span></span>
+            <span class="input is-focus"><span class="grow">••••••••</span><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
+            <span class="field-hint">With a password, the code alone shows only a lock screen. There's no way to recover it, so keep it somewhere safe.</span></label>
+          <button class="btn btn-primary btn-block" type="button">Create board</button>
+          <button class="btn btn-quiet btn-block" type="button">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">Too many attempts <span>{{t3}}</span></p>
+    <div class="nu frame frame-ph" data-theme="{{t3}}">
+      <div class="shell shell-ph" style="height: 100%;">
+        <header class="topbar"><a class="wordmark" href="#" style="font-size: 18px;"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>Next Up</a><span class="grow"></span>
+          <button class="round" type="button" aria-label="Settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></header>
+        <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; text-align: center;">
+          <span class="icon-circle ic-warn"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+          <h1 class="display t-title2">Too many tries for now</h1>
+          <p class="c2" style="margin: 0;">Your network has tried a lot of codes that don't exist. Boards you've opened before still open by their link.</p>
+          <span class="badge badge-warning badge-countdown">Try again in 4:12</span>
+          <div class="code-form" style="opacity: 0.5; margin-top: 8px;"><input class="code-input" value="pnc-autumm" disabled aria-label="Board code"><span class="code-go is-disabled" style="background: var(--surface-4); color: var(--text-3);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
+        </main>
+        <footer class="bottombar"><a class="version-link" href="#"><span>Next Up</span><b>v0.1.0</b><span aria-hidden="true">·</span><span>What's new</span></a></footer>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"t1":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"pastel"},"t2":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"t3":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"cyberpunk"},"$preview":{"width":1350,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return { t1: this.props.t1 ?? 'pastel', t2: this.props.t2 ?? 'dark', t3: this.props.t3 ?? 'cyberpunk' }; }
+}
+</script>
+</body>
+</html>

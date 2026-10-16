@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Up: landing states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="nu.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&amp;family=JetBrains+Mono:wght@400..700&amp;display=swap">
+<style>body{margin:0}
+.ls{border-radius:20px;display:grid;place-items:center;height:440px;padding:24px}
+.ls-sheet{width:420px;border-radius:var(--r-sheet);padding:32px 30px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+</style>
+</helmet>
+<div class="sheet-canvas" style="width: 1560px; height: 1060px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 24px; align-content: start;">
+
+  <div><p class="lbl">1 · Typing <span>go button wakes up once there's a code</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2">
+        <h2 class="display t-title2">What are we playing next?</h2>
+        <p class="c2 t-foot" style="margin: 0 0 12px;">Type your board's code to open it. A code nobody has used yet makes a new board.</p>
+        <div class="code-form is-focus"><input class="code-input" value="pnc-aut" aria-label="Board code"><button class="code-go" type="button" aria-label="Open board"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></div>
+        <div class="code-form" style="margin-top: 6px;"><input class="code-input" placeholder="Board code" aria-label="Board code, empty"><span class="code-go is-disabled" style="background: var(--surface-4); color: var(--text-3);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
+        <p class="t-cap c3" style="margin: 0;">above: typing · below: empty, go disabled</p>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">2 · Opening an existing board <span>then the board loads in place</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2">
+        <h2 class="display t-title2">What are we playing next?</h2>
+        <p class="c2 t-foot" style="margin: 0 0 12px;">Type your board's code to open it. A code nobody has used yet makes a new board.</p>
+        <div class="code-form" style="opacity: 0.75;"><input class="code-input" value="pnc-autumn" disabled aria-label="Board code"><span class="code-go" style="background: var(--accent-fill); color: var(--text-on-accent);"><span class="spin"></span></span></div>
+        <p class="t-foot c2" style="margin: 6px 0 0;" aria-live="polite">Opening <span class="mono" style="font-weight: 600;">pnc-autumn</span>…</p>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">3 · The code is free: create it? <span>password optional</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2" style="align-items: stretch; text-align: left; gap: 14px;">
+        <div class="row" style="gap: 12px;"><span class="icon-circle ic-accent" style="width: 44px; height: 44px;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+          <div class="col"><h2 class="display t-title3"><span class="mono" style="font-family: var(--font-mono);">pnc-autumn</span> is free</h2><span class="t-foot c2">Nobody has made this board yet. Create it?</span></div></div>
+        <label class="field"><span class="field-label">Board password <span class="c3" style="font-weight: 500;">(optional)</span></span>
+          <span class="input"><span class="grow placeholder-text">Leave empty for an open board</span><svg class="i c3" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
+          <span class="field-hint">Without one, anyone with the code can open and edit the board. With one, the code alone shows nothing but a lock screen. You can add, change or remove it later in Settings.</span></label>
+        <div class="row" style="justify-content: flex-end; gap: 10px; margin-top: 4px;"><button class="btn btn-quiet" type="button">Back</button><button class="btn btn-primary" type="button">Create board</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">4 · Too many attempts <span>rate-limited per network</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2">
+        <span class="icon-circle ic-warn"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+        <h2 class="display t-title3">Too many tries for now</h2>
+        <p class="c2 t-foot" style="margin: 0;">Your network has tried a lot of codes that don't exist. You can try again in a few minutes; boards you've opened before still open by their link.</p>
+        <span class="badge badge-warning badge-countdown">Try again in 4:12</span>
+        <div class="code-form" style="opacity: 0.55; margin-top: 6px;"><input class="code-input" value="pnc-autumm" disabled aria-label="Board code"><span class="code-go is-disabled" style="background: var(--surface-4); color: var(--text-3);"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">5 · Board limit reached <span>creating refused plainly</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2">
+        <span class="icon-circle ic-neutral"><svg class="i i-lg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18M9 4v16"></path></svg></span>
+        <h2 class="display t-title3">Next Up is full</h2>
+        <p class="c2 t-foot" style="margin: 0;"><span class="mono" style="font-weight: 600;">pnc-autumn</span> is free, but Next Up has reached its limit on boards, so it can't make new ones right now. Opening an existing board still works.</p>
+        <div class="row" style="gap: 10px; margin-top: 8px;"><button class="btn btn-secondary" type="button">Try another code</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div><p class="lbl">6 · Error <span>couldn't reach the server; code is kept</span></p>
+    <div class="nu frame ls" data-theme="{{theme}}">
+      <div class="ls-sheet glass-2">
+        <h2 class="display t-title2">What are we playing next?</h2>
+        <p class="c2 t-foot" style="margin: 0 0 12px;">Type your board's code to open it. A code nobody has used yet makes a new board.</p>
+        <div class="code-form is-error"><input class="code-input" value="pnc-autumn" aria-label="Board code" aria-describedby="err"><button class="code-go" type="button" aria-label="Try again"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"></path><path d="M4 3v5h5"></path><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"></path><path d="M20 21v-5h-5"></path></svg></button></div>
+        <div id="err" class="banner banner-err" style="width: 100%; margin-top: 6px; text-align: left;"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.5"></path></svg><span class="grow"><b>Couldn't reach Next Up.</b> Check your connection, then try again.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark","legacy","pastel","cyberpunk"],"default":"dark"},"$preview":{"width":1560,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'dark' }; }
+}
+</script>
+</body>
+</html>
