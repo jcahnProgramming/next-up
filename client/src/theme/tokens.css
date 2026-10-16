@@ -2,7 +2,7 @@
    itself built on home-dashboard's tokens); copy changes from there.
    Themes: light · dark · legacy · pastel · cyberpunk  (data-theme on <html>, or any wrapper)
    Scales: data-radius (small|default|large) · data-text (s|m|l|xl) · data-density (comfortable|compact) · data-motion (full|reduced|off)
-   Apply before first paint with the theme boot script inlined in client/index.html.
+   Apply before first paint with the theme boot script (client/public/theme-boot.js, loaded from client/index.html).
 
    Kept here that nu.css doesn't have: the @property cross-fade, the radius/text/density/motion scales, --press,
    --lift, --spring-bounce, the *-fill status colours, --stopped and the hd-* keyframes.

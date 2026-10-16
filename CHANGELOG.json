@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "version": "1.0.0",
+      "date": "2026-10-16",
+      "title": "Next Up 1.0: the guild’s game board, ready for the rotation",
+      "sections": {
+        "New": [
+          "Next Up 1.0. Everything below already works and has been used by Post Nerf Clarity on a real board, on desktop and phone. This release adds no new features; it marks the board as ready.",
+          "Boards open by code: type one on the front page to open that board, or create it if it’s free. There are no accounts. Anyone with the code can use the board.",
+          "An optional password, chosen when the board is created. A password board shows nothing but a lock screen until it is unlocked, and this browser remembers the unlock until you press the lock on the code chip. The password can be changed later but never removed.",
+          "Three lanes, Up Next, Now Playing and Played. Drag cards between and within them with a mouse, by long-press on a phone, or with the keyboard.",
+          "Each card shows the game’s art and opens to its go-live date, server info (links work) and a sign-up list where anyone can add or remove players.",
+          "History logs every change with the name of whoever made it, and Restore undoes card edits, deletes, moves and removed sign-ups.",
+          "Live updates: changes show up for everyone viewing the board as they happen. If the connection drops, the board says so and pauses editing until it’s back.",
+          "Settings: pick one of five themes (Light, Dark, Legacy, Pastel, Cyberpunk, or Match device), set your display name, and for the board you came from, change its password or delete it. A deleted board can be restored for 24 hours, then it and its code are gone.",
+          "Card art for 31 games: 7 Days to Die, Abiotic Factor, ARK: Survival Ascended, Conan Exiles, Core Keeper, DayZ, Don’t Starve Together, Dune: Awakening, Enshrouded, Everwind, Factorio, Hytale, ICARUS, Minecraft, Night of the Dead, Once Human, Palworld, Pax Dei, Project Zomboid, Rust, Satisfactory, Sons of the Forest, Soulmask, Space Engineers, Stardew Valley, Stormforge, Subnautica 2, Terraria, Unturned, V Rising and Valheim. Pick one from a card’s logo list."
+        ]
+      }
+    },
+    {
       "version": "0.10.1",
       "date": "2026-10-16",
       "title": "Hardening before the guild test: nightly backups, safer headers, clearer states, better keyboard use",

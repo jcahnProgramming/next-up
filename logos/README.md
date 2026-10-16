@@ -23,7 +23,7 @@ Each file declares one logo. Its display name (shown in the logo dropdown, and f
 someone picks it for an untitled card) is the file name title-cased: `v-rising.webp` is **V Rising**,
 `helldivers-2.webp` is **Helldivers 2**.
 
-When title-casing gets it wrong, add the right name to `names.json` in this folder (create it if it isn't there):
+When title-casing gets it wrong, add the right name to `names.json` in this folder:
 
 ```json
 {

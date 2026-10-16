@@ -25,7 +25,8 @@ cd <APPDATA_DIR>
 git clone <gitea clone url> next-up      # must be on main
 cd next-up
 mkdir data
-touch .env                               # then add MCP_BEARER_TOKEN=..., PUID=99, PGID=100
+touch .env                               # then add MCP_BEARER_TOKEN=..., PUID=99, PGID=100 (and later
+                                         # TRUSTED_PROXIES: see "Rate limits behind the tunnel")
 chown -R 99:100 data
 ```
 
@@ -65,13 +66,16 @@ Rate limits count per visitor network, which behind the tunnel is the `CF-Connec
 
 1. Open any board through the tunnel (any browser, `https://nextup.postnerfclarity.com/b/<a code>`), then on <HOST>:
    `docker logs next-up 2>&1 | grep CF-Connecting-IP`. The app logs each address the header arrives from, once:
-   `CF-Connecting-IP arrived on a connection from 172.18.0.1: honoured (TRUSTED_PROXIES not set)`.
+   `CF-Connecting-IP arrived on a connection from <TUNNEL_SOURCE_IP>: honoured (TRUSTED_PROXIES not set)`.
 2. From a LAN machine: `curl -s -H 'CF-Connecting-IP: 203.0.113.9' http://<LAN_IP>:3230/api/boards/zz-spoof-check`
    (a lookup: only board requests consult the limits, so only they log it), then the same
    `grep` again. Its line names the LAN machine's own address (`<LAN_RANGE>`).
-3. If the two addresses differ, add the tunnel's to `.env`: a Docker bridge address (172.16–31.x.x) as
-   `TRUSTED_PROXIES=172.16.0.0/12` (Docker can renumber its networks; no LAN address is in that range), or
-   `<LAN_IP>` as itself. Then `docker compose up -d next-up` (a plain `restart` doesn't re-read `.env`).
+3. If the two addresses differ, add the tunnel's to `.env`. A Docker network address can be in any of Docker's
+   private ranges, so check which one the log shows: 172.16–31.x.x is `TRUSTED_PROXIES=172.16.0.0/12`, 192.168.x.x
+   is `TRUSTED_PROXIES=192.168.0.0/16` (Docker can renumber its networks within a range; trust the whole range, as
+   long as the LAN is not in it). `<LAN_IP>` goes in as itself. On <HOST> the tunnel arrived from `<TUNNEL_SOURCE_IP>`, so
+   the value is `TRUSTED_PROXIES=192.168.0.0/16` (the LAN is <LAN_RANGE>). Then `docker compose up -d next-up` (a plain
+   `restart` doesn't re-read `.env`).
    If they're the same, stop: this way can't tell them apart, and the tunnel needs to reach the container another
    way.
 4. Check: the start-up log says `CF-Connecting-IP honoured only from TRUSTED_PROXIES`, the LAN `curl` now logs

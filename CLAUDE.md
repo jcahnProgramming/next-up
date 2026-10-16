@@ -1,7 +1,7 @@
 # Next Up
 
 A game-planning kanban for the WoW guild Post Nerf Clarity, at https://nextup.postnerfclarity.com. Built for Path and
-the guild. Stack, structure and deploy are copied from `D:\Dev\home-dashboard`; when in doubt, do it the way it does.
+the guild. Stack, structure and deploy are copied from the owner's home-dashboard project; when in doubt, do it the way it does.
 
 **Hard boundary: PUBLIC on the internet** through the Cloudflare tunnel "<TUNNEL_NAME>". **No user accounts, ever**: no
 login, no sign-up, no user table, no email, no OAuth. The board code is the access key, plus the board's password if
@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.9.0 has all of it: boards, access, lanes, cards, drag and drop, card details, history and restore, live sync, board retiring and Settings' "This board")
+## What Next Up is (the agreed spec: complete since 0.9.0, released as 1.0.0 once it was in real use)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -58,7 +58,8 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   The header can't be forged from the internet (Cloudflare's edge sets it), but a LAN device talking to port 3230
   directly can send its own. Setting `TRUSTED_PROXIES` in `.env` (cloudflared's address as the container sees it)
   makes the app honour the header only from there; until it is set, the header is honoured from any connection.
-  The web app logs each connection address the header arrives from, once, and whether it was honoured (never the
+  On <HOST> it is `192.168.0.0/16` (set 2026-10-16: the tunnel arrived from the Docker gateway <TUNNEL_SOURCE_IP>; the LAN
+  is <LAN_RANGE>). Docker can number its networks in 172.16–31.x or 192.168.x, so measure, never assume. The web app logs each connection address the header arrives from, once, and whether it was honoured (never the
   header's value): that is how the value is found, and how a wrong one shows (`IGNORED` on the tunnel's address
   means every visitor shares one limit). README "Rate limits behind the tunnel" has the steps.
   - Unknown codes: **30 per network per 15 minutes**. Every creation attempt counts too (otherwise "that code is
@@ -349,7 +350,7 @@ version on the left and the coffee link on the right.
   the lock screen, player chips). Fields that are busy are `readOnly` or `aria-disabled`, not `disabled`, when they
   hold focus.
 
-- **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script in `client/index.html` applies the stored
+- **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script (`client/public/theme-boot.js`, loaded from `client/index.html`) applies the stored
   theme (`nu.theme` in localStorage) before first paint; unset, Light/Dark follow the device ("Match device"). Dark
   is glass. **Legacy is flat**: no blur or translucency, 1 px borders, small radii, squared buttons; cards stay
   pills.
@@ -357,8 +358,8 @@ version on the left and the coffee link on the right.
   field in `--backdrop-pattern`); every glass pane has `--edge` (a `--hairline-w` rim in `--glass-rim` and a 1 px top
   `--glass-sheen`); the bars use `--surface-bar`. All are theme tokens in `client/src/theme/tokens.css`, never
   one-off styles. Text on glass is checked at 4.5:1 or better against the brightest backdrop pixel under it, in a
-  browser, in every theme, including with cards scrolled under the bars. No-logo cards stay solid. The app still ships the home-dashboard tokens (`client/src/theme/tokens.css`) until the UI is converted to
-  `design/v1/nu.css`.
+  browser, in every theme, including with cards scrolled under the bars. No-logo cards stay solid. The themes and shared tokens in `client/src/theme/tokens.css`
+  come from `design/v1/nu.css`; change them there first.
 - **Top bar option A**, with the board's code chip. On a password board unlocked in this browser, the chip carries the
   lock button that forgets the unlock.
 - **Phones (390 px):** the three lanes stack vertically. Moving a card is long-press, drag with auto-scroll near the
@@ -436,7 +437,15 @@ Newest first. Omit sections that don't apply (`Removed` is also allowed).
 
 - **PATCH** (0.x.1) for fixes, small additions and refinements. The default.
 - **MINOR** (0.x.0) for a genuinely new capability.
-- **1.0.0 is reserved** for: the full agreed spec working live and used by Post Nerf Clarity for one real game
-  rotation. Don't approach it.
+- **1.0.0 was reached on 2026-10-16**: the full agreed spec working live and used by Post Nerf Clarity for a real
+  game rotation (the `testboard` board, on desktop and phone). Releases after it follow the same PATCH / MINOR rules.
+
+## Roadmap (after 1.0)
+
+Planned, not specced. Each gets its own spec here before it is built.
+
+- Easter eggs and mini-games: off by default, with cryptic changelog entries.
+- Steam update badges on cards.
+- A public Discord bot.
 
 Write entries for someone reading them in six months: what changed from a user's point of view, not which files moved.
