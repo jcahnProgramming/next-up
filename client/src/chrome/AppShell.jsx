@@ -3,20 +3,36 @@ import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-rou
 import { APP_VERSION } from '../release.js';
 import { ArrowRight, SettingsIcon } from './icons.jsx';
 import { createScrollMemory, focusMainHeading, restoreScroll, scrollDecision } from './scrollMemory.js';
+import { CodeChip, TopbarProvider, useTopbar } from './topbar.jsx';
 import './chrome.css';
 
 // From home-dashboard: no navigation menu, sidebar or tab bar. A top bar with the app name and one button,
 // and a bottom bar with the version.
 export function AppShell() {
+  return (
+    <TopbarProvider>
+      <Shell />
+    </TopbarProvider>
+  );
+}
+
+function Shell() {
   const { pathname } = useLocation();
+  const { board } = useTopbar();
   return (
     <div className="shell">
       <ScrollManager />
-      <header className="topbar">
-        <Link to="/" className="topbar-name display">
+      <header className={`topbar${board ? ' has-board' : ''}`}>
+        <Link to="/" className="topbar-name display" aria-label="Next Up, home">
           <span className="topbar-mark" aria-hidden="true"><ArrowRight size={16} /></span>
-          Next Up
+          <span className="topbar-word">Next Up</span>
         </Link>
+        {board && (
+          <>
+            <span className="topbar-sep" aria-hidden="true" />
+            <CodeChip board={board} />
+          </>
+        )}
         <div className="topbar-actions">
           <NavLink to="/settings" className="round-button" aria-label="Settings" title="Settings">
             <SettingsIcon />

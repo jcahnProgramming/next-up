@@ -369,3 +369,139 @@ body {
   color: var(--text-1);
   font-weight: 600;
 }
+.banner-err {
+  background: var(--error-soft);
+  color: var(--error-text);
+}
+.banner-info {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Spinner (design/v1 nu.css .spin). */
+.spin {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: hd-spin 0.8s linear infinite;
+}
+
+/* Icon discs heading a state (design/v1 nu.css .icon-circle / .ic-*). */
+.icon-circle {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.icon-circle-sm {
+  width: 44px;
+  height: 44px;
+}
+.ic-neutral { background: var(--surface-3); color: var(--text-2); }
+.ic-accent { background: var(--accent-soft); color: var(--accent-text); }
+.ic-warn { background: var(--warning-soft); color: var(--warning-text); }
+.ic-err { background: var(--error-soft); color: var(--error-text); }
+.ic-ok { background: var(--success-soft); color: var(--success-text); }
+
+/* Round icon buttons (design/v1 nu.css .icon-btn). The 36 px dot keeps a 44 px target through ::after. */
+.icon-btn {
+  position: relative;
+  width: var(--icon-btn);
+  height: var(--icon-btn);
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: transparent;
+  color: var(--text-2);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text-1);
+}
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.icon-btn-dot {
+  width: var(--icon-btn-dot);
+  height: var(--icon-btn-dot);
+}
+.icon-btn-dot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--hit-min);
+  transform: translateY(-50%);
+}
+
+/* A field with something inside it (design/v1 nu.css .input wrapping a show-password button): the box draws the
+   well and the focus ring; the input inside is bare. */
+.field-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 4px 0 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  box-shadow: var(--well);
+  color: var(--text-1);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.field-box:focus-within {
+  box-shadow: var(--well), var(--focus-ring);
+}
+.field-box.is-error {
+  box-shadow: var(--well), 0 0 0 2px var(--error);
+}
+.field-box.is-busy {
+  opacity: 0.6;
+}
+.field-box > input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-body);
+}
+.field-box > input:focus-visible {
+  outline: none;
+  box-shadow: none; /* the box draws the ring */
+}
+.field-box > input::placeholder {
+  color: var(--text-3);
+}
+.field-box > input:disabled {
+  cursor: not-allowed;
+}
+.field-label-quiet {
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* The board code wherever it's quoted in text. */
+.code-text {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}

@@ -1,6 +1,26 @@
 {
   "releases": [
     {
+      "version": "0.3.0",
+      "date": "2026-10-15",
+      "title": "Boards and access",
+      "sections": {
+        "New": [
+          "Boards exist. Type a code on the front page: if the board exists it opens (or shows its lock screen); if nobody has used the code yet, Next Up offers to create it. Codes are 3 to 32 letters, numbers and hyphens, and capital letters don't matter: PNC-Raids and pnc-raids are the same board. Each board has its own address, /b/<code>.",
+          "When you create a board you choose, once, whether it has a password. Without one, anyone with the code can open and edit it, for good: a password can't be added later. With one, the code alone shows only a lock screen; the password will be changeable later but can never be removed, and it can't be recovered. You type it twice when creating the board.",
+          "The lock screen asks for the password and says plainly when it's wrong. Once it's right, this browser remembers the board until you press the lock on the code chip in the top bar, which forgets it here (no one else is affected). If the board's password has changed since this browser last opened it, the lock screen says so and asks for the new one.",
+          "The top bar shows the board's code with a copy button that copies the board's link (never the password). On a lock screen it shows only the code you typed.",
+          "Opening a board shows what is real so far: that it's open, whether it has a password and when it was made. Lanes and cards are not built yet, and the page says so instead of showing anything made up.",
+          "Abuse limits, per network: 10 wrong passwords per 15 minutes across all boards, and 30 codes that don't exist (or board creations) per 15 minutes. Past either, Next Up shows a countdown until you can try again. Boards this browser has opened before still open by their link while the code limit is in force.",
+          "Next Up holds at most 500 boards. When it is full, a free code says so straight away instead of letting you fill in the form first. Opening existing boards still works.",
+          "Every board keeps a change history from the moment it is created, recording who made each change by their display name (or \"Someone\" if they haven't set one). It isn't shown anywhere yet; it is what History and Restore will read. Password changes will be recorded without the password itself."
+        ],
+        "Improved": [
+          "If Next Up can't be reached while opening, creating or unlocking, it says so and keeps what you typed, separately from \"wrong password\" or \"nothing here\"."
+        ]
+      }
+    },
+    {
       "version": "0.2.0",
       "date": "2026-10-15",
       "title": "Themes and your display name",

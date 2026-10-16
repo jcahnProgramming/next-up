@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { createApp } from './app.js';
 import { config } from './core/config.js';
 import { closeDb } from './core/db.js';
+import { describeTrust } from './core/network.js';
 import { initPlatform } from './core/platform.js';
 import { APP_VERSION } from './core/version.js';
 
@@ -15,6 +16,7 @@ if (!existsSync(config.clientDist)) {
 // config.listenHost: loopback locally, the container's own interfaces in Docker (published on <LAN_IP> only).
 const httpServer = createApp().listen(config.port, config.listenHost, () => {
   console.log(`[web] Next Up ${APP_VERSION} listening on ${config.listenHost}:${config.port}`);
+  console.log(`[web] Rate limits per network: ${describeTrust()}`);
 });
 
 function shutdown() {

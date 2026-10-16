@@ -9,19 +9,21 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; only the skeleton exists in 0.1.0)
+## What Next Up will be (the agreed spec; 0.3.0 has boards and access, not lanes or cards yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
 - A card is a wide, short rounded pill with a game logo from `logos/` as its background (a solid theme-coloured fill
   with the game name when it has no logo). Clicking it opens a panel with a go-live date, a free-form server info
   field, and a player sign-up list (+ Add Player).
-- **Optional per-board password.** Without one, the board is fully open to anyone with the code. With one, someone
-  without the password sees only a lock screen. There is no view-only mode (see "Access model").
+- **Optional per-board password, chosen at creation only.** Without one, the board is fully open to anyone with the
+  code, for life. With one, someone without the password sees only a lock screen; it can be changed later but never
+  removed. There is no view-only mode (see "Access model").
+- **Boards can be retired** (deleted) by anyone who can edit them; restorable for 24 hours, then purged.
 - **Every change is logged** against the per-browser display name. Card edits, deletes and moves can be restored;
   password changes are logged but never restorable.
 - Boards update live for everyone viewing.
-- A Settings page: theme, display name, and the current board's password.
+- A Settings page: theme, display name, and "This board" (change password, delete board).
 - Read-only MCP server. Apple glass styling with five themes.
 
 **The UI is designed in `design/v1/`** (exported from the Claude Design canvas; see its `README.md`). It is the
@@ -40,18 +42,38 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 - **Unlocking is remembered per browser.** A lock button on the code chip in the top bar forgets it; it appears only
   on a password board unlocked in this browser. When a board's password changes, browsers holding the old one land on
   a "the board's password changed" lock screen, not a generic error.
-- **Changing or removing a password requires the current password.** Setting one on an open board does not.
-- **Rate limits are per network** (per client IP). Behind the tunnel the client's address is Cloudflare's
-  `CF-Connecting-IP` header; requests that didn't come through the tunnel (the LAN port) don't have a trustworthy one,
-  so never trust that header from anywhere but the tunnel, and never rate-limit everyone as one IP by accident.
-  - Wrong-code attempts are rate-limited.
-  - Wrong-password attempts are rate-limited with **one shared counter** covering both the lock screen and Settings
-    (current-password checks): failing in one place counts against the other.
-- **The total number of boards is capped** (a server-side constant). Creating past the cap is refused with a plain
-  message, never a silent failure. The cap is how a public, account-free app stays bounded.
-- **Board passwords** are stored hashed (a slow KDF), never in plain text, never in logs, never returned by any API
-  or MCP tool. The change history records that the password was set, changed or removed, never the password or its
-  hash, and those entries are never restorable.
+- **A password can only be set when the board is created.** An open board can never gain one later. A password
+  board's password can be **changed** (current password required) but **never removed**: a locked board stays locked
+  for life. The database enforces all three (triggers in `server/core/schema.js`), not just the app.
+- **Rate limits are per network** (per client IP; IPv6 per /64), in memory (`server/core/rateLimit.js`): a restart
+  forgets them. Behind the tunnel the client's address is Cloudflare's `CF-Connecting-IP` header
+  (`server/core/network.js`); never rate-limit everyone as one IP by accident (every tunnel request shares
+  cloudflared's socket address). Requests without the header (the LAN port, dev) are keyed by their socket address.
+  The header can't be forged from the internet (Cloudflare's edge sets it), but a LAN device talking to port 3230
+  directly can send its own. Setting `TRUSTED_PROXIES` in `.env` (cloudflared's address as the container sees it)
+  makes the app honour the header only from there; until it is set, the header is honoured from any connection.
+  - Unknown codes: **30 per network per 15 minutes**. Every creation attempt counts too (otherwise "that code is
+    taken" would be an unlimited oracle). While a network is limited, every lookup answers "too many tries" except
+    for boards this browser has opened before (it holds their access cookie): "locked" would still say "exists".
+  - Wrong passwords: **10 per network per 15 minutes**, **one shared counter** (`limits.passwords`, one per app)
+    covering every board, the lock screen and Settings' current-password checks: failing in one place counts against
+    the other. Each attempt claims its slot before hashing (so parallel guesses can't slip past) and only a right
+    password gives its own slot back; success never resets the count.
+- **The total number of boards is capped** at `MAX_BOARDS` = 500 (`server/boards/routes.js`), checked again inside
+  the creating transaction. Creating past the cap is refused with a plain message ("Next Up is full"), never a silent
+  failure; a free code's lookup already says so. The cap is how a public, account-free app stays bounded.
+- **Board passwords** are stored as argon2id hashes (64 MiB, 3 passes, 1 lane; `server/core/passwords.js`), never
+  in plain text, never in logs, never returned by any API or MCP tool. Codes are 3–32 letters (a–z), numbers and
+  hyphens, case-insensitive, stored lower case (`server/core/codes.js`, shared with the client); passwords 8–128
+  characters. The change history records that a board was created with or without a password and when the password
+  changed, never the password or its hash, and those entries are never restorable.
+- **Access is an httpOnly cookie per board** (`nu_access`, `Path=/api/boards/<code>`, SameSite=Strict, Secure over
+  HTTPS; `server/boards/grants.js`), HMAC-signed with `server_secrets.access_grant_key` and carrying the board id and
+  password version. A version older than the board's is "the board's password changed". Page script never sees it;
+  the lock button asks the server to clear it.
+- **Every board route lives under `/api/boards/:code`** and, except `lock` and `unlock`, is registered after
+  `requireAccess` in `server/boards/routes.js`, so it is protected by construction. A password board without access
+  answers only `{ status: 'locked', code }` (plus `reason: 'password_changed'`), to every method and every path.
 - **The display name is per browser** (localStorage) and is a label, not an identity: anyone can type any name. The
   history says "changed by <name>", never implies it was verified. It is asked for at a browser's first change, never
   just for viewing; "Not now" logs that browser's changes as "Someone".
@@ -62,9 +84,10 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 
 - **Theme picker** (the five themes, with Light/Dark following the device by default as "Match device") and
   **display name**. Both are per browser.
-- **"This board"**: sets, changes or removes the current board's password. It is a board setting that lives on the
-  Settings page; it shows only while on a board you can access, and is absent when Settings is opened from the
-  landing page.
+- **"This board"**: **change password** (password boards only; current password required, and the check shares the
+  wrong-password counter) and **delete board**. There is no "set" or "remove": a password is chosen only at creation
+  and can never be removed. It is a board setting that lives on the Settings page; it shows only while on a board you
+  can access, and is absent when Settings is opened from the landing page. (Not built yet.)
 
 ## Images
 
@@ -76,9 +99,18 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 
 ## Data rules
 
-- **Retention is forever.** Boards and their full change history are kept indefinitely. No exceptions yet. Any
-  exception must name its reason here.
-- Deleting a board, card or player is a logged change that can be restored, never a hard delete.
+- **Retention is forever.** Boards and their full change history are kept indefinitely. Any exception must name its
+  reason here. The one exception:
+  - **Retired boards.** Anyone with edit access can delete ("retire") a board. It is soft-deleted (`deleted_at`) and
+    restorable for 24 hours; after that the board and its whole history are purged and its code becomes free. Reason:
+    with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever. (Not built
+    yet; the schema already lets only a retired board, or its events, be deleted.)
+- Deleting a card or player is a logged change that can be restored, never a hard delete.
+- **The change log is `events`** (`server/core/events.js`): append-only (the database refuses updates, and deletes
+  except when purging a retired board), indexed on `(board_id, created_at)`. Event types **declare themselves** with
+  `declareEventType({ type, restorable, payload: zod object })` next to the feature that writes them
+  (`server/boards/events.js`); `appendEvent` refuses undeclared types and any payload field not in the schema. Write
+  the event in the same transaction as the change. Types so far: `board.created` `{ hasPassword }`.
 - History offers Restore on card edits, deletes and moves. Restoring a move puts the card as close to its old lane
   and position as the board now allows. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
@@ -110,9 +142,13 @@ and after and fails if it changed.
 ## Credentials
 
 - **The app never writes `.env`** (the deploy fingerprints it). Everything in it is added by hand.
-- The only secret so far is `MCP_BEARER_TOKEN` (min 16 chars, `npm run gen-token` prints one). It is read at start-up:
+- The only secret in `.env` is `MCP_BEARER_TOKEN` (min 16 chars, `npm run gen-token` prints one). It is read at start-up:
   restart `next-up-mcp` after changing it. Without one the MCP server answers 503 to everything but `/health`.
-- Never log or return a token, a board password or its hash, including inside error messages.
+- The key that signs access cookies is generated by a migration into `server_secrets` (in the database, not
+  `.env`). Nothing may read it except `server/boards/grants.js`.
+- `TRUSTED_PROXIES` (optional, not a secret) is read at start-up; a malformed value stops the web app from booting.
+- Never log or return a token, a board password or its hash, an access cookie or the signing key, including inside
+  error messages.
 
 ## MCP
 
@@ -123,8 +159,8 @@ and after and fails if it changed.
   `mcp/server.js` or `mcp/app.js` to add a tool. Every tool is registered with `readOnlyHint`.
 - The MCP process opens the database `query_only`: SQLite itself refuses writes from it.
 - Keep tool names stable: a rename breaks every connected client.
-- **What MCP can never return**: board passwords or their hashes, the token, anything that unlocks a password board
-  or grants editing.
+- **What MCP can never return**: board passwords or their hashes, the token, the access-grant key, anything that
+  unlocks a password board or grants editing. No tool reads boards yet.
 - Tools so far: `get_version`.
 
 ## Honesty rules
@@ -182,6 +218,8 @@ settings button, a bottom bar with the version.
 ## Testing
 
 - `npm test` (node:test, `server/test/`). `npm run build` runs `scripts/check-changelog.js` first.
+- API tests use `startApp()` from `server/test/helpers.js`: an in-memory database, its own limits and a clock the
+  test moves (`clock.advance(ms)`), and `ip` per request as CF-Connecting-IP. Never point a test at `data/`.
 - Test the empty state with a fresh browser profile and an empty database.
 - Verify a fix's test catches the bug by running it against unfixed code.
 - Drag tests use real input (DevTools protocol) or a lost-capture simulation: events dispatched from page script never

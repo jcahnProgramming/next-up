@@ -107,3 +107,51 @@
     padding: 36px 20px 28px;
   }
 }
+
+/* ---------- states (design/v1 Landing-States) ---------- */
+.landing-intro {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.landing-hint,
+.landing-status {
+  margin: 6px 0 0;
+  font-size: var(--fs-footnote);
+  color: var(--text-3);
+  text-wrap: pretty;
+}
+.landing-status {
+  color: var(--text-2);
+}
+.landing-error {
+  margin: 4px 0 0;
+}
+.landing-banner {
+  width: 100%;
+  margin: 6px 0 0;
+  text-align: left;
+}
+.code-form.is-error,
+.code-form.is-error:focus-within {
+  box-shadow: var(--well), 0 0 0 2px var(--error);
+}
+.code-form.is-paused {
+  opacity: 0.55;
+}
+.code-go[aria-disabled='true'] {
+  cursor: progress;
+}
+/* On a desktop the create step takes the sheet's place (Landing-States 3); on a phone the landing stays and the
+   create step slides up over it as a bottom sheet (boards.css). */
+@media (min-width: 601px) {
+  .landing.is-creating .landing-intro {
+    display: none;
+  }
+  .landing.is-creating .landing-sheet {
+    max-width: 460px;
+    padding: 32px 30px 28px;
+  }
+}

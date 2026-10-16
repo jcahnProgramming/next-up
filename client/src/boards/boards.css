@@ -1,0 +1,274 @@
+/* Boards and access: create, lock screen, rate-limit and limit states, the board page's frame.
+   design/v1 Landing-States, Landing-Phone, Lock-Screen and nu.css (.lock, .bsheet, .st-error). */
+
+.board-center {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: 32px 0;
+}
+
+/* ---------- a centred state sheet (limits, board limit, not a code, the board stub) ---------- */
+.access-sheet {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px 30px;
+  border-radius: var(--r-sheet);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.access-state {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.access-title {
+  font-size: var(--fs-title2);
+  text-wrap: balance;
+}
+.access-text {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-footnote);
+  text-wrap: pretty;
+}
+.access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.access-state .code-form {
+  margin-top: 6px;
+}
+
+/* "Couldn't load": a solid error tint, never the dashed "nothing here" look (design/v1 nu.css .st-error). */
+.st-error {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+  border-radius: var(--r-card);
+  background: var(--error-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.board-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-2);
+}
+.board-loading-text {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+.board-stub .access-text {
+  font-size: var(--fs-body);
+}
+.board-facts {
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 14px 16px;
+  list-style: none;
+  border-radius: var(--r-lg);
+  background: var(--surface-3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  font-size: var(--fs-footnote);
+  color: var(--text-2);
+}
+.board-facts li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+/* ---------- create: inline on a desktop sheet, a bottom sheet on a phone ---------- */
+.create-sheet {
+  color: var(--text-1);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+.create:not(.is-sheet) .create-sheet {
+  /* inline, the panel sits on the surrounding sheet's glass */
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.board-create {
+  width: 100%;
+  max-width: 460px;
+}
+.board-create .create .create-sheet {
+  background: var(--surface-2);
+  backdrop-filter: var(--glass-filter-strong);
+  -webkit-backdrop-filter: var(--glass-filter-strong);
+  box-shadow: var(--shadow-sheet);
+  padding: 32px 30px 28px;
+  border-radius: var(--r-sheet);
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.create-scrim,
+.create-grabber {
+  display: none;
+}
+.create-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.create-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.create-title {
+  font-size: var(--fs-title3);
+}
+.create-sub {
+  color: var(--text-2);
+  font-size: var(--fs-footnote);
+}
+.create-choice {
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+.create-choice p {
+  margin: 0;
+}
+.create-choice b {
+  color: var(--text-1);
+  font-weight: 650;
+}
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ---------- lock screen (design/v1 nu.css .lock) ---------- */
+.lock-wrap {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lock {
+  width: 100%;
+  padding: 40px 36px 32px;
+  border-radius: var(--r-sheet);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.lock-title {
+  font-size: var(--fs-title2);
+  text-wrap: balance;
+}
+.lock-text {
+  margin: 0;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+.lock-form {
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+.lock-caption {
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+.lock-banner {
+  font-size: var(--fs-footnote);
+}
+
+@media (max-width: 600px) {
+  .access-sheet,
+  .board-create .create-sheet {
+    padding: 30px 20px 24px;
+  }
+  .lock {
+    padding: 32px 22px 26px;
+  }
+}
+
+/* The landing's create step at phone width: a bottom sheet over the landing (design/v1 Landing-Phone), rendered on
+   <body> by CreateBoard sheetOnPhone. */
+.create.is-sheet .create-scrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--scrim);
+  backdrop-filter: var(--scrim-filter);
+  -webkit-backdrop-filter: var(--scrim-filter);
+  animation: hd-fade-in var(--dur-base) var(--ease-out);
+}
+.create.is-sheet .create-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 0 20px calc(26px + env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  /* solid: a blurred layer over live text is unreadable wherever the blur doesn't render; the scrim carries the glass */
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-sheet);
+  animation: hd-sheet-up var(--dur-slow) var(--spring);
+}
+.create.is-sheet .create-grabber {
+  display: block;
+  flex: none;
+  width: 38px;
+  height: 5px;
+  margin: 8px auto 4px;
+  border-radius: 3px;
+  background: var(--surface-4);
+}
+.create.is-sheet .create-actions {
+  flex-direction: column-reverse;
+}
+.create.is-sheet .create-actions .btn {
+  width: 100%;
+}

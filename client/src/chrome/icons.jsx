@@ -43,3 +43,80 @@ export function WarningIcon() {
     </svg>
   );
 }
+
+// Board chrome and access (design/v1 Topbar-Options, Lock-Screen, Landing-States).
+const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' };
+
+export function CopyIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </svg>
+  );
+}
+
+export function LockIcon({ size = 16, open = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d={open ? 'M8 11V7a4 4 0 0 1 7.5-2' : 'M8 11V7a4 4 0 0 1 8 0v4'} />
+    </svg>
+  );
+}
+
+export function EyeIcon({ off = false }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" {...S}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+      {off && <path d="M4 4l16 16" />}
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+export function ClockIcon({ size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+export function FullIcon({ size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 10h18M9 4v16" />
+    </svg>
+  );
+}
+
+export function RetryIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <path d="M20 11a8 8 0 0 0-14.5-4.5L4 8" />
+      <path d="M4 3v5h5" />
+      <path d="M4 13a8 8 0 0 0 14.5 4.5L20 16" />
+      <path d="M20 21v-5h-5" />
+    </svg>
+  );
+}
+
+export function ErrorIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16v.5" />
+    </svg>
+  );
+}

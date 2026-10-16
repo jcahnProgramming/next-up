@@ -57,12 +57,13 @@ These were decided alongside the canvas and are mirrored in `CLAUDE.md`.
   appears only on a password board that was unlocked in this browser.
 - **Password changed.** When a board's password changes, browsers holding the old one land on a "the board's
   password changed" lock screen.
-- **Changing or removing a password requires the current password.** Setting one on an open board does not.
+- **A password is chosen only when a board is created** (changed 2026-10-15). An open board can never gain one; a
+  password can be changed (current password required) but never removed.
 - **Wrong-password attempts are rate-limited per network,** with one shared counter covering both the lock screen
   and Settings.
 - **Settings** holds the theme picker (five themes) and display name (both per browser), and a "This board" section
-  that sets, changes or removes the board password. "This board" is a board setting that lives on the Settings page;
-  it shows only while on a board you can access and is absent from the landing page.
+  with change password (password boards only) and delete board. "This board" is a board setting that lives on the
+  Settings page; it shows only while on a board you can access and is absent from the landing page.
 - **History.** Restore on card edits, deletes and moves. Restoring a move puts the card as close to its old lane and
   position as possible. Password changes are logged but never restorable.
 - **Display name** is asked at a browser's first change, never just for viewing. "Not now" logs changes as
@@ -93,5 +94,9 @@ Found when the canvas was exported. The artboards are kept verbatim, so build th
   error, offline and rate-limited states (`Settings.dc.html` draws some of them).
 - `System-States.dc.html` says offline uses the warning tint; every other board draws it with the error banner.
 - `Main.dc.html` gives `control-h-sm` as 32; `nu.css` and `Tokens.dc.html` say 36.
+- `Landing-States.dc.html` (3) says "You can add, change or remove it later in Settings." A password is chosen only
+  at creation and can never be removed; the create step also asks for the password twice (no confirm field is drawn).
+- `Settings.dc.html` draws "Set password" on an open board and "Remove password" on a password board. Neither exists:
+  "This board" is change password (password boards only) and delete board.
 - `Logo-Picker.dc.html` describes the no-logo card as "the game's initials". It shows the game name; the initials
   are only the monogram disc.
