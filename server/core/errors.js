@@ -2,8 +2,12 @@
  * Express error handler for both processes. It never puts an error's message into a log line: a JSON parse
  * error quotes the request body, and a request body can be a credential being saved. Expected errors
  * (status < 500) carry messages written by this app, which never contain values, and go back to the client.
- * Unexpected ones log only their name and code locations.
+ * Unexpected ones log only their name and code locations, and the path with any board code replaced by ":code"
+ * (a board's code is its key: never logged, right or wrong).
  */
+export const loggablePath = (url) =>
+  String(url ?? '').split('?')[0].replace(/^\/api\/boards\/[^/]+/, '/api/boards/:code').slice(0, 200);
+
 export function createErrorHandler(processName) {
   // eslint-disable-next-line no-unused-vars
   return (err, req, res, _next) => {
@@ -14,7 +18,7 @@ export function createErrorHandler(processName) {
     // details: structured, safe extras some refusals carry (e.g. a card-save conflict and the latest card).
     if (status < 500) return res.status(status).json({ error: err.message, ...(err.details ?? {}) });
     const frames = String(err?.stack ?? '').split('\n').slice(1, 6).join('\n');
-    console.error(`[${processName}] ${req.method} ${req.path} failed: ${err?.name ?? 'Error'}${err?.code ? ` (${err.code})` : ''}\n${frames}`);
+    console.error(`[${processName}] ${req.method} ${loggablePath(req.originalUrl)} failed: ${err?.name ?? 'Error'}${err?.code ? ` (${err.code})` : ''}\n${frames}`);
     res.status(500).json({ error: 'Internal server error' });
   };
 }

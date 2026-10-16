@@ -22,7 +22,7 @@ const base = (code) => `/api/boards/${code}/cards`;
 const deleting = (data) => ({ kind: 'invalid', field: null, error: data.error, deleting: data.board ?? null });
 
 function read(r) {
-  if (r.failed) return { kind: 'error', offline: r.offline };
+  if (r.failed) return { kind: 'error', offline: r.offline, timedOut: Boolean(r.timedOut) };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
   if (data?.code === 'board_deleting') return deleting(data);
@@ -87,7 +87,7 @@ export const deleteCard = async (code, card) =>
 const players = (code, card) => `${base(code)}/${card.id}/players`;
 
 function readPlayers(r) {
-  if (r.failed) return { kind: 'error', offline: r.offline };
+  if (r.failed) return { kind: 'error', offline: r.offline, timedOut: Boolean(r.timedOut) };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
   if (data?.code === 'board_deleting') return deleting(data);

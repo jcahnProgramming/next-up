@@ -180,6 +180,15 @@ html.ov-open {
 @keyframes ov-from-bottom {
   from { transform: translateY(calc(60px * var(--motion-k))); opacity: 0; }
 }
+/* Reduce motion: sheets fade in where they'll sit, without sliding. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes ov-from-right {
+    from { opacity: 0; }
+  }
+  @keyframes ov-from-bottom {
+    from { opacity: 0; }
+  }
+}
 
 /* While a dialog is open, toasts show at the top, clear of the sheet and its fields. */
 html.ov-open .toast-region {

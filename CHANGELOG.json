@@ -1,6 +1,39 @@
 {
   "releases": [
     {
+      "version": "0.10.1",
+      "date": "2026-10-16",
+      "title": "Hardening before the guild test: nightly backups, safer headers, clearer states, better keyboard use",
+      "sections": {
+        "New": [
+          "Nightly backups. Every night at 04:00 UTC the database is copied to the backups share on <HOST>, checked for corruption before it is kept, and named by date. The last 30 days are kept. A backup that fails says so loudly in the web container’s log, and the earlier ones stay. RESTORE.md walks through putting one back.",
+          "The web app now says in its log which connection address the visitor-address header arrives from, so the rate limits can be told to trust only the tunnel (TRUSTED_PROXIES). README “Rate limits behind the tunnel” has the steps."
+        ],
+        "Improved": [
+          "Security headers on every page and answer: a Content-Security-Policy that allows only Next Up’s own scripts, styles, fonts and images, no framing by other sites, no sniffing, no referrer (a board’s address holds its code), and every device permission (camera, microphone, location and the rest) switched off.",
+          "Repeat visits load faster: the app’s files are cached by the browser until they change, instead of being checked again on every visit.",
+          "Keyboard use: focus now lands somewhere sensible everywhere. A board opened from the landing page or a lock screen focuses the board; closing a dialog goes back to what opened it (or to History, after a restore); removing a player moves to the next one; a wrong password selects it to retype; “too many tries” moves to the message.",
+          "Screen readers hear the value on the Lane, Logo and Go-live buttons (“Lane, Up Next”), not just their label.",
+          "Reduce motion is fully respected: with it on, sheets and pages fade in instead of sliding or rising, and the live dot and loading shimmer hold still.",
+          "A board that couldn’t load now says “Timed out after 10 s” when that’s what happened, and offers Back to Home.",
+          "Text that was too faint is now readable (4.5:1 or better): the deleting countdown banner’s text in Light and Pastel, and the next and previous month’s days in the date picker in every theme.",
+          "Drag auto-scroll near the top of the window now starts below the top bar, not underneath it."
+        ],
+        "Fixed": [
+          "If reloading a board failed after it fell behind (many changes while disconnected), the top bar still said Live and editing stayed on. It now says “Out of date”, pauses editing, and Retry reloads it.",
+          "A board’s whole History could show its loading shimmer for ever if the board had been erased meanwhile. It now says it couldn’t load.",
+          "Failures that were silent now say what happened: removing a player, deleting a card while the board is being deleted, and deleting, restoring or changing the password of a board when the server answers unexpectedly.",
+          "The lock screen now says “You’re offline” when you are, instead of “Couldn’t check it”.",
+          "Inside a card or a confirmation, “You’re offline” no longer showed as “Reconnecting…” while still connected.",
+          "A board that couldn’t load no longer shows “Connecting…” in the top bar.",
+          "A server error’s log line no longer includes the board’s code."
+        ],
+        "Removed": [
+          "The leftover “coming soon” page and its “isn’t built yet” wording. Unknown addresses still get “Page not found”."
+        ]
+      }
+    },
+    {
       "version": "0.10.0",
       "date": "2026-10-16",
       "title": "Claude can read open boards through the MCP server",

@@ -2,9 +2,10 @@
 import { existsSync } from 'node:fs';
 import { createApp } from './app.js';
 import { SWEEP_MS } from './boards/retire.js';
+import { scheduleBackups } from './core/backup.js';
 import { config } from './core/config.js';
-import { closeDb } from './core/db.js';
-import { describeTrust } from './core/network.js';
+import { closeDb, getDb } from './core/db.js';
+import { describeTrust, logHeaderSources } from './core/network.js';
 import { initPlatform } from './core/platform.js';
 import { APP_VERSION } from './core/version.js';
 
@@ -15,7 +16,7 @@ if (!existsSync(config.clientDist)) {
 }
 
 // config.listenHost: loopback locally, the container's own interfaces in Docker (published on <LAN_IP> only).
-const app = createApp();
+const app = createApp({ onHeader: logHeaderSources() });
 const httpServer = app.listen(config.port, config.listenHost, () => {
   console.log(`[web] Next Up ${APP_VERSION} listening on ${config.listenHost}:${config.port}`);
   console.log(`[web] Rate limits per network: ${describeTrust()}`);
@@ -35,8 +36,13 @@ sweep();
 const sweeper = setInterval(sweep, SWEEP_MS);
 sweeper.unref();
 
+// Nightly backups to BACKUP_DIR (core/backup.js; RESTORE.md puts one back). Failures are logged as [backup] FAILED.
+const stopBackups = config.backupDir ? scheduleBackups({ db: getDb, dir: config.backupDir, stagingDir: config.dataDir }) : () => {};
+console.log(config.backupDir ? `[backup] Nightly at 04:00 UTC to ${config.backupDir}` : '[backup] Off: BACKUP_DIR is not set');
+
 function shutdown() {
   clearInterval(sweeper);
+  stopBackups();
   // Open live streams would hold the server open: end them, and browsers reconnect to the next process.
   app.locals.live.close();
   httpServer.close(() => {

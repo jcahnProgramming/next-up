@@ -12,6 +12,7 @@ import { CheckIcon } from './icons.jsx';
  */
 export function Dropdown({ labelledBy, value, onChange, options, disabled = false }) {
   const listId = useId();
+  const valueId = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const root = useRef(null);
@@ -81,13 +82,14 @@ export function Dropdown({ labelledBy, value, onChange, options, disabled = fals
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-labelledby={labelledBy}
+        // Named by its label and then its value ("Lane, Up Next"), so the words on it are in its name.
+        aria-labelledby={`${labelledBy} ${valueId}`}
         disabled={disabled}
         onClick={() => (open ? close() : show())}
         onKeyDown={onTriggerKey}
       >
         {selected.icon}
-        <span className="dropdown-value">{selected.label}</span>
+        <span id={valueId} className="dropdown-value">{selected.label}</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
         </svg>

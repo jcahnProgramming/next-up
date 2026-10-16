@@ -17,14 +17,36 @@ import { BlockList, isIP } from 'node:net';
  *
  * IPv6 addresses are grouped by /64 (one home or one server gets at least that many), IPv4 per address.
  */
-export function createNetworkResolver({ trustedProxies = process.env.TRUSTED_PROXIES } = {}) {
+export function createNetworkResolver({ trustedProxies = process.env.TRUSTED_PROXIES, onHeader } = {}) {
   const trusted = parseTrusted(trustedProxies);
   return function networkOf(req) {
     const socket = cleanIp(req.socket?.remoteAddress);
     const header = req.headers['cf-connecting-ip'];
     const fromHeader = typeof header === 'string' ? cleanIp(header.trim()) : null;
-    const honour = fromHeader && (!trusted || (socket && trusted.check(socket, isIP(socket) === 6 ? 'ipv6' : 'ipv4')));
+    const honour = Boolean(fromHeader && (!trusted || (socket && trusted.check(socket, isIP(socket) === 6 ? 'ipv6' : 'ipv4'))));
+    if (fromHeader && onHeader) onHeader(socket, honour, Boolean(trusted));
     return groupOf(honour ? fromHeader : socket) ?? 'unknown';
+  };
+}
+
+/**
+ * onHeader for createNetworkResolver: logs each connection address the header arrives from, once, and whether it was
+ * honoured. It is how TRUSTED_PROXIES is found (open the site through the tunnel and read the log) and how a wrong
+ * one shows up (every tunnel visitor sharing one bucket would otherwise be silent). It never logs the header's
+ * value, only the address of the connection that carried it. At most `max` addresses are remembered.
+ */
+export function logHeaderSources({ log = console, max = 32 } = {}) {
+  const seen = new Set();
+  return (socket, honoured, restricted) => {
+    const key = `${socket}|${honoured}`;
+    if (seen.has(key) || seen.size >= max) return;
+    seen.add(key);
+    const from = socket ?? 'an unknown address';
+    if (honoured) {
+      log.log(`[web] CF-Connecting-IP arrived on a connection from ${from}: honoured (${restricted ? 'in TRUSTED_PROXIES' : 'TRUSTED_PROXIES not set'})`);
+    } else {
+      log.warn(`[web] CF-Connecting-IP arrived on a connection from ${from}: IGNORED, not in TRUSTED_PROXIES. Those requests are rate-limited as ${from}. If this is cloudflared, add it to TRUSTED_PROXIES.`);
+    }
   };
 }
 

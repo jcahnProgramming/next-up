@@ -71,7 +71,7 @@ function Shell() {
           flex box, bare text runs become items and lose their edge whitespace ("Next Upv0.1.0· What's new"). It
           keeps the class coffee-bar: drag auto-scroll measures from its top edge (cards/useCardDrag.js). */}
       <footer className="coffee-bar">
-        <NavLink to="/changelog" className="version-link" aria-label={`Next Up v${APP_VERSION}, What's new`}>
+        <NavLink to="/changelog" className="version-link">
           <span className="version-name">Next Up</span>
           <span className="version-number">v{APP_VERSION}</span>
           <span aria-hidden="true">·</span>
@@ -119,13 +119,25 @@ function ScrollManager() {
     if (decision === 'stay') return undefined;
     if (decision === 'restore') return restoreScroll(window, document, memory.get(location.key) ?? 0);
     window.scrollTo(0, 0);
-    // The heading may render a moment later (a page that loads its data first).
-    let done = false;
-    const timers = [0, 150, 600].map((ms) => setTimeout(() => {
-      if (!done) done = focusMainHeading(document);
+    // The heading may render a moment later (a page that loads its data first), and may be replaced once it has (a
+    // board's "Opening…" heading, then the board's own): it follows to the new one, but only until the reader first
+    // presses a key or the pointer. After that, focus is theirs.
+    let heading = null;
+    let touched = false;
+    const touch = () => {
+      touched = true;
+    };
+    window.addEventListener('keydown', touch, true);
+    window.addEventListener('pointerdown', touch, true);
+    const timers = [0, 150, 600, 1500, 3000].map((ms) => setTimeout(() => {
+      if (touched) return;
+      const lost = heading && !heading.isConnected && (!document.activeElement || document.activeElement === document.body);
+      if (!heading || lost) heading = focusMainHeading(document) ? document.activeElement : null;
     }, ms));
     return () => {
       timers.forEach(clearTimeout);
+      window.removeEventListener('keydown', touch, true);
+      window.removeEventListener('pointerdown', touch, true);
     };
   }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;

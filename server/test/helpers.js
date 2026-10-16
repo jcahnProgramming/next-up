@@ -18,14 +18,16 @@ export function memoryDb() {
 }
 
 /**
- * Starts the web app on a random port with its own database and a clock the test moves.
+ * Starts the web app on a random port with its own database and a clock the test moves. opts.host: where it listens
+ * (default 127.0.0.1; '::' takes both ::1 and 127.0.0.1, two distinct client addresses on one machine).
  * Returns { base, db, clock, live, request, sweep, close } (live: the app's live-sync hub, live/hub.js). request(path, { method, body, ip, cookie, headers }) → { status, body, headers, cookie }.
  */
 export async function startApp(opts = {}) {
   const db = memoryDb();
   const clock = { t: Date.UTC(2026, 9, 15, 12), now: () => clock.t, advance: (ms) => (clock.t += ms) };
-  const app = createApp({ db: () => db, now: clock.now, ...opts });
-  const server = app.listen(0, '127.0.0.1');
+  const { host = '127.0.0.1', ...appOpts } = opts;
+  const app = createApp({ db: () => db, now: clock.now, ...appOpts });
+  const server = app.listen(0, host);
   await new Promise((resolve) => server.once('listening', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
 

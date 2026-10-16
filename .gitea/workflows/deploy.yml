@@ -26,6 +26,8 @@ on:
 
 env:
   DEPLOY_DIR: <DEPLOY_DIR>
+  # Nightly database backups (docker-compose.yml mounts it at /backups in the web container).
+  BACKUP_DIR: <BACKUP_DIR>
   # Internal bridge address of Gitea. The tailnet hostname does not resolve from containers.
   GITEA_INTERNAL_URL: <GITEA_INTERNAL_URL>
   # The ports are published on <HOST>'s LAN address only (docker-compose.yml), so that is where they are probed:
@@ -75,6 +77,14 @@ jobs:
               echo "Host deploy dir OK: $PWD"
               echo ".env sha256: $(sha256sum .env | cut -d" " -f1)"
             '
+
+          # The backup folder docker-compose.yml mounts into the web container. Checked here, before compose stops
+          # anything: if it's missing, `up` would fail after taking the running site down.
+          docker run --rm \
+            --mount "type=bind,source=$BACKUP_DIR,target=/backups,readonly" \
+            --entrypoint sh "$GIT_IMAGE" -c 'test -d /backups' \
+            || { echo "::error::$BACKUP_DIR not found on host. Create it (README: First-time setup on <HOST>)."; exit 1; }
+          echo "Backup folder OK: $BACKUP_DIR"
 
       - name: Record .env fingerprint
         run: |

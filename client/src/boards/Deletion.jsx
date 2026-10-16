@@ -116,6 +116,8 @@ export function RestoreBoard({ code, onClose, onDone }) {
     const r = await restoreBoard(code);
     setBusy(false);
     if (r.kind === 'error') return setFailed(r.offline ? 'offline' : 'error');
+    // Anything else (a refusal nobody expected) is said here, never closed without a word.
+    if (!['open', 'not-deleting', 'locked', 'free'].includes(r.kind)) return setFailed('refused');
     onDone(r);
   };
 
@@ -132,7 +134,7 @@ export function RestoreBoard({ code, onClose, onDone }) {
           It goes back to normal for everyone who can open it: it won’t be deleted, and editing works again. History
           keeps a note that you restored it.
         </p>
-        {failed && <Failed offline={failed === 'offline'} what="Nothing was restored" />}
+        {failed && <Failed kind={failed} what="Nothing was restored" />}
         <div className="modal-actions">
           <button type="button" className="btn btn-quiet" onClick={onClose} disabled={busy} data-autofocus>
             Cancel
@@ -178,6 +180,7 @@ export function DeleteBoard({ code, onClose, onDone }) {
     setBusy(false);
     if (r.kind === 'error') return setFailed(r.offline ? 'offline' : 'error');
     if (r.kind === 'invalid') return setError(r.error);
+    if (!(r.kind === 'open' || r.kind === 'locked' || r.kind === 'free' || (r.kind === 'deleting' && r.board))) return setFailed('refused');
     return onDone(r);
   };
 
@@ -228,7 +231,7 @@ export function DeleteBoard({ code, onClose, onDone }) {
             </span>
           )}
         </div>
-        {failed && <Failed offline={failed === 'offline'} what="Nothing was deleted" />}
+        {failed && <Failed kind={failed} what="Nothing was deleted" />}
         <div className="modal-actions">
           <button type="button" className="btn btn-quiet" onClick={onClose} disabled={busy}>
             Keep the board
@@ -252,12 +255,22 @@ export function DeleteBoard({ code, onClose, onDone }) {
   );
 }
 
-function Failed({ offline, what }) {
+// kind: offline | error (couldn't reach Next Up) | refused (it answered, but not in a way this screen expects)
+function Failed({ kind, what }) {
   return (
     <p className="banner banner-err" role="alert">
       <WarningIcon />
       <span className="banner-text">
-        <b>{offline ? 'You’re offline.' : 'Couldn’t reach Next Up.'}</b> {what}. Check your connection, then try again.
+        {kind === 'refused' ? (
+          <>
+            <b>That didn’t work.</b> {what}. Reload the page to see the board as it is now, then try again.
+          </>
+        ) : (
+          <>
+            <b>{kind === 'offline' ? 'You’re offline.' : 'Couldn’t reach Next Up.'}</b> {what}. Check your connection, then
+            try again.
+          </>
+        )}
       </span>
     </p>
   );

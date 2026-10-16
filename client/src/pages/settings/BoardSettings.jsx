@@ -133,7 +133,27 @@ function ChangePassword({ code, onBoard, onLost }) {
   const [failed, setFailed] = useState(null);
   const [said, setSaid] = useState('');
   const currentRef = useRef(null);
+  const toggleRef = useRef(null);
+  const [selectCurrent, setSelectCurrent] = useState(false);
   const formId = useId();
+
+  // After a wrong password, select it to retype once the fields are enabled again (they're disabled while saving).
+  useEffect(() => {
+    if (phase === 'entering' && selectCurrent) {
+      currentRef.current?.select();
+      setSelectCurrent(false);
+    }
+  }, [phase, selectCurrent]);
+  // Too many tries: the fields are disabled, so focus goes to the notice that says why and for how long.
+  const limitedRef = useRef(null);
+  useEffect(() => {
+    if (phase === 'limited') limitedRef.current?.focus({ preventScroll: true });
+  }, [phase]);
+  // Closing the form (Cancel, or a change that worked) removes what had focus: give it to the button that reopens it.
+  const closeForm = () => {
+    setOpen(false);
+    requestAnimationFrame(() => toggleRef.current?.focus({ preventScroll: true }));
+  };
 
   const reset = () => {
     setCurrent('');
@@ -163,7 +183,7 @@ function ChangePassword({ code, onBoard, onLost }) {
     const r = await changePassword(code, current, next);
     if (r.kind === 'open') {
       reset();
-      setOpen(false);
+      closeForm();
       setPhase('entering');
       setSaid('Password changed.');
       toast('Password changed. This browser stays in; everyone else needs the new one.');
@@ -178,11 +198,11 @@ function ChangePassword({ code, onBoard, onLost }) {
     setPhase('entering');
     if (r.kind === 'wrong') {
       setErrors({ current: "That password didn't work. Too many wrong tries pause this for a few minutes." });
-      setTimeout(() => currentRef.current?.select(), 0);
+      setSelectCurrent(true);
     } else if (r.kind === 'invalid') {
       setErrors({ [r.field === 'current' ? 'current' : 'next']: r.error });
     } else {
-      setFailed(r.kind === 'error' && r.offline ? 'offline' : 'error');
+      setFailed(r.kind !== 'error' ? 'refused' : r.offline ? 'offline' : 'error');
     }
     return undefined;
   };
@@ -201,7 +221,7 @@ function ChangePassword({ code, onBoard, onLost }) {
           <span className="pw-state-sub">Anyone opening this board needs it. It applies to everyone, not just this browser.</span>
         </span>
         {!open && (
-          <button type="button" className="btn btn-quiet" aria-expanded="false" aria-controls={formId} onClick={() => setOpen(true)}>
+          <button ref={toggleRef} type="button" className="btn btn-quiet" aria-expanded="false" aria-controls={formId} onClick={() => setOpen(true)}>
             Change password
           </button>
         )}
@@ -213,7 +233,7 @@ function ChangePassword({ code, onBoard, onLost }) {
       {open && (
         <form id={formId} className="pw-form" onSubmit={check} aria-label="Change password" noValidate>
           {limited && (
-            <div className="st-warn settings-limited" role="alert">
+            <div ref={limitedRef} tabIndex={-1} className="st-warn settings-limited" role="alert">
               <span className="icon-circle icon-circle-sm ic-warn">
                 <WarningIcon />
               </span>
@@ -270,8 +290,16 @@ function ChangePassword({ code, onBoard, onLost }) {
             <p className="banner banner-err" role="alert">
               <WarningIcon />
               <span className="banner-text">
-                <b>{failed === 'offline' ? 'You’re offline.' : 'Couldn’t reach Next Up.'}</b> The password hasn’t
-                changed. Check your connection, then try again.
+                {failed === 'refused' ? (
+                  <>
+                    <b>That didn’t work.</b> The password hasn’t changed. Reload the page to see the board as it is now.
+                  </>
+                ) : (
+                  <>
+                    <b>{failed === 'offline' ? 'You’re offline.' : 'Couldn’t reach Next Up.'}</b> The password hasn’t
+                    changed. Check your connection, then try again.
+                  </>
+                )}
               </span>
             </p>
           )}
@@ -281,7 +309,7 @@ function ChangePassword({ code, onBoard, onLost }) {
               className="btn btn-quiet"
               onClick={() => {
                 reset();
-                setOpen(false);
+                closeForm();
                 if (!limited) setPhase('entering');
               }}
               disabled={busy}

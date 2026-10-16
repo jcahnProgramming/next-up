@@ -51,8 +51,10 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
       arrived.current = null;
       if (r.kind === 'ok') setList({ kind: 'ready', events: later.reduce(addEntry, r.events), next: r.next, card: r.card });
       else if (r.kind === 'locked') latest.current.onLocked(r.changed);
-      else if (r.kind === 'gone') setCardId(null); // the card isn't on this board: show the whole board's history
-      else setList({ kind: 'error', offline: r.offline });
+      // The card isn't on this board: show the whole board's history. The whole board's history gone means the board
+      // is (its own page says so); that is an error here, never a shimmer that waits for ever.
+      else if (r.kind === 'gone' && cardId !== null) setCardId(null);
+      else setList({ kind: 'error', offline: r.kind === 'error' && r.offline });
     });
     return () => {
       live = false;
@@ -142,7 +144,7 @@ export function HistoryPanel({ code, cardId: startCard = null, onClose, onRestor
           <section className="st-empty history-state">
             <h3 className="history-state-title">No changes yet</h3>
             <p className="history-state-text">
-              {filtered ? `Nothing has happened to ${list.card.title} yet.` : 'Changes to this board will show here.'}
+              {filtered ? `Nothing has happened to ${list.card.title} yet.` : 'Every edit will show up here.'}
             </p>
           </section>
         )}

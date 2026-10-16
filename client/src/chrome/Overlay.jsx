@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { focusMainHeading } from './scrollMemory.js';
 import { usePhone } from './usePhone.js';
 import './overlay.css';
 
@@ -11,7 +12,8 @@ import './overlay.css';
  *
  * On a phone both become a bottom sheet with a grabber (Detail-Phone, Prompts). Rendered on <body> so the blurred
  * scrim covers everything. Focus moves in (to [data-autofocus], else the first control), Tab stays inside, Escape
- * or the scrim closes (onClose), and focus goes back where it was. While open, the page behind doesn't scroll.
+ * or the scrim closes (onClose), and focus goes back where it was (or to the dialog it was opened from, if that's gone,
+ * or else the page's heading). While open, the page behind doesn't scroll.
  *
  * Escape is handled on the panel, so a dropdown inside that uses Escape to close itself calls stopPropagation and
  * the sheet stays open. A dialog opened from inside another closes alone.
@@ -24,11 +26,19 @@ export function Overlay({ kind = 'modal', labelledBy, onClose, className = '', c
 
   useLayoutEffect(() => {
     const before = document.activeElement;
+    // A dialog opened from inside another: if what opened it is gone by the time it closes (History's Restore button,
+    // once that change is restored), focus goes back to that dialog rather than falling out to the page.
+    const home = before?.closest?.('[role="dialog"]') ?? null;
     const el = panel.current;
     const first = el.querySelector('[data-autofocus]') ?? focusables(el)[0] ?? el;
     first.focus({ preventScroll: true });
     return () => {
-      if (before && before.isConnected && typeof before.focus === 'function') before.focus({ preventScroll: true });
+      const back = before?.isConnected ? before : home?.isConnected ? home : null;
+      if (back && typeof back.focus === 'function') back.focus({ preventScroll: true });
+      // Nothing to go back to (the board's Restore button goes with the banner it sat in): the page's heading.
+      else if (!document.activeElement || document.activeElement === document.body || el.contains(document.activeElement)) {
+        focusMainHeading(document);
+      }
     };
   }, []);
 

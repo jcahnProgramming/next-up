@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ClockIcon, LockIcon, WarningIcon } from '../chrome/icons.jsx';
 import { unlockBoard } from './api.js';
 import { PasswordField } from './PasswordField.jsx';
@@ -29,16 +29,18 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
       setRetryAfter(result.retryAfter);
       return setPhase('limited');
     }
-    if (result.kind === 'wrong') {
-      setPhase('wrong');
-      setTimeout(() => input.current?.select(), 0);
-      return undefined;
-    }
-    setPhase('error');
+    if (result.kind === 'wrong') return setPhase('wrong');
+    setPhase(result.kind === 'error' && result.offline ? 'offline' : 'error');
   };
 
   const limited = phase === 'limited';
   const unlocking = phase === 'unlocking';
+  // Too many tries disables the field that had focus: move it to the heading that says why. A wrong password selects
+  // what was typed, once the field is enabled again (it's disabled while checking), so typing replaces it.
+  useEffect(() => {
+    if (limited) document.getElementById('lock-title')?.focus({ preventScroll: true });
+    if (phase === 'wrong' || phase === 'error' || phase === 'offline') input.current?.select();
+  }, [limited, phase]);
 
   return (
     <div className="lock-wrap">
@@ -55,7 +57,6 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
         onSubmit={submit}
         aria-labelledby="lock-title"
         aria-busy={unlocking || undefined}
-        role={limited ? 'alert' : undefined}
         noValidate
       >
         {limited ? (
@@ -63,7 +64,7 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
             <span className="icon-circle ic-warn">
               <ClockIcon />
             </span>
-            <h1 id="lock-title" className="display lock-title">
+            <h1 id="lock-title" className="display lock-title" tabIndex={-1}>
               Too many tries for now
             </h1>
             <p className="lock-text">Your network has entered a wrong password too many times. Wait a few minutes, then try again.</p>
@@ -87,7 +88,7 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
             value={password}
             onChange={(v) => {
               setPassword(v);
-              if (phase === 'wrong' || phase === 'error') setPhase('entering');
+              if (phase === 'wrong' || phase === 'error' || phase === 'offline') setPhase('entering');
             }}
             placeholder={limited ? 'Paused' : changed ? 'Ask whoever runs the board' : undefined}
             error={phase === 'wrong' ? "That password didn't work. Check with whoever runs the board." : undefined}
@@ -96,11 +97,19 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
             autoFocus
             inputRef={input}
           />
-          {phase === 'error' && (
+          {(phase === 'error' || phase === 'offline') && (
             <p className="banner banner-err" role="alert">
               <WarningIcon />
               <span className="banner-text">
-                <b>Couldn’t check it.</b> That’s not a wrong password: Next Up couldn’t be reached. Try again.
+                {phase === 'offline' ? (
+                  <>
+                    <b>You’re offline.</b> Unlocking needs a connection. Try again when you’re back online.
+                  </>
+                ) : (
+                  <>
+                    <b>Couldn’t check it.</b> That’s not a wrong password: Next Up couldn’t be reached. Try again.
+                  </>
+                )}
               </span>
             </p>
           )}
@@ -115,7 +124,7 @@ export function LockScreen({ code, changed = false, onUnlocked, onLookupLimited 
                 <span className="spin" aria-hidden="true" />
                 Unlocking…
               </>
-            ) : phase === 'error' ? (
+            ) : phase === 'error' || phase === 'offline' ? (
               'Try again'
             ) : (
               'Unlock'

@@ -35,3 +35,63 @@ test('with TRUSTED_PROXIES, a header from anywhere else is ignored (no spoofing 
   assert.equal(networkOf(req('<LAN_DEVICE_IP>', '198.51.100.7')), '<LAN_DEVICE_IP>');
   assert.throws(() => createNetworkResolver({ trustedProxies: '<host>' }), /TRUSTED_PROXIES/);
 });
+
+// End to end, over real sockets from two different addresses on this machine: ::1 plays cloudflared, 127.0.0.1 a
+// device on the LAN talking to port 3230 directly. Unknown codes are limited to 30 per network per 15 minutes.
+async function lookupsFrom(base, from, n, fakeHeaders) {
+  const host = from === '::1' ? `[::1]:${new URL(base).port}` : `127.0.0.1:${new URL(base).port}`;
+  const statuses = [];
+  for (let i = 0; i < n; i++) {
+    const res = await fetch(`http://${host}/api/boards/no-such-board-${i}`, {
+      headers: fakeHeaders ? { 'cf-connecting-ip': `203.0.113.${i + 1}` } : {},
+    });
+    statuses.push(res.status);
+    await res.arrayBuffer();
+  }
+  return statuses;
+}
+
+test('the LAN gap today: without TRUSTED_PROXIES a faked header buys a fresh bucket every request', async () => {
+  const { startApp } = await import('./helpers.js');
+  const app = await startApp({ host: '::', trustedProxies: '' });
+  try {
+    const lan = await lookupsFrom(app.base, '127.0.0.1', 31, true);
+    assert.ok(lan.every((s) => s === 404), 'every faked address got its own 30');
+  } finally {
+    await app.close();
+  }
+});
+
+test('with TRUSTED_PROXIES, a LAN request with a fake header counts against its own address; the tunnel still splits visitors', async () => {
+  const { startApp } = await import('./helpers.js');
+  const seen = [];
+  const app = await startApp({ host: '::', trustedProxies: '::1', onHeader: (...a) => seen.push(a) });
+  try {
+    // The LAN device fakes a new visitor address on every request: all 31 land in ONE bucket, its own.
+    const lan = await lookupsFrom(app.base, '127.0.0.1', 31, true);
+    assert.deepEqual(lan.slice(0, 30), Array(30).fill(404));
+    assert.equal(lan[30], 429);
+    // cloudflared's visitors are still told apart by the header (31 different visitors, none limited)…
+    const tunnel = await lookupsFrom(app.base, '::1', 31, true);
+    assert.ok(tunnel.every((s) => s === 404));
+    // …and the LAN device's own limit is unaffected by the header it sends.
+    assert.deepEqual(await lookupsFrom(app.base, '127.0.0.1', 1, false), [429]);
+    assert.deepEqual(seen.find(([socket]) => socket === '127.0.0.1'), ['127.0.0.1', false, true]);
+    assert.deepEqual(seen.find(([socket]) => socket === '::1'), ['::1', true, true]);
+  } finally {
+    await app.close();
+  }
+});
+
+test('the header-source log names each connection address once, and never the visitor address', async () => {
+  const { logHeaderSources } = await import('../core/network.js');
+  const lines = [];
+  const onHeader = logHeaderSources({ log: { log: (l) => lines.push(l), warn: (l) => lines.push(l) } });
+  const networkOf = createNetworkResolver({ trustedProxies: '172.16.0.0/12', onHeader });
+  for (let i = 0; i < 3; i++) networkOf(req('172.18.0.1', `198.51.100.${i}`));
+  networkOf(req('<LAN_DEVICE_IP>', '198.51.100.9'));
+  assert.equal(lines.length, 2);
+  assert.match(lines[0], /from 172\.18\.0\.1: honoured \(in TRUSTED_PROXIES\)/);
+  assert.match(lines[1], /from 10\.0\.0\.40: IGNORED/);
+  assert.ok(lines.every((l) => !l.includes('198.51.100')));
+});

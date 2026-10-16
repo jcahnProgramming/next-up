@@ -85,7 +85,8 @@ function BoardView({ code, state, setState, retry }) {
     plain: !open,
     onLock: open && state.board.hasPassword ? relock : undefined,
     onHistory: open ? openHistory : undefined,
-    live: open ? (live ?? { status: 'connecting', since: null }) : undefined,
+    // false: the board couldn't load, so no pill at all (cards/Board.jsx)
+    live: open && live !== false ? (live ?? { status: 'connecting', since: null }) : undefined,
   });
 
   switch (state.kind) {
@@ -164,13 +165,16 @@ function BoardView({ code, state, setState, retry }) {
             <p className="access-text">
               {state.offline
                 ? 'Boards need a connection to open.'
-                : 'Next Up didn’t answer. Nothing has changed on the board; this is only about reaching it.'}
+                : state.timedOut
+                  ? 'Timed out after 10 s. Nothing has changed on the board; this is only about reaching it.'
+                  : 'Next Up didn’t answer. Nothing has changed on the board; this is only about reaching it.'}
             </p>
             <div className="access-actions">
               <button type="button" className="btn btn-primary" onClick={retry}>
                 Retry
               </button>
             </div>
+            <HomeButton secondary />
           </section>
         </Centered>
       );

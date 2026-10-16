@@ -61,7 +61,8 @@ export function useLive({ code, head, onChange, onReset, onLocked, onBoard, onGo
   return { ...state, retry: () => conn.current?.retry() };
 }
 
-export const LiveContext = createContext({ status: 'live', why: null, since: null, deleting: false, retry: () => {}, subscribe: () => () => {} });
+// Outside a board's provider nothing is live: editing stays paused rather than assumed safe.
+export const LiveContext = createContext({ status: 'connecting', why: null, since: null, deleting: false, retry: () => {}, subscribe: () => () => {} });
 
 export const useLiveState = () => useContext(LiveContext);
 export const usePaused = () => {
@@ -90,6 +91,8 @@ export function SyncPill({ live }) {
     reconnecting: ['sync-re', <span key="s" className="spin" aria-hidden="true" />, 'Reconnecting…'],
     offline: ['sync-off', <OfflineIcon key="o" size={14} />, `Offline · as of ${time(since)}`],
     down: ['sync-off', <OfflineIcon key="o" size={14} />, `Not connected · as of ${time(since)}`],
+    // Connected, but a reload failed: the board shown is out of date (cards/Board.jsx).
+    behind: ['sync-off', <OfflineIcon key="o" size={14} />, `Out of date · as of ${time(since)}`],
   }[status];
   return (
     <span className={`sync ${cls}`} role="status" title={label}>
@@ -132,7 +135,7 @@ export function SyncBanner({ live, loadedAt }) {
  * board is being deleted (and connected), it says that instead: reconnecting wouldn't help, restoring the board would.
  */
 export function PausedBanner() {
-  const { status, why, retry, deleting } = useLiveState();
+  const { status, why, since, retry, deleting } = useLiveState();
   if (deleting && status === 'live') {
     return (
       <div className="banner banner-warn" role="status">
@@ -143,12 +146,27 @@ export function PausedBanner() {
       </div>
     );
   }
+  if (status === 'behind') {
+    return (
+      <div className="banner banner-err" role="status">
+        <WarningIcon />
+        <span className="banner-text">
+          <b>Couldn’t refresh the board.</b> Editing paused until it loads.
+        </span>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={retry}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+  const solid = status === 'offline' || status === 'down';
   const lead = status === 'offline' ? 'You’re offline.' : status === 'down' ? 'Not connected.' : why === 'busy' ? 'Next Up is busy.' : status === 'connecting' ? 'Connecting…' : 'Reconnecting…';
   return (
-    <div className={`banner ${status === 'offline' || status === 'down' ? 'banner-err' : 'banner-warn'}`} role="status">
-      {status === 'offline' || status === 'down' ? <WarningIcon /> : <span className="spin" aria-hidden="true" />}
+    <div className={`banner ${solid ? 'banner-err' : 'banner-warn'}`} role="status">
+      {solid ? <WarningIcon /> : <span className="spin" aria-hidden="true" />}
       <span className="banner-text">
-        <b>{lead}</b> Editing paused until we reconnect.
+        <b>{lead}</b>
+        {solid && since ? ` As of ${time(since)}.` : ''} Editing paused until we reconnect.
       </span>
       <button type="button" className="btn btn-secondary btn-sm" onClick={retry}>
         Retry

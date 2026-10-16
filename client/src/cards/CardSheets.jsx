@@ -363,13 +363,14 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
   const [failure, setFailure] = useState(null);
 
   const confirm = async () => {
-    if (busy) return;
+    if (busy || paused) return;
     setFailure(null);
     setBusy(true);
     const r = await onDelete();
     setBusy(false);
     if (r.kind === 'conflict') setFailure({ kind: 'conflict-delete' });
     else if (r.kind === 'error') setFailure({ kind: r.offline ? 'offline' : 'error' });
+    else if (r.kind === 'invalid') setFailure({ kind: 'refused', text: r.error });
   };
 
   return (
@@ -386,7 +387,7 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
           <button type="button" className="btn btn-quiet" onClick={onClose} disabled={busy} data-autofocus>
             Cancel
           </button>
-          <button type="button" className="btn btn-danger" onClick={confirm} aria-disabled={busy || undefined}>
+          <button type="button" className="btn btn-danger" onClick={confirm} aria-disabled={busy || paused || undefined}>
             {busy ? (
               <>
                 <span className="spin" aria-hidden="true" />
@@ -406,8 +407,12 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
 }
 
 function Failure({ failure, onRetry }) {
-  if (failure.kind === 'offline') return <PausedBanner />;
   const text = {
+    offline: (
+      <>
+        <b>You’re offline.</b> Nothing was saved. Check your connection, then try again.
+      </>
+    ),
     error: (
       <>
         <b>Couldn’t reach Next Up.</b> Nothing was saved. Check your connection, then try again.
@@ -434,9 +439,9 @@ function Failure({ failure, onRetry }) {
       </>
     ),
   }[failure.kind];
-  const retry = failure.kind === 'error';
+  const retry = failure.kind === 'error' || failure.kind === 'offline';
   return (
-    <div className={`banner ${failure.kind === 'error' ? 'banner-err' : 'banner-warn'}`} role="alert">
+    <div className={`banner ${retry ? 'banner-err' : 'banner-warn'}`} role="alert">
       <WarningIcon />
       <span className="banner-text">{text}</span>
       {retry && (

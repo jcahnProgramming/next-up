@@ -227,7 +227,7 @@
   --glass-rim: rgb(0 0 0 / 0.08); --glass-sheen: rgb(255 255 255 / 0.95);
   --focus-ring: 0 0 0 3px rgb(10 111 224 / 0.35);
   --success: #28a745; --success-text: #157a34; --success-soft: rgb(40 167 69 / 0.13); --success-fill: #34b75a;
-  --warning: #f09a0a; --warning-text: #995800; --warning-soft: rgb(240 154 10 / 0.15); --warning-fill: #f5a623;
+  --warning: #f09a0a; --warning-text: #774400; --warning-soft: rgb(240 154 10 / 0.15); --warning-fill: #f5a623;
   --error: #e3342c; --error-text: #c0221b; --error-soft: rgb(227 52 44 / 0.11); --error-fill: #ea4c45;
   --info: #0a6fe0; --info-text: #0060c4; --info-soft: rgb(10 111 224 / 0.11);
   --unknown: #9a9aa2; --unknown-text: #65656e; --unknown-soft: rgb(118 118 128 / 0.12);
@@ -364,7 +364,7 @@
   --glass-rim: rgb(255 255 255 / 0.7); --glass-sheen: rgb(255 255 255 / 0.95);
   --focus-ring: 0 0 0 3px rgb(212 32 138 / 0.35), 0 0 18px rgb(255 95 176 / 0.45);
   --success: #12b88f; --success-text: #066d53; --success-soft: rgb(30 210 165 / 0.20); --success-fill: linear-gradient(135deg, #52e8c0, #12b88f);
-  --warning: #f59b1f; --warning-text: #934800; --warning-soft: rgb(255 190 70 / 0.28); --warning-fill: linear-gradient(135deg, #ffd25e, #ff9d3a);
+  --warning: #f59b1f; --warning-text: #874200; --warning-soft: rgb(255 190 70 / 0.28); --warning-fill: linear-gradient(135deg, #ffd25e, #ff9d3a);
   --error: #e3192b; --error-text: #b10d1d; --error-soft: rgb(227 25 43 / 0.13); --error-fill: linear-gradient(135deg, #ff4d4d, #d3122a);
   --info: #8a4ff0; --info-text: #6430c9; --info-soft: rgb(138 79 240 / 0.15);
   --unknown: #a3949c; --unknown-text: #6f5e68; --unknown-soft: rgb(120 100 112 / 0.14);
@@ -467,6 +467,16 @@
 @keyframes hd-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes hd-pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes hd-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Reduce motion: things fade instead of sliding, scaling or rising; nothing pulses or sweeps for ever. A spinner still
+   turns: it is the only sign that something is happening. The same keyframe names, so every use follows. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes hd-sheet-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hd-sheet-up { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hd-pop { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hd-rise { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hd-pulse { from, to { box-shadow: none; opacity: 1; } }
+  @keyframes hd-shimmer { from, to { background-position: 0 0; } }
+}
 
 /* Card middle scrolls silently — the fade mask signals more content */
 [data-card-scroll] { scrollbar-width: none; }

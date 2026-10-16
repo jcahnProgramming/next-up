@@ -32,6 +32,17 @@ services:
     environment:
       DATA_DIR: /data
       PORT: 3230
+      BACKUP_DIR: /backups
+    # Nightly backups (server/core/backup.js, RESTORE.md) go to the array share, off the cache pool the database is
+    # on. The folder must already exist, owned by PUID:PGID: Docker must never create it (it would be root's, and on
+    # the cache). The deploy's preflight checks it before anything is restarted.
+    volumes:
+      - ./data:/data
+      - type: bind
+        source: <BACKUP_DIR>
+        target: /backups
+        bind:
+          create_host_path: false
     ports:
       - "<LAN_IP>:3230:3230"
     healthcheck:

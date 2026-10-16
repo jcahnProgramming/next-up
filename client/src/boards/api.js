@@ -14,15 +14,15 @@ import { readDisplayName } from '../prefs/displayName.js';
  *   { kind: 'deleting', board }         the board is being deleted: nothing on it can change until it's restored
  *   { kind: 'not-deleting', board }     restore, but someone else restored it first
  *   { kind: 'no-password' }             change password on an open board (which can never get one)
- *   { kind: 'error', offline }          couldn't reach Next Up, or it failed (never shown as "nothing here")
+ *   { kind: 'error', offline, timedOut? }  couldn't reach Next Up, or it failed (never shown as "nothing here")
  *
  * Access is an httpOnly cookie the server sets; this code never sees or stores it.
  */
 const TIMEOUT_MS = 10_000;
 
 /**
- * One request to the API: { status, data } with the parsed JSON body, or { failed: true, offline } when Next Up
- * couldn't be reached or didn't answer in JSON. Never throws. Shared with cards/api.js.
+ * One request to the API: { status, data } with the parsed JSON body, or { failed: true, offline, timedOut } when
+ * Next Up couldn't be reached, didn't answer within TIMEOUT_MS (timedOut), or didn't answer in JSON. Never throws. Shared with cards/api.js.
  */
 export async function request(path, { method = 'GET', body } = {}) {
   let res;
@@ -35,8 +35,12 @@ export async function request(path, { method = 'GET', body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch {
-    return { failed: true, offline: typeof navigator !== 'undefined' && navigator.onLine === false };
+  } catch (err) {
+    return {
+      failed: true,
+      offline: typeof navigator !== 'undefined' && navigator.onLine === false,
+      timedOut: err?.name === 'TimeoutError',
+    };
   }
   try {
     return { status: res.status, data: res.status === 204 ? null : await res.json() };
@@ -47,7 +51,7 @@ export async function request(path, { method = 'GET', body } = {}) {
 
 async function call(path, opts) {
   const r = await request(path, opts);
-  return r.failed ? { kind: 'error', offline: r.offline } : read(r.status, r.data);
+  return r.failed ? { kind: 'error', offline: r.offline, timedOut: Boolean(r.timedOut) } : read(r.status, r.data);
 }
 
 function read(status, data) {

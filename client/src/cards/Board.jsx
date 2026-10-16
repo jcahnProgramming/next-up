@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { PlusIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
+import { focusMainHeading } from '../chrome/scrollMemory.js';
 import { useTopbar } from '../chrome/topbar.jsx';
 import { usePhone } from '../chrome/usePhone.js';
 import { useAskName } from '../prefs/NamePrompt.jsx';
@@ -91,7 +92,7 @@ export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
       } else if (r.kind === 'locked') {
         onLocked(r.changed);
       } else {
-        setLoad({ kind: 'error', offline: r.offline });
+        setLoad({ kind: 'error', offline: r.offline, timedOut: r.timedOut });
       }
     });
     return () => {
@@ -100,6 +101,12 @@ export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
   }, [code, attempt, onLocked]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
+
+  // Opened from a lock screen, or anything else whose focused control went away as the board loaded: focus lands on
+  // the board's heading rather than nowhere.
+  useEffect(() => {
+    if (load.kind === 'ready' && (!document.activeElement || document.activeElement === document.body)) focusMainHeading(document);
+  }, [load.kind]);
 
   // Only ever newer: an answer or a change that arrives after a newer one for the same card doesn't undo it.
   const upsert = useCallback((card) => {
@@ -205,25 +212,32 @@ export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
     onGone: () => onGone(),
   });
   const deleting = deletion !== null;
-  const connected = live.status === 'live';
+  // A reload that failed (after a reset, or a rebalanced lane) leaves the board known to be out of date even while the
+  // stream is live: it's "behind" until a reload works, and editing pauses as it does when disconnected.
+  const behind = load.kind === 'error' && Boolean(data) && live.status === 'live';
+  const status = behind ? 'behind' : live.status;
+  const connected = status === 'live';
   // Editing pauses while the stream isn't live, and while the board is being deleted; only the first greys the lanes.
   const paused = !connected || deleting;
-  const stale = !connected && live.status !== 'connecting';
+  const stale = !connected && status !== 'connecting';
   const subscribe = useCallback((fn) => {
     listeners.current.add(fn);
     return () => {
       listeners.current.delete(fn);
     };
   }, []);
+  const since = behind ? data.loadedAt : live.since;
   const liveValue = useMemo(
-    () => ({ status: live.status, why: live.why, since: live.since, retry: live.retry, deleting, subscribe }),
-    [live.status, live.why, live.since, live.retry, deleting, subscribe],
+    () => ({ status, why: live.why, since, retry: behind ? reload : live.retry, deleting, subscribe }),
+    [status, live.why, since, behind, reload, live.retry, deleting, subscribe],
   );
 
-  // The top bar's sync pill (pages/BoardPage.jsx puts it there).
+  // The top bar's sync pill (pages/BoardPage.jsx puts it there). None while the board couldn't load at all: the page
+  // says so, and "Connecting…" would suggest something is on its way.
+  const failed = load.kind === 'error' && !data;
   useEffect(() => {
-    onLive?.({ status: live.status, since: live.since });
-  }, [onLive, live.status, live.since]);
+    onLive?.(failed ? false : { status, since });
+  }, [onLive, failed, status, since]);
   useEffect(() => {
     return () => {
       onLive?.(null);
@@ -332,7 +346,7 @@ export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
         <h1 className="sr-only">
           Board <span className="code-text">{code}</span>
         </h1>
-        {load.kind === 'loading' ? <Skeleton /> : <LoadError offline={load.offline} onRetry={reload} />}
+        {load.kind === 'loading' ? <Skeleton /> : <LoadError offline={load.offline} timedOut={load.timedOut} onRetry={reload} />}
       </div>
     );
   }
@@ -360,11 +374,12 @@ export function Board({ board, onLocked, onGone, history, onHistory, onLive }) {
         />
       )}
       <SyncBanner live={live} loadedAt={data.loadedAt} />
-      {!stale && load.kind === 'error' && (
+      {behind && (
         <div className="banner banner-err board-banner" role="alert">
           <WarningIcon />
           <span className="banner-text">
-            <b>Couldn’t refresh the board.</b> Showing it as it was at {formatTime(data.loadedAt)}.
+            <b>Couldn’t refresh the board.</b> Showing it as it was at {formatTime(data.loadedAt)}. Editing paused until
+            it loads.
           </span>
           <button type="button" className="btn btn-secondary btn-sm" onClick={reload}>
             Retry
@@ -688,7 +703,7 @@ function Skeleton() {
   );
 }
 
-function LoadError({ offline, onRetry }) {
+function LoadError({ offline, timedOut, onRetry }) {
   return (
     <div className="board-center">
       <section className="st-error board-error" role="alert">
@@ -699,7 +714,9 @@ function LoadError({ offline, onRetry }) {
         <p className="board-error-text">
           {offline
             ? 'Boards need a connection to open. Nothing on the board has changed.'
-            : 'Next Up didn’t answer. Nothing on the board has changed; we just couldn’t fetch it.'}
+            : timedOut
+              ? 'Timed out after 10 s. Nothing on the board has changed; we just couldn’t fetch it.'
+              : 'Next Up didn’t answer. Nothing on the board has changed; we just couldn’t fetch it.'}
         </p>
         <button type="button" className="btn btn-primary" onClick={onRetry}>
           <RetryIcon />

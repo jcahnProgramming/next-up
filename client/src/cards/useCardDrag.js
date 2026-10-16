@@ -21,7 +21,7 @@ import { LANES, laneName } from '../../../server/core/cardRules.js';
  *
  * Touch: a press only lifts after LONG_PRESS_MS without moving more than TOUCH_SLOP; moving sooner is a scroll and
  * the drag never starts. Once lifted, touchmove is cancelled so the page doesn't scroll under the finger, and the
- * page auto-scrolls instead when the card is held near the top or bottom edge (above the coffee bar).
+ * page auto-scrolls instead when the card is held near the top or bottom edge (below the top bar, above the coffee bar).
  */
 const LONG_PRESS_MS = 350;
 const TOUCH_SLOP = 8;
@@ -153,8 +153,9 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
 
   const scrollSpeed = (y) => {
     const zone = autoscrollZone();
+    const top = topBarBottom();
     const bottom = window.innerHeight - coffeeBarHeight();
-    if (y < zone) return -MAX_SCROLL * Math.min(1, (zone - y) / zone);
+    if (y < top + zone) return -MAX_SCROLL * Math.min(1, (top + zone - y) / zone);
     if (y > bottom - zone) return MAX_SCROLL * Math.min(1, (y - (bottom - zone)) / zone);
     return 0;
   };
@@ -360,7 +361,7 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
       s.dy = to.top - (r.top - s.dy);
       s.li.style.transition = 'transform var(--dur-base) var(--spring)';
       s.li.style.transform = `translate3d(${s.dx}px, ${s.dy}px, 0)`;
-      slot.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      slot.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     });
   }, [drag, guard, rootRef]);
 
@@ -409,6 +410,12 @@ let zone = null;
 function autoscrollZone() {
   if (zone === null) zone = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--autoscroll-zone')) || 96;
   return zone;
+}
+
+// Auto-scroll measures from the sticky top bar's bottom edge: the bar covers the top of the viewport, so a band that
+// started at the window's top would sit mostly under it.
+function topBarBottom() {
+  return Math.max(0, document.querySelector('.topbar-bar')?.getBoundingClientRect().bottom ?? 0);
 }
 
 // Auto-scroll measures from the coffee bar's top edge: the bar covers the bottom of the viewport.
