@@ -1,28 +1,28 @@
 import { useId, useState } from 'react';
+import { DatePicker } from '../chrome/DatePicker.jsx';
 import { Dropdown } from '../chrome/Dropdown.jsx';
 import { CloseIcon, EditIcon, ErrorIcon, TrashIcon, WarningIcon } from '../chrome/icons.jsx';
 import { Overlay } from '../chrome/Overlay.jsx';
 import { usePhone } from '../chrome/usePhone.js';
+import { SERVER_INFO_MAX, checkServerInfo, cleanServerInfo } from '../../../server/core/cardDetail.js';
 import { LANES, TITLE_MAX, checkTitle, cleanTitle, laneName } from '../../../server/core/cardRules.js';
 import { CardFace } from './Card.jsx';
+import { GoLive, Players, ServerInfo } from './CardDetail.jsx';
 import { LogoPicker } from './LogoPicker.jsx';
-import { LOGOS, logoById } from './logos.js';
+import { LOGOS } from './logos.js';
 
 /**
  * The sheets a card opens (design/v1 Detail-Desktop, Detail-Edit, Detail-Phone; a side sheet on a desktop, a bottom
  * sheet on a phone):
  *
- *   CardPanel      the card: its header pill, lane, logo, when it was added; Edit and Delete
- *   CardEditor     add or edit: game name, logo, lane
+ *   CardPanel      the card: its header pill and lane, go-live date, server info and sign-ups (CardDetail.jsx);
+ *                  Edit and Delete. Players are added and removed right here, with no edit mode.
+ *   CardEditor     add or edit: game name, logo, lane, go-live date (the themed DatePicker) and server info
  *   ConfirmDelete  "Delete Valheim?"
- *
- * Go-live date, server info and sign-ups join the panel and editor when they're built; until then they're left out,
- * not shown empty.
  */
 
-export function CardPanel({ card, paused, onEdit, onDelete, onClose }) {
+export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose, onCount, onLocked, onGone }) {
   const titleId = useId();
-  const logo = logoById(card.logo);
   return (
     <Overlay kind="side" labelledBy={titleId} onClose={onClose} className="card-panel">
       <div className="panel-hero">
@@ -35,7 +35,7 @@ export function CardPanel({ card, paused, onEdit, onDelete, onClose }) {
           </span>
         </CardFace>
         <div className="panel-hero-actions">
-          <button type="button" className="btn btn-sm hero-btn" onClick={onEdit} disabled={paused}>
+          <button type="button" className="btn btn-sm hero-btn" onClick={() => onEdit()} disabled={paused}>
             <EditIcon />
             Edit
           </button>
@@ -45,39 +45,17 @@ export function CardPanel({ card, paused, onEdit, onDelete, onClose }) {
         </div>
       </div>
 
-      <div className="sheet-body">
+      <div className="sheet-body card-detail">
         {paused && <PausedBanner />}
-        <dl className="card-facts">
-          <div>
-            <dt>Lane</dt>
-            <dd>
-              <span className={`lane-dot ld-${card.lane}`} aria-hidden="true" />
-              {laneName(card.lane)}
-            </dd>
-          </div>
-          <div>
-            <dt>Logo</dt>
-            <dd>{logo ? logo.name : card.logo ? 'No logo (its file is no longer in the library)' : 'No logo'}</dd>
-          </div>
-          <div>
-            <dt>Added</dt>
-            <dd>
-              <time dateTime={card.createdAt}>{formatDate(card.createdAt)}</time>
-            </dd>
-          </div>
-          {card.updatedAt !== card.createdAt && (
-            <div>
-              <dt>Last changed</dt>
-              <dd>
-                <time dateTime={card.updatedAt}>{formatDate(card.updatedAt)}</time>
-              </dd>
-            </div>
-          )}
-        </dl>
+        <GoLive value={card.goLive} paused={paused} onSet={() => onEdit('goLive')} />
+        <ServerInfo value={card.serverInfo} paused={paused} onSet={() => onEdit('serverInfo')} toast={toast} />
+        <Players key={card.id} code={code} card={card} paused={paused} onCount={onCount} onLocked={onLocked} onGone={onGone} />
       </div>
 
       <div className="sheet-foot">
-        <span className="grow" />
+        <span className="sheet-foot-note">
+          Added <time dateTime={card.createdAt}>{formatInstant(card.createdAt)}</time>
+        </span>
         <button type="button" className="btn btn-ghost btn-sm btn-delete" onClick={onDelete} disabled={paused}>
           <TrashIcon />
           Delete card
@@ -87,17 +65,22 @@ export function CardPanel({ card, paused, onEdit, onDelete, onClose }) {
   );
 }
 
-export function CardEditor({ card, lane: startLane, paused, full, onSave, onDelete, onClose }) {
+export function CardEditor({ card, lane: startLane, focus, paused, full, onSave, onDelete, onClose }) {
   const titleId = useId();
   const nameId = useId();
   const logoId = useId();
   const laneId = useId();
+  const dateId = useId();
+  const infoId = useId();
   const phone = usePhone();
   const adding = !card;
   const [title, setTitle] = useState(card?.title ?? '');
   const [logo, setLogo] = useState(card?.logo ?? null);
   const [lane, setLane] = useState(card?.lane ?? startLane ?? 'up_next');
+  const [goLive, setGoLive] = useState(card?.goLive ?? null);
+  const [serverInfo, setServerInfo] = useState(card?.serverInfo ?? '');
   const [titleError, setTitleError] = useState(null);
+  const [infoError, setInfoError] = useState(null);
   const [failure, setFailure] = useState(null); // { kind: 'offline' | 'error' | 'full' | 'conflict', text? }
   const [busy, setBusy] = useState(false);
 
@@ -110,7 +93,13 @@ export function CardEditor({ card, lane: startLane, paused, full, onSave, onDele
       return;
     }
     setTitleError(null);
-    let values = { title: t.title, logo, lane };
+    const info = checkServerInfo(serverInfo);
+    if (!info.ok) {
+      setInfoError(info.error);
+      return;
+    }
+    setInfoError(null);
+    let values = { title: t.title, logo, lane, goLive, serverInfo: info.serverInfo };
     if (!adding) {
       values = Object.fromEntries(Object.entries(values).filter(([k, v]) => v !== card[k]));
       if (Object.keys(values).length === 0) return onClose();
@@ -121,12 +110,15 @@ export function CardEditor({ card, lane: startLane, paused, full, onSave, onDele
     setBusy(false);
     if (r.kind === 'invalid') {
       if (r.field === 'title') setTitleError(r.error);
+      else if (r.field === 'serverInfo') setInfoError(r.error);
       else setFailure({ kind: 'refused', text: r.error });
     } else if (r.kind === 'conflict') {
       // Show what's there now; the person makes their change again on top of it.
       setTitle(r.card.title);
       setLogo(r.card.logo);
       setLane(r.card.lane);
+      setGoLive(r.card.goLive);
+      setServerInfo(r.card.serverInfo);
       setFailure({ kind: 'conflict' });
     } else if (r.kind === 'full') {
       setFailure({ kind: 'full', text: r.error });
@@ -196,7 +188,7 @@ export function CardEditor({ card, lane: startLane, paused, full, onSave, onDele
               enterKeyHint="done"
               aria-invalid={titleError ? 'true' : undefined}
               aria-describedby={titleError ? `${nameId}-error` : undefined}
-              data-autofocus
+              data-autofocus={!focus || undefined}
             />
             {titleError ? (
               <span id={`${nameId}-error`} className="field-error" role="alert">
@@ -248,6 +240,44 @@ export function CardEditor({ card, lane: startLane, paused, full, onSave, onDele
               />
               {!adding && lane !== card.lane && <span className="field-hint">It goes to the bottom of {laneName(lane)}.</span>}
             </div>
+            <div className="field">
+              <span className="field-label" id={dateId}>
+                Go-live date
+              </span>
+              <DatePicker labelledBy={dateId} value={goLive} onChange={setGoLive} autoFocus={focus === 'goLive'} />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor={infoId}>
+              Server info
+            </label>
+            <textarea
+              id={infoId}
+              className="field-input field-textarea"
+              value={serverInfo}
+              onChange={(e) => {
+                setServerInfo(e.target.value);
+                setInfoError(null);
+              }}
+              rows={6}
+              placeholder="IP, port, password, links…"
+              spellCheck="false"
+              aria-invalid={infoError ? 'true' : undefined}
+              aria-describedby={`${infoId}-hint`}
+              data-autofocus={focus === 'serverInfo' || undefined}
+            />
+            {infoError ? (
+              <span id={`${infoId}-hint`} className="field-error" role="alert">
+                <ErrorIcon />
+                {infoError}
+              </span>
+            ) : (
+              <span id={`${infoId}-hint`} className="field-hint">
+                Free text. Links become clickable. Anyone who can open this board can see it.
+                {infoLength(serverInfo) > SERVER_INFO_MAX - 200 && ` ${infoLength(serverInfo).toLocaleString()} of ${SERVER_INFO_MAX.toLocaleString()} characters.`}
+              </span>
+            )}
           </div>
         </div>
 
@@ -374,7 +404,9 @@ function Failure({ failure, onRetry }) {
   );
 }
 
-const formatDate = (iso) => {
+const infoLength = (value) => [...cleanServerInfo(value)].length;
+
+const formatInstant = (iso) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 };

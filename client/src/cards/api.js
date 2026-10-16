@@ -49,8 +49,8 @@ export async function loadCards(code) {
 
 const actor = () => readDisplayName() ?? undefined;
 
-export const addCard = async (code, { title, logo, lane }) =>
-  read(await request(base(code), { method: 'POST', body: { title, logo, lane, actor: actor() } }));
+export const addCard = async (code, { title, logo, lane, goLive, serverInfo }) =>
+  read(await request(base(code), { method: 'POST', body: { title, logo, lane, goLive, serverInfo, actor: actor() } }));
 
 export const editCard = async (code, card, changes) =>
   read(await request(`${base(code)}/${card.id}`, { method: 'PATCH', body: { ...changes, version: card.version, actor: actor() } }));
@@ -61,3 +61,49 @@ export const moveCard = async (code, card, { lane, index, afterId }) =>
 
 export const deleteCard = async (code, card) =>
   read(await request(`${base(code)}/${card.id}`, { method: 'DELETE', body: { version: card.version, actor: actor() } }));
+
+/**
+ * A card's sign-ups (server/players/routes.js). Besides the kinds above:
+ *
+ *   { kind: 'ok', players, limit }                  the list, in sign-up order
+ *   { kind: 'ok', player, playerCount }             added or removed; playerCount is the card's new count
+ *   { kind: 'exists', error, player }               that name is already on the card (`player` as written there)
+ *   { kind: 'players-full', error }                 the card has the most players it can hold
+ *   { kind: 'player-gone' }                         someone else removed that player first
+ *   { kind: 'gone' }                                the card was deleted
+ */
+const players = (code, card) => `${base(code)}/${card.id}/players`;
+
+function readPlayers(r) {
+  if (r.failed) return { kind: 'error', offline: r.offline };
+  const { status, data } = r;
+  if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
+  if ((status === 200 || status === 201) && data?.player) return { kind: 'ok', player: data.player, playerCount: data.playerCount };
+  if (status === 200 && Array.isArray(data?.players)) return { kind: 'ok', players: data.players, next: data.next ?? null, limit: data.limit };
+  if (data?.code === 'player_exists') return { kind: 'exists', error: data.error, player: data.player };
+  if (data?.code === 'player_limit') return { kind: 'players-full', error: data.error };
+  if (data?.code === 'player_gone') return { kind: 'player-gone' };
+  if (data?.code === 'card_gone') return { kind: 'gone' };
+  if (status === 400 && data?.field) return { kind: 'invalid', field: data.field, error: data.error };
+  return { kind: 'error', offline: false };
+}
+
+/** Everyone signed up to the card, following the server's pages (a card holds at most its limit: one page). */
+export async function loadPlayers(code, card) {
+  const list = [];
+  let after = null;
+  for (let page = 0; page < 5; page++) {
+    const r = readPlayers(await request(`${players(code, card)}${after ? `?after=${encodeURIComponent(after)}` : ''}`));
+    if (r.kind !== 'ok') return r;
+    list.push(...r.players);
+    if (!r.next) return { kind: 'ok', players: list, limit: r.limit };
+    after = r.next;
+  }
+  return { kind: 'error', offline: false };
+}
+
+export const addPlayer = async (code, card, name) =>
+  readPlayers(await request(players(code, card), { method: 'POST', body: { name, actor: actor() } }));
+
+export const removePlayer = async (code, card, player) =>
+  readPlayers(await request(`${players(code, card)}/${player.id}`, { method: 'DELETE', body: { actor: actor() } }));

@@ -37,7 +37,7 @@ export function Board({ board, onLocked }) {
   const announce = useCallback((text) => setSaid((p) => ({ text, n: p.n + 1 })), []);
   const [load, setLoad] = useState({ kind: 'loading' });
   const [data, setData] = useState(null); // { cards, limit, loadedAt }
-  const [sheet, setSheet] = useState(null); // { mode: 'view' | 'edit' | 'add' | 'delete', id?, lane?, back? }
+  const [sheet, setSheet] = useState(null); // { mode: 'view' | 'edit' | 'add' | 'delete', id?, lane?, back?, focus? }
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -65,6 +65,10 @@ export function Board({ board, onLocked }) {
   }, []);
   const drop = useCallback((id) => {
     setData((d) => ({ ...d, cards: d.cards.filter((c) => c.id !== id) }));
+  }, []);
+  // Sign-ups change only the card's count; its version stays (server/players/routes.js).
+  const setPlayerCount = useCallback((id, playerCount) => {
+    setData((d) => ({ ...d, cards: d.cards.map((c) => (c.id === id && c.playerCount !== playerCount ? { ...c, playerCount } : c)) }));
   }, []);
 
   const lanes = useMemo(() => {
@@ -251,11 +255,20 @@ export function Board({ board, onLocked }) {
 
       {sheet?.mode === 'view' && sheetCard && (
         <CardPanel
+          code={code}
           card={sheetCard}
           paused={paused}
-          onEdit={() => setSheet({ mode: 'edit', id: sheetCard.id, back: 'view' })}
+          toast={toast}
+          onEdit={(focus) => setSheet({ mode: 'edit', id: sheetCard.id, back: 'view', focus })}
           onDelete={() => setSheet({ mode: 'delete', id: sheetCard.id, back: 'view' })}
           onClose={() => setSheet(null)}
+          onCount={(n) => setPlayerCount(sheetCard.id, n)}
+          onLocked={(changed) => common({ kind: 'locked', changed })}
+          onGone={() => {
+            drop(sheetCard.id);
+            setSheet(null);
+            toast(`${sheetCard.title} was deleted by someone else.`, 'error');
+          }}
         />
       )}
       {(sheet?.mode === 'add' || (sheet?.mode === 'edit' && sheetCard)) && (
@@ -263,6 +276,7 @@ export function Board({ board, onLocked }) {
           key={sheet.mode === 'add' ? 'add' : `edit-${sheet.id}`}
           card={sheet.mode === 'edit' ? sheetCard : null}
           lane={sheet.lane}
+          focus={sheet.focus}
           paused={paused}
           full={full}
           onSave={(values) => save(sheet.mode, sheetCard, values)}

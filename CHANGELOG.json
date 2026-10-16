@@ -1,6 +1,23 @@
 {
   "releases": [
     {
+      "version": "0.6.0",
+      "date": "2026-10-15",
+      "title": "Card details: go-live date, server info and sign-ups",
+      "sections": {
+        "New": [
+          "A card can have a go-live date. Set it in the card's edit sheet with a calendar that matches your theme, with “Today” and “Clear date” buttons. It's a date only, with no time: “Sat 24 Oct” is the same day for everyone, wherever they live. The card's panel shows the date and how far away it is (“In 9 days”, “Goes live today”, “Live 12 days”), and the card on the board shows it as a small badge. A card without a date says “Not set” in its panel and shows no badge.",
+          "A card can hold server info: one free-text box, up to 2,000 characters, for addresses, ports, passwords, mod lists and links. Web addresses starting with http:// or https:// become links that open in a new tab; everything else, including anything that looks like HTML or markdown, is shown exactly as typed. “Copy all” copies the whole text. Anyone who can open the board can read it, so a password board's server info is only as private as its password.",
+          "Sign up for a game: “Add Player” in a card's panel opens a box filled in with your display name (change it to add someone else) and Add puts the name on the card, in the order people signed up. Enter adds and keeps the box open for the next name. A name already on the card is turned away, whatever its capitals; a card holds up to 100 players. Anyone with the board can remove any name with the × on it, straight away and without a confirmation. The card on the board shows how many people are signed up.",
+          "Adding a player counts as a change, so a browser that has never given a display name is asked for one first, like any other change.",
+          "Every change to a card's date and server info, every sign-up and every removal is recorded in the board's history with what it was before, so the coming History page can undo edits and put removed players back where they were. History itself isn't built yet."
+        ],
+        "Improved": [
+          "A card's panel now shows its date, server info and players instead of the list of its lane, logo and dates. Its lane is still on the card at the top, and when it was added is at the bottom."
+        ]
+      }
+    },
+    {
       "version": "0.5.0",
       "date": "2026-10-15",
       "title": "Drag and drop",

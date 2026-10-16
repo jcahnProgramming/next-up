@@ -1,18 +1,25 @@
 import express from 'express';
+import { checkGoLive, checkServerInfo } from '../core/cardDetail.js';
 import { MAX_CARDS, checkLane, checkLogo, checkTitle } from '../core/cardRules.js';
 import { appendEvent } from '../core/events.js';
 import { keyAfter, keyBetween, spreadKeys, tooLong } from '../core/positions.js';
-import { CARD_CREATED, CARD_DELETED, CARD_EDITED, CARD_MOVED } from './events.js';
+import { createPlayersRouter } from '../players/routes.js';
+import { CARD_CREATED, CARD_DELETED, CARD_DETAIL_EDITED, CARD_EDITED, CARD_MOVED } from './events.js';
 
 /**
  * /api/boards/:code/cards. Mounted by boards/routes.js AFTER requireAccess, so a password board without access never
  * reaches here: every method and path answers only { status: 'locked', code }.
  *
  *   GET    /             a page of the board's live cards, in lane order: { cards, next, limit }   ?limit=&after=
- *   POST   /             add { title, logo?, lane, actor? } to the bottom of the lane → 201 { card }
- *   PATCH  /:id          edit { version, title?, logo?, lane?, actor? } → { card }; a new lane puts it at the bottom
+ *   POST   /             add { title, logo?, lane, goLive?, serverInfo?, actor? } to the bottom of the lane → 201 { card }
+ *   PATCH  /:id          edit { version, title?, logo?, lane?, goLive?, serverInfo?, actor? } → { card }; a new lane
+ *                        puts it at the bottom
  *   POST   /:id/move     place it { lane, index, afterId?, actor? } → { card, moved }
  *   DELETE /:id          tombstone { version, actor? } → { card } (the card as it was)
+ *   …      /:id/players  its sign-ups (players/routes.js)
+ *
+ * goLive is a calendar date 'YYYY-MM-DD' or null; serverInfo is plain text, '' when not set (core/cardDetail.js).
+ * A card says how many players are signed up (playerCount); the list itself comes from /:id/players.
  *
  * Every change writes its event (cards/events.js) in the same transaction. Edits and deletes name the version they
  * started from; if someone else changed the card since, the answer is 409 { code: 'conflict', card } with the latest.
@@ -47,14 +54,25 @@ export function createCardsRouter({ db }) {
     if (!logo.ok) return invalid(res, 'logo', logo.error);
     const lane = checkLane(body.lane);
     if (!lane.ok) return invalid(res, 'lane', lane.error);
+    const goLive = checkGoLive(body.goLive);
+    if (!goLive.ok) return invalid(res, 'goLive', goLive.error);
+    const serverInfo = checkServerInfo(body.serverInfo);
+    if (!serverInfo.ok) return invalid(res, 'serverInfo', serverInfo.error);
     const boardId = req.board.id;
 
     const outcome = db().transaction(() => {
       if (q.liveCount(boardId) >= MAX_CARDS) return 'full';
       const place = bottomOf(boardId, lane.lane);
-      const id = q.insert(boardId, lane.lane, place.position, title.title, logo.logo);
+      const id = q.insert(boardId, {
+        lane: lane.lane,
+        position: place.position,
+        title: title.title,
+        logo: logo.logo,
+        goLive: goLive.goLive,
+        serverInfo: serverInfo.serverInfo,
+      });
       const card = q.byId(boardId, id);
-      appendEvent(db(), { boardId, type: CARD_CREATED, actor: body.actor, payload: { cardId: id, card: stateOf(card, place.index) } });
+      appendEvent(db(), { boardId, type: CARD_CREATED, actor: body.actor, payload: { cardId: id, card: wholeStateOf(card, place.index) } });
       return { card, rebalanced: place.rebalanced };
     }).immediate();
     if (outcome === 'full') return cardLimit(res);
@@ -83,16 +101,27 @@ export function createCardsRouter({ db }) {
       if (!lane.ok) return invalid(res, 'lane', lane.error);
       changes.lane = lane.lane;
     }
+    if (body.goLive !== undefined) {
+      const goLive = checkGoLive(body.goLive);
+      if (!goLive.ok) return invalid(res, 'goLive', goLive.error);
+      changes.goLive = goLive.goLive;
+    }
+    if (body.serverInfo !== undefined) {
+      const serverInfo = checkServerInfo(body.serverInfo);
+      if (!serverInfo.ok) return invalid(res, 'serverInfo', serverInfo.error);
+      changes.serverInfo = serverInfo.serverInfo;
+    }
     const boardId = req.board.id;
 
     const outcome = db().transaction(() => {
       const card = q.byId(boardId, id);
       if (!card || card.deleted_at) return { gone: true };
       if (card.version !== version) return { conflict: card };
-      const next = { title: card.title, logo: card.logo, lane: card.lane, position: card.position, ...changes };
+      const next = { ...editableOf(card), ...changes };
       const edited = next.title !== card.title || next.logo !== card.logo;
+      const detailed = next.goLive !== card.go_live || next.serverInfo !== card.server_info;
       const moved = next.lane !== card.lane;
-      if (!edited && !moved) return { card };
+      if (!edited && !detailed && !moved) return { card };
       const before = stateOf(card, q.indexOf(card));
       let place = null;
       if (moved) {
@@ -101,10 +130,19 @@ export function createCardsRouter({ db }) {
       }
       q.update(boardId, id, next);
       const saved = q.byId(boardId, id);
-      // The name or logo is an edit and the lane a move, each logged as itself (cards/events.js).
+      // The name or logo is an edit, the go-live date and server info a detail edit, and the lane a move, each
+      // logged as itself (cards/events.js).
       if (edited) {
         const after = { ...before, title: saved.title, logo: saved.logo };
         appendEvent(db(), { boardId, type: CARD_EDITED, actor: body.actor, payload: { cardId: id, before, after } });
+      }
+      if (detailed) {
+        appendEvent(db(), {
+          boardId,
+          type: CARD_DETAIL_EDITED,
+          actor: body.actor,
+          payload: { cardId: id, before: detailOf(card), after: detailOf(saved) },
+        });
       }
       if (moved) {
         appendEvent(db(), {
@@ -155,7 +193,7 @@ export function createCardsRouter({ db }) {
 
       const before = placeOf(stateOf(card, from));
       const place = placeBetween(boardId, lane.lane, others, index);
-      q.update(boardId, id, { title: card.title, logo: card.logo, lane: lane.lane, position: place.position });
+      q.update(boardId, id, { ...editableOf(card), lane: lane.lane, position: place.position });
       const saved = q.byId(boardId, id);
       appendEvent(db(), {
         boardId,
@@ -181,7 +219,7 @@ export function createCardsRouter({ db }) {
       const card = q.byId(boardId, id);
       if (!card || card.deleted_at) return { gone: true };
       if (card.version !== version) return { conflict: card };
-      const state = stateOf(card, q.indexOf(card));
+      const state = wholeStateOf(card, q.indexOf(card));
       q.tombstone(boardId, id);
       appendEvent(db(), { boardId, type: CARD_DELETED, actor: body.actor, payload: { cardId: id, card: state } });
       return { card };
@@ -190,6 +228,8 @@ export function createCardsRouter({ db }) {
     if (outcome.conflict) return conflict(res, outcome.conflict);
     res.json({ card: cardBody(outcome.card) });
   });
+
+  router.use('/:id/players', createPlayersRouter({ db }));
 
   // The bottom of a lane: a key after its last live card, and the index the card will have. A key that would pass the
   // length cap rebalances the lane first (core/positions.js). Call inside the write transaction.
@@ -237,15 +277,37 @@ function cardBody(row) {
     logo: row.logo,
     lane: row.lane,
     position: row.position,
+    goLive: row.go_live,
+    serverInfo: row.server_info,
+    playerCount: row.player_count,
     version: row.version,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
+// A card.edited's before or after: the name and logo, and the card's place.
 function stateOf(row, index) {
   return { title: row.title, logo: row.logo, lane: row.lane, position: row.position, index };
 }
+
+// A card.created's or card.deleted's card: everything a person can set on it, and its place.
+function wholeStateOf(row, index) {
+  return { ...stateOf(row, index), goLive: row.go_live, serverInfo: row.server_info };
+}
+
+// A card.detail_edited's before or after.
+const detailOf = (row) => ({ goLive: row.go_live, serverInfo: row.server_info });
+
+// What q.update writes, as the card has it now.
+const editableOf = (row) => ({
+  title: row.title,
+  logo: row.logo,
+  lane: row.lane,
+  position: row.position,
+  goLive: row.go_live,
+  serverInfo: row.server_info,
+});
 
 const placeOf = ({ lane, position, index }) => ({ lane, position, index });
 
@@ -294,7 +356,9 @@ function queries(db) {
     if (!cache.has(sql)) cache.set(sql, db().prepare(sql));
     return cache.get(sql);
   };
-  const COLS = 'id, board_id, lane, position, title, logo, version, created_at, updated_at, deleted_at';
+  // player_count: the card's live sign-ups (players_live_name's index; at most MAX_PLAYERS).
+  const COLS = `id, board_id, lane, position, title, logo, go_live, server_info, version, created_at, updated_at, deleted_at,
+    (SELECT COUNT(*) FROM players p WHERE p.card_id = cards.id AND p.deleted_at IS NULL) AS player_count`;
   const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
   return {
     byId: (boardId, id) => st(`SELECT ${COLS} FROM cards WHERE board_id = ? AND id = ? LIMIT 1`).get(boardId, id) ?? null,
@@ -329,20 +393,23 @@ function queries(db) {
       )
         .pluck()
         .get(card.board_id, card.lane, card.position, card.position, card.id),
-    insert: (boardId, lane, position, title, logo) =>
+    insert: (boardId, c) =>
       Number(
-        st('INSERT INTO cards (board_id, lane, position, title, logo) VALUES (?, ?, ?, ?, ?)').run(boardId, lane, position, title, logo)
-          .lastInsertRowid,
+        st('INSERT INTO cards (board_id, lane, position, title, logo, go_live, server_info) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+          boardId,
+          c.lane,
+          c.position,
+          c.title,
+          c.logo,
+          c.goLive,
+          c.serverInfo,
+        ).lastInsertRowid,
       ),
     update: (boardId, id, c) =>
-      st(`UPDATE cards SET title = ?, logo = ?, lane = ?, position = ?, version = version + 1, updated_at = ${NOW} WHERE board_id = ? AND id = ?`).run(
-        c.title,
-        c.logo,
-        c.lane,
-        c.position,
-        boardId,
-        id,
-      ),
+      st(
+        `UPDATE cards SET title = ?, logo = ?, lane = ?, position = ?, go_live = ?, server_info = ?, version = version + 1,
+         updated_at = ${NOW} WHERE board_id = ? AND id = ?`,
+      ).run(c.title, c.logo, c.lane, c.position, c.goLive, c.serverInfo, boardId, id),
     tombstone: (boardId, id) =>
       st(`UPDATE cards SET deleted_at = ${NOW}, version = version + 1, updated_at = ${NOW} WHERE board_id = ? AND id = ?`).run(boardId, id),
     setPosition: (boardId, id, position) => st('UPDATE cards SET position = ? WHERE board_id = ? AND id = ?').run(position, boardId, id),

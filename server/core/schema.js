@@ -101,4 +101,42 @@ export const coreMigrations = [
       `);
     },
   },
+  {
+    // A card's details: its go-live date and server info (columns), and the players signed up to it (a table).
+    // Removing a player only tombstones it (deleted_at), so History can put them back where they were; only purging
+    // a retired board ever removes the row.
+    id: '003_card_detail',
+    up(db) {
+      db.exec(`
+        -- A calendar date, 'YYYY-MM-DD', no time or zone (core/cardDetail.js). NULL: not set.
+        ALTER TABLE cards ADD COLUMN go_live TEXT
+          CHECK (go_live IS NULL OR (go_live GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(go_live) = go_live));
+        -- Free text, shown escaped with only http(s) links made clickable. '': not set.
+        ALTER TABLE cards ADD COLUMN server_info TEXT NOT NULL DEFAULT '' CHECK (length(server_info) <= 2000);
+
+        CREATE TABLE players (
+          id         INTEGER PRIMARY KEY,
+          board_id   INTEGER NOT NULL REFERENCES boards (id),
+          card_id    INTEGER NOT NULL REFERENCES cards (id),
+          name       TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 32),
+          -- playerKey(name): what two live players on one card may not share (case-insensitive).
+          name_key   TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          deleted_at TEXT
+        ) STRICT;
+        -- Sign-up order is (created_at, id): a restored player keeps both, so goes back where they were.
+        CREATE INDEX players_card_time ON players (card_id, created_at, id);
+        CREATE UNIQUE INDEX players_live_name ON players (card_id, name_key) WHERE deleted_at IS NULL;
+
+        CREATE TRIGGER players_on_their_cards_board BEFORE INSERT ON players
+          WHEN (SELECT board_id FROM cards WHERE id = NEW.card_id) IS NOT NEW.board_id
+          BEGIN SELECT RAISE(ABORT, 'a player belongs to a card on the same board'); END;
+        CREATE TRIGGER players_stay_put BEFORE UPDATE OF board_id, card_id, name, name_key, created_at ON players
+          BEGIN SELECT RAISE(ABORT, 'a player is never moved or renamed; remove them and add the new name'); END;
+        CREATE TRIGGER players_purge_only_retired BEFORE DELETE ON players
+          WHEN (SELECT deleted_at FROM boards WHERE id = OLD.board_id) IS NULL
+          BEGIN SELECT RAISE(ABORT, 'players are tombstoned, never deleted; only a retired board''s players are purged'); END;
+      `);
+    },
+  },
 ];

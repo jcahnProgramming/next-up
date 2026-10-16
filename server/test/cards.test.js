@@ -35,7 +35,7 @@ describe('cards on an open board', () => {
   test('adding puts the card at the bottom of its lane and logs card.created with the whole card', async () => {
     const one = await api('', { method: 'POST', body: { title: '  Valheim ', lane: 'now_playing', actor: 'Path' } });
     assert.equal(one.status, 201);
-    assert.deepEqual(Object.keys(one.body.card).sort(), ['createdAt', 'id', 'lane', 'logo', 'position', 'title', 'updatedAt', 'version']);
+    assert.deepEqual(Object.keys(one.body.card).sort(), ['createdAt', 'goLive', 'id', 'lane', 'logo', 'playerCount', 'position', 'serverInfo', 'title', 'updatedAt', 'version']);
     assert.equal(one.body.card.title, 'Valheim');
     assert.equal(one.body.card.logo, null);
     assert.equal(one.body.card.version, 1);
@@ -47,7 +47,7 @@ describe('cards on an open board', () => {
     assert.equal(created2.actor, 'Someone');
     assert.deepEqual(created2.payload, {
       cardId: two.body.card.id,
-      card: { title: 'V Rising', logo: 'v-rising', lane: 'now_playing', position: two.body.card.position, index: 1 },
+      card: { title: 'V Rising', logo: 'v-rising', lane: 'now_playing', position: two.body.card.position, index: 1, goLive: null, serverInfo: '' },
     });
     assert.equal(created2.restorable, false);
 
@@ -139,7 +139,15 @@ describe('cards on an open board', () => {
     const [deleted] = eventsOf(app, b.id).filter((e) => e.type === 'card.deleted');
     assert.equal(deleted.restorable, true);
     assert.equal(deleted.payload.cardId, card.id);
-    assert.deepEqual(deleted.payload.card, { title: 'Dune Awakening', logo: null, lane: 'up_next', position: card.position, index: 1 });
+    assert.deepEqual(deleted.payload.card, {
+      title: 'Dune Awakening',
+      logo: null,
+      lane: 'up_next',
+      position: card.position,
+      index: 1,
+      goLive: null,
+      serverInfo: '',
+    });
 
     // Gone means gone: a second delete or an edit says so.
     assert.equal((await api(`/${card.id}`, { method: 'DELETE', body: { version: 2 } })).body.code, 'card_gone');

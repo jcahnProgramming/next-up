@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.5.0 has boards, access, lanes, cards and drag and drop; not card details, history or live sync yet)
+## What Next Up will be (the agreed spec; 0.6.0 has boards, access, lanes, cards, drag and drop and card details; not history or live sync yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -125,6 +125,19 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   on its next load). A move still bumps the version, so an edit sheet opened before it gets the conflict. Dropping a
   card where it is writes and logs nothing. Every change of lane or order is `card.moved`, the edit sheet's Lane
   dropdown included; an edit that renames and moves at once logs `card.edited` (lane unchanged) then `card.moved`.
+- **Card details** (rules shared with the client in `server/core/cardDetail.js`): the **go-live date** is a calendar
+  date `'YYYY-MM-DD'` (2000–2099) or null, with no time or zone: it is never parsed as an instant
+  (`new Date('2026-10-24')` shows the 23rd west of Greenwich); `client/src/cards/dates.js` works on the three numbers.
+  **Server info** is plain text up to 2,000 characters ('' when not set), stored as typed and shown escaped; the only
+  links are http(s) URLs (`client/src/cards/linkify.js`, new tab, `rel="noopener noreferrer"`), never HTML or
+  markdown. Both are edited in the edit sheet, carry the card's `version`, and log `card.detail_edited`.
+- **Players** (`server/players/routes.js`, under `/cards/:id/players`): names 1–32 characters, at most `MAX_PLAYERS`
+  = 100 live per card, no two alike ignoring case (`playerKey`, NFC + lower case; a partial unique index enforces it
+  too). Sign-up order is `(created_at, id)`. Removing tombstones the row (`players.deleted_at`), so restoring it puts
+  the player back where they were; the database refuses deleting, moving or renaming one. Sign-ups never bump the
+  card's version (an open edit sheet still saves). Anyone with access adds any name and removes anyone, no confirm.
+  Adding opens an inline box pre-filled with this browser's display name (unless it's already on the card); opening
+  it awaits `useAskName()` like any change. A card's body carries `playerCount`; the list loads with the panel.
 - **Order within a lane is a fractional key** (`server/core/positions.js`): placing a card writes only that card.
   Keys are capped at 64 characters; a placement that would pass the cap rebalances that one lane first (378
   consecutive moves into the same gap before that can happen); the answer then says `rebalanced: true` and the
@@ -136,9 +149,13 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   the event in the same transaction as the change. Each payload holds enough to undo it without reading anything
   else. Types so far: `board.created` `{ hasPassword }`; `card.created` `{ cardId, card }`, `card.edited`
   `{ cardId, before, after }` (restorable), `card.deleted` `{ cardId, card }` (restorable), where a card state is
-  `{ title, logo, lane, position, index }`; `card.moved` `{ cardId, before, after }` (restorable), where each is only
-  the place `{ lane, position, index }` (`server/cards/events.js`).
-- History offers Restore on card edits, deletes and moves. Restoring a move puts the card as close to its old lane
+  `{ title, logo, lane, position, index }` (created and deleted also carry `goLive` and `serverInfo` from 0.6.0);
+  `card.moved` `{ cardId, before, after }` (restorable), where each is only the place `{ lane, position, index }`;
+  `card.detail_edited` `{ cardId, before, after }` (restorable), each `{ goLive, serverInfo }`
+  (`server/cards/events.js`). One save that renames, re-dates and moves logs card.edited, card.detail_edited,
+  card.moved in that order. `player.added` and `player.removed` `{ cardId, playerId, name, position }` (only removed
+  is restorable; `position` is the 0-based place in the sign-up list; `server/players/events.js`).
+- History offers Restore on card edits (details included), deletes, moves and removed players. Restoring a move puts the card as close to its old lane
   and position as the board now allows. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
 - Every query takes limit/cursor. No unbounded selects, ever.

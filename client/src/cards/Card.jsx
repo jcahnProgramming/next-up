@@ -1,3 +1,4 @@
+import { formatBadge, formatDate } from './dates.js';
 import { initials, markBroken, useLogo } from './logos.js';
 
 /**
@@ -8,6 +9,9 @@ import { initials, markBroken, useLogo } from './logos.js';
  * its panel; dragging it, a long press on a touch screen, or Space then arrows moves it (useCardDrag.js, given as
  * `dnd`; `describedBy` points at the instructions). Nothing clickable sits inside it yet; anything that ever does
  * must sit above this whole-card target (CLAUDE.md, "Bugs that cost us").
+ *
+ * Its badges (Card-States): the go-live date when one is set, and how many players are signed up when anyone is.
+ * Neither shows when there's nothing to say.
  */
 export function CardPill({ card, onOpen, dnd, lifted = false, describedBy }) {
   const onKeyDown = (e) => {
@@ -29,7 +33,42 @@ export function CardPill({ card, onOpen, dnd, lifted = false, describedBy }) {
       onKeyDown={onKeyDown}
       onPointerDown={dnd ? (e) => dnd.onPointerDown(e, card) : undefined}
       data-card-id={card.id}
-    />
+    >
+      <CardBadges card={card} />
+    </CardFace>
+  );
+}
+
+function CardBadges({ card }) {
+  const players = card.playerCount ?? 0;
+  if (!card.goLive && players === 0) return null;
+  return (
+    <span className="card-chips">
+      {card.goLive && (
+        <span className="card-chip">
+          <span className="sr-only">Go-live date </span>
+          <time dateTime={card.goLive} title={formatDate(card.goLive)}>
+            {formatBadge(card.goLive)}
+          </time>
+        </span>
+      )}
+      {players > 0 && (
+        <span className="card-chip">
+          <PersonIcon />
+          {players}
+          <span className="sr-only">{players === 1 ? ' player' : ' players'}</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
   );
 }
 
