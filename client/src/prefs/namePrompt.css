@@ -1,0 +1,35 @@
+/* design/v1 Prompts: the display-name prompt. */
+.name-prompt-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.name-prompt-then {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: var(--fs-footnote);
+  overflow-wrap: anywhere;
+}
+.name-prompt-then > svg {
+  flex: none;
+}
+.name-prompt-then b {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.name-prompt-foot {
+  margin-top: -8px;
+  text-align: right;
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+.ov-bottom .name-prompt-foot {
+  margin-top: 0;
+  text-align: center;
+}

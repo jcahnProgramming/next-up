@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
+import { NamePromptProvider } from '../prefs/NamePrompt.jsx';
 import { APP_VERSION } from '../release.js';
 import { ArrowRight, SettingsIcon } from './icons.jsx';
 import { createScrollMemory, focusMainHeading, restoreScroll, scrollDecision } from './scrollMemory.js';
@@ -11,7 +12,9 @@ import './chrome.css';
 export function AppShell() {
   return (
     <TopbarProvider>
-      <Shell />
+      <NamePromptProvider>
+        <Shell />
+      </NamePromptProvider>
     </TopbarProvider>
   );
 }

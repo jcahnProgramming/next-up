@@ -1,4 +1,5 @@
 import express from 'express';
+import { createCardsRouter } from '../cards/routes.js';
 import { checkCode, checkNewPassword } from '../core/codes.js';
 import { appendEvent } from '../core/events.js';
 import { hashPassword, verifyPassword } from '../core/passwords.js';
@@ -17,7 +18,8 @@ export const MAX_BOARDS = 500;
  *   POST /:code/unlock          { password }
  *   ── everything below needs access: a password board without it answers ONLY { status: 'locked', code } ──
  *   GET  /:code                 the board
- *   ...                         every later board route goes here, after requireAccess, and is protected by
+ *   …    /:code/cards/…         its cards (cards/routes.js)
+ *   ...                       every later board route goes here, after requireAccess, and is protected by
  *                               construction (server/test/boards.test.js checks an unknown sub-route stays locked)
  *
  * Responses never contain a password, a hash, or (for a locked board) anything but its code and that it's locked.
@@ -129,11 +131,12 @@ export function createBoardsRouter({ db, limits, networkOf, maxBoards = MAX_BOAR
   });
 
   board.get('/', (req, res) => res.json(openBody(req.board)));
+  board.use('/cards', createCardsRouter({ db }));
 
   return router;
 }
 
-// What an open (or unlocked) board's API says about it. Nothing else exists yet: lanes and cards come next.
+// What an open (or unlocked) board's API says about it. Its cards come from their own route (cards/routes.js).
 function openBody(row) {
   return { status: 'open', board: { code: row.code, hasPassword: row.password_hash !== null, createdAt: row.created_at } };
 }

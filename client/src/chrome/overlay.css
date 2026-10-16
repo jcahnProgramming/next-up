@@ -1,0 +1,173 @@
+/* Dialogs over the page: design/v1 nu.css .scrim, .overlay/.modal, .sheet-side, .bsheet, .sheet-head/-body/-foot.
+   Fixed to the viewport here (the artboards draw them inside a frame). */
+
+html.ov-open {
+  overflow: hidden;
+}
+
+.ov {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+}
+.ov-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  -webkit-backdrop-filter: var(--scrim-filter);
+  backdrop-filter: var(--scrim-filter);
+  animation: ov-fade var(--dur-base) var(--ease-out);
+}
+.ov-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  outline: none;
+  color: var(--text-1);
+}
+
+/* centred modal */
+.ov-modal {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.ov-modal .ov-panel {
+  width: 440px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  border-radius: var(--r-sheet);
+  animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+
+/* side sheet */
+.ov-side {
+  justify-content: flex-end;
+  padding: 12px;
+}
+.ov-side .ov-panel {
+  width: 480px;
+  max-width: 100%;
+  height: 100%;
+  border-radius: var(--r-sheet);
+  overflow: hidden;
+  animation: ov-from-right var(--dur-base) var(--ease-out);
+}
+
+/* phone: everything is a bottom sheet */
+.ov-bottom {
+  align-items: flex-end;
+}
+.ov-bottom .ov-panel {
+  width: 100%;
+  max-height: calc(100dvh - 44px);
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: ov-from-bottom var(--dur-base) var(--ease-out);
+}
+.ov-grabber {
+  flex: none;
+  width: 38px;
+  height: 5px;
+  margin: 8px auto 0;
+  border-radius: 3px;
+  background: var(--surface-4);
+}
+
+/* Inside a sheet. */
+.sheet-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 12px;
+}
+.sheet-head.is-ruled {
+  border-bottom: 1px solid var(--separator);
+  padding-bottom: 14px;
+}
+.sheet-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-title3);
+}
+.ov-bottom .sheet-title {
+  font-size: var(--fs-headline);
+  text-align: center;
+}
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.sheet-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--separator);
+}
+.sheet-foot-note {
+  flex: 1;
+  min-width: 12em;
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+
+/* A modal's own layout (design/v1 .modal: padding 28, gap 18). */
+.modal-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ov-bottom .modal-body {
+  padding: 18px 20px 28px;
+  gap: 16px;
+}
+.modal-title {
+  font-size: var(--fs-title2);
+}
+.modal-text {
+  margin: 0;
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ov-bottom .modal-actions {
+  flex-direction: column-reverse;
+}
+.ov-bottom .modal-actions .btn {
+  width: 100%;
+}
+
+@keyframes ov-fade {
+  from { opacity: 0; }
+}
+@keyframes ov-from-right {
+  from { transform: translateX(calc(24px * var(--motion-k))); opacity: 0; }
+}
+@keyframes ov-from-bottom {
+  from { transform: translateY(calc(60px * var(--motion-k))); opacity: 0; }
+}
+
+/* While a dialog is open, toasts show at the top, clear of the sheet and its fields. */
+html.ov-open .toast-region {
+  top: 16px;
+  bottom: auto;
+}

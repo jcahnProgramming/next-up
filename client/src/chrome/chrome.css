@@ -62,8 +62,8 @@
   display: grid;
   place-items: center;
   background: var(--surface-1);
-  backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
   box-shadow: var(--shadow-card);
   color: var(--text-1);
   transition: transform var(--dur-fast) var(--spring), background var(--dur-fast) var(--ease-out);

@@ -66,4 +66,39 @@ export const coreMigrations = [
       db.prepare('INSERT INTO server_secrets (name, value) VALUES (?, ?)').run('access_grant_key', randomBytes(32));
     },
   },
+  {
+    // Cards: one game on a board, in a lane, at a position. Deleting one only tombstones it (deleted_at), so History
+    // can restore it; only purging a retired board ever removes the row. Go-live date, server info and players come
+    // in later migrations as columns and tables of their own.
+    id: '002_cards',
+    up(db) {
+      db.exec(`
+        CREATE TABLE cards (
+          id         INTEGER PRIMARY KEY,
+          board_id   INTEGER NOT NULL REFERENCES boards (id),
+          lane       TEXT NOT NULL CHECK (lane IN ('up_next', 'now_playing', 'played')),
+          -- A fractional key (core/positions.js): base-62 digits, never ending in 0, compared as plain strings.
+          position   TEXT NOT NULL CHECK (length(position) BETWEEN 1 AND 64 AND position NOT GLOB '*[^0-9A-Za-z]*' AND position NOT GLOB '*0'),
+          title      TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 60),
+          -- A file name in logos/ without its extension; never a URL. NULL: no logo.
+          logo       TEXT CHECK (logo IS NULL OR (length(logo) BETWEEN 1 AND 64 AND logo NOT GLOB '*[^a-z0-9-]*')),
+          -- Bumped on every change; an edit names the version it started from, so two people can't overwrite each
+          -- other's change without seeing it.
+          version    INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          deleted_at TEXT
+        ) STRICT;
+        CREATE INDEX cards_board_order ON cards (board_id, lane, position, id);
+        CREATE INDEX cards_board_time ON cards (board_id, created_at);
+
+        -- Deleting a card is a tombstone; the row goes only when its retired board is purged.
+        CREATE TRIGGER cards_purge_only_retired BEFORE DELETE ON cards
+          WHEN (SELECT deleted_at FROM boards WHERE id = OLD.board_id) IS NULL
+          BEGIN SELECT RAISE(ABORT, 'cards are tombstoned, never deleted; only a retired board''s cards are purged'); END;
+        CREATE TRIGGER cards_stay_on_their_board BEFORE UPDATE OF board_id ON cards
+          BEGIN SELECT RAISE(ABORT, 'a card never moves to another board'); END;
+      `);
+    },
+  },
 ];

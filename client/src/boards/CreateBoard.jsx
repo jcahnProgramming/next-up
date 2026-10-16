@@ -1,6 +1,8 @@
-import { useEffect, useId, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PlusIcon, WarningIcon } from '../chrome/icons.jsx';
+import { usePhone } from '../chrome/usePhone.js';
+import { useAskName } from '../prefs/NamePrompt.jsx';
 import { createBoard } from './api.js';
 import { checkNewPassword } from './codes.js';
 import { PasswordField } from './PasswordField.jsx';
@@ -25,6 +27,7 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
   const [failed, setFailed] = useState(null);
   const withPassword = password.length > 0;
   const asSheet = usePhone() && sheetOnPhone;
+  const askName = useAskName();
 
   useEffect(() => {
     const onKey = (e) => {
@@ -49,6 +52,8 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
     setFailed(null);
     if (Object.keys(next).length) return;
 
+    // Creating a board is this browser's first change if nothing else was: ask for a name before it's logged.
+    if (!(await askName(`create ${code}`))) return;
     setBusy(true);
     const result = await createBoard(code, withPassword ? password : '');
     setBusy(false);
@@ -154,16 +159,3 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
   return asSheet ? createPortal(panel, document.body) : panel;
 }
 
-const PHONE = '(max-width: 600px)';
-function usePhone() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(PHONE);
-      mq.addEventListener('change', onChange);
-      return () => {
-        mq.removeEventListener('change', onChange);
-      };
-    },
-    () => window.matchMedia(PHONE).matches,
-  );
-}

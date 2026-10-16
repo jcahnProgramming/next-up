@@ -16,7 +16,11 @@ import { readDisplayName } from '../prefs/displayName.js';
  */
 const TIMEOUT_MS = 10_000;
 
-async function call(path, { method = 'GET', body } = {}) {
+/**
+ * One request to the API: { status, data } with the parsed JSON body, or { failed: true, offline } when Next Up
+ * couldn't be reached or didn't answer in JSON. Never throws. Shared with cards/api.js.
+ */
+export async function request(path, { method = 'GET', body } = {}) {
   let res;
   try {
     res = await fetch(path, {
@@ -27,15 +31,18 @@ async function call(path, { method = 'GET', body } = {}) {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch {
-    return { kind: 'error', offline: typeof navigator !== 'undefined' && navigator.onLine === false };
+    return { failed: true, offline: typeof navigator !== 'undefined' && navigator.onLine === false };
   }
-  let data = null;
   try {
-    data = res.status === 204 ? null : await res.json();
+    return { status: res.status, data: res.status === 204 ? null : await res.json() };
   } catch {
-    return { kind: 'error', offline: false };
+    return { failed: true, offline: false };
   }
-  return read(res.status, data);
+}
+
+async function call(path, opts) {
+  const r = await request(path, opts);
+  return r.failed ? { kind: 'error', offline: r.offline } : read(r.status, r.data);
 }
 
 function read(status, data) {

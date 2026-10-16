@@ -59,8 +59,8 @@
   padding: 20px 22px;
   border-radius: var(--r-lg);
   background: var(--surface-1);
-  backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
   box-shadow: var(--shadow-card);
 }
 .release-headline {

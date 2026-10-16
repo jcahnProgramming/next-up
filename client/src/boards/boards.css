@@ -9,7 +9,7 @@
   padding: 32px 0;
 }
 
-/* ---------- a centred state sheet (limits, board limit, not a code, the board stub) ---------- */
+/* ---------- a centred state sheet (limits, board limit, not a code) ---------- */
 .access-sheet {
   width: 100%;
   max-width: 440px;
@@ -77,30 +77,6 @@
   font-weight: 500;
 }
 
-.board-stub .access-text {
-  font-size: var(--fs-body);
-}
-.board-facts {
-  width: 100%;
-  margin: 8px 0 0;
-  padding: 14px 16px;
-  list-style: none;
-  border-radius: var(--r-lg);
-  background: var(--surface-3);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: left;
-  font-size: var(--fs-footnote);
-  color: var(--text-2);
-}
-.board-facts li {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-
 /* ---------- create: inline on a desktop sheet, a bottom sheet on a phone ---------- */
 .create-sheet {
   color: var(--text-1);
@@ -114,8 +90,8 @@
   /* inline, the panel sits on the surrounding sheet's glass */
   background: none;
   box-shadow: none;
-  backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .board-create {
   width: 100%;
@@ -123,8 +99,8 @@
 }
 .board-create .create .create-sheet {
   background: var(--surface-2);
-  backdrop-filter: var(--glass-filter-strong);
   -webkit-backdrop-filter: var(--glass-filter-strong);
+  backdrop-filter: var(--glass-filter-strong);
   box-shadow: var(--shadow-sheet);
   padding: 32px 30px 28px;
   border-radius: var(--r-sheet);
@@ -238,8 +214,8 @@
   inset: 0;
   z-index: 40;
   background: var(--scrim);
-  backdrop-filter: var(--scrim-filter);
   -webkit-backdrop-filter: var(--scrim-filter);
+  backdrop-filter: var(--scrim-filter);
   animation: hd-fade-in var(--dur-base) var(--ease-out);
 }
 .create.is-sheet .create-sheet {

@@ -177,7 +177,7 @@ function NameSection() {
         <span id="settings-name-hint" className="field-hint">
           {name
             ? 'It will appear next to your changes in a board’s history.'
-            : 'No name is set in this browser.'}{' '}
+            : 'No name is set in this browser, so your changes show as “Someone”.'}{' '}
           A label, not an account: anyone can type any name.
         </span>
       </form>

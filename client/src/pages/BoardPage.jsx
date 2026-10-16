@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckIcon, LockIcon, WarningIcon } from '../chrome/icons.jsx';
+import { WarningIcon } from '../chrome/icons.jsx';
+import { Board } from '../cards/Board.jsx';
 import { useTopbar, useTopbarBoard } from '../chrome/topbar.jsx';
 import { lockBoard, lookupBoard } from '../boards/api.js';
 import { checkCode } from '../boards/codes.js';
@@ -10,7 +11,7 @@ import { BoardLimit, TooManyLookups } from '../boards/states.jsx';
 import '../boards/boards.css';
 
 // /b/:code. Looks the code up and shows exactly one of:
-//   opening · the board (lanes and cards are not built yet, and it says so) · lock screen · "free: create it?" ·
+//   opening · the board (cards/Board.jsx) · lock screen · "free: create it?" ·
 //   board limit reached · too many lookups · not a code · couldn't load (with Retry)
 export function BoardPage() {
   const { code: raw } = useParams();
@@ -57,6 +58,9 @@ function BoardView({ code, state, setState, retry }) {
     }
   }, [code, setState, toast]);
 
+  // The board locked under us (its lock pressed in another tab, or its password changed): back to the lock screen.
+  const onLocked = useCallback((changed) => setState({ kind: 'locked', changed }), [setState]);
+
   const open = state.kind === 'open';
   useTopbarBoard({ code, plain: !open, onLock: open && state.board.hasPassword ? relock : undefined });
 
@@ -73,7 +77,7 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
     case 'open':
-      return <BoardStub board={state.board} />;
+      return <Board board={state.board} onLocked={onLocked} />;
     case 'locked':
       return (
         <Centered>
@@ -135,44 +139,6 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
   }
-}
-
-// The board itself is the next piece of work. Until it ships, this says so plainly and shows only what is real.
-function BoardStub({ board }) {
-  const created = new Date(board.createdAt);
-  return (
-    <Centered>
-      <section className="access-sheet glass-2 board-stub" aria-labelledby="board-title">
-        <span className="icon-circle ic-ok">
-          {board.hasPassword ? <LockIcon size={24} open /> : <CheckIcon size={24} />}
-        </span>
-        <h1 id="board-title" className="display access-title">
-          <span className="code-text">{board.code}</span> is open
-        </h1>
-        <p className="access-text">
-          Lanes and cards are coming soon. This board exists and is saved, but Next Up can’t show or add games yet, so
-          there’s nothing here to see.
-        </p>
-        <ul className="board-facts">
-          <li>
-            <span className="badge">{board.hasPassword ? 'Password board' : 'Open board'}</span>
-            {board.hasPassword
-              ? 'Unlocked in this browser. The lock on the code chip forgets it here.'
-              : 'Anyone with the code can open and edit it.'}
-          </li>
-          {!Number.isNaN(created.getTime()) && (
-            <li>
-              <span className="badge">Created</span>
-              <time dateTime={board.createdAt}>
-                {created.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
-              </time>
-            </li>
-          )}
-        </ul>
-        <HomeButton secondary />
-      </section>
-    </Centered>
-  );
 }
 
 function Full({ code }) {

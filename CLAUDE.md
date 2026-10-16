@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.3.0 has boards and access, not lanes or cards yet)
+## What Next Up will be (the agreed spec; 0.4.0 has boards, access, lanes and cards; not drag and drop, card details, history or live sync yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -76,7 +76,9 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   answers only `{ status: 'locked', code }` (plus `reason: 'password_changed'`), to every method and every path.
 - **The display name is per browser** (localStorage) and is a label, not an identity: anyone can type any name. The
   history says "changed by <name>", never implies it was verified. It is asked for at a browser's first change, never
-  just for viewing; "Not now" logs that browser's changes as "Someone".
+  just for viewing; "Not now" logs that browser's changes as "Someone". Creating a board counts as a change. Every
+  change awaits `useAskName()` (`client/src/prefs/NamePrompt.jsx`) first. One key, `nu.displayName`, holds all three
+  states: absent (never asked), `""` (answered "Not now", or cleared in Settings: never asked again), or the name.
 - The only per-browser settings are the theme and the display name. (Which password boards this browser has unlocked
   is per-browser state, not a setting.)
 
@@ -96,6 +98,12 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   Adding a logo is a commit.
 - Logo art is 1200 × 300 (spec and safe zone in `design/v1/Card-Anatomy.dc.html`). A card with no logo is a solid
   theme-coloured fill from the `--card-fb-*` tokens with the game name as text.
+- **The library is built, not fetched.** Each file declares one logo (its id is the file name); display names are the
+  title-cased file name unless `logos/names.json` says otherwise. `scripts/logos.js` reads and checks every file; it
+  runs as `scripts/check-logos.js` in `npm run build` and again inside the client build (the `virtual:nu-logos`
+  plugin in `client/vite.config.js`), so a bad file fails the build and the deploy. Cards store only the id; a card
+  whose id isn't in the library (or whose image fails to load) shows the no-logo card. The server checks a logo id's
+  shape only (it never sees `logos/`).
 
 ## Data rules
 
@@ -105,12 +113,23 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
     restorable for 24 hours; after that the board and its whole history are purged and its code becomes free. Reason:
     with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever. (Not built
     yet; the schema already lets only a retired board, or its events, be deleted.)
-- Deleting a card or player is a logged change that can be restored, never a hard delete.
+- Deleting a card or player is a logged change that can be restored, never a hard delete. Cards are tombstoned
+  (`cards.deleted_at`); the database refuses deleting a card row unless its board is retired.
+- **Cards** (`server/cards/routes.js`, rules shared with the client in `server/core/cardRules.js`): title 1–60
+  characters, an optional logo id, one of three lanes. At most `MAX_CARDS` = 200 live cards per board, checked inside
+  the creating transaction, refused with a plain message. Edits and deletes carry the card's `version`; a stale one
+  gets 409 `{ code: 'conflict', card }` with the latest, never a silent overwrite.
+- **Order within a lane is a fractional key** (`server/core/positions.js`): placing a card writes only that card.
+  Keys are capped at 64 characters; a placement that would pass the cap rebalances that one lane first (378
+  consecutive moves into the same gap before that can happen). A new card goes to the bottom of its lane.
 - **The change log is `events`** (`server/core/events.js`): append-only (the database refuses updates, and deletes
   except when purging a retired board), indexed on `(board_id, created_at)`. Event types **declare themselves** with
   `declareEventType({ type, restorable, payload: zod object })` next to the feature that writes them
   (`server/boards/events.js`); `appendEvent` refuses undeclared types and any payload field not in the schema. Write
-  the event in the same transaction as the change. Types so far: `board.created` `{ hasPassword }`.
+  the event in the same transaction as the change. Each payload holds enough to undo it without reading anything
+  else. Types so far: `board.created` `{ hasPassword }`; `card.created` `{ cardId, card }`, `card.edited`
+  `{ cardId, before, after }` (restorable), `card.deleted` `{ cardId, card }` (restorable), where a card state is
+  `{ title, logo, lane, position, index }` (`server/cards/events.js`).
 - History offers Restore on card edits, deletes and moves. Restoring a move puts the card as close to its old lane
   and position as the board now allows. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
@@ -194,7 +213,8 @@ settings button, a bottom bar with the version.
 - **Buttons never clip or truncate their labels.** Sizes come from the `--btn-*` tokens, never inline sizes on a
   button; touch targets are at least 44 px.
 - **No native `<select>`** (nor `<datalist>` or native date/time/colour pickers): their popups ignore the theme
-  (home-dashboard: dark themes showed light text on a light popup). Build one themed dropdown and use it everywhere;
+  (home-dashboard: dark themes showed light text on a light popup). The one themed dropdown is
+  `client/src/chrome/Dropdown.jsx` (the logo dropdown, `client/src/cards/LogoPicker.jsx`, is its searchable cousin); use it everywhere;
   the go-live date gets a themed date picker, not `<input type="date">`.
 
 ## Bugs that cost us (in home-dashboard): don't reintroduce
@@ -202,6 +222,10 @@ settings button, a bottom bar with the version.
 - **Interactive elements inside a card must sit above the card's full-size click target.** In home-dashboard a
   button stacked under the card's link opened the link instead (reproduced with real input). Anything clickable on a
   card sits above its click layer, and is tested with real input.
+- **Write `-webkit-backdrop-filter` before `backdrop-filter`.** The production CSS minifier keeps only the last of the
+  pair when they share a value; written standard-first, the build shipped only the prefixed one, which Chrome and
+  Edge ignore, and every glass surface lost its blur on the live site (0.2.0–0.3.0) while `npm run dev` looked fine.
+  `server/test/client-css.test.js` enforces the order. Check glass in a production build, not only in dev.
 - **Effect cleanup:** arrow-function effects use block bodies, never concise bodies. A concise body returns its
   value, which React calls as cleanup.
 - **A drag must not move the node that holds the pointer.** Re-ordering the DOM mid-drag (React moving a keyed node)

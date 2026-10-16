@@ -1,6 +1,30 @@
 {
   "releases": [
     {
+      "version": "0.4.0",
+      "date": "2026-10-15",
+      "title": "Lanes and cards",
+      "sections": {
+        "New": [
+          "A board is now a real board: three lanes, Up Next, Now Playing and Played, side by side on a computer and stacked top to bottom on a phone, each with its number of games. A brand-new board says so and offers “Add a game”; an empty lane says it has nothing in it yet.",
+          "Add a game with the + on any lane: type its name (up to 60 characters), optionally pick a logo, and choose the lane. New games go to the bottom of their lane. A board holds up to 200 games; when it's full it says so and asks you to delete one first.",
+          "Each game is a wide pill card. With a logo, the logo fills the card behind the name. Without one, the card is a solid colour from your theme with the game's name and its initials in a small disc. If a card's logo is ever removed from Next Up, the card quietly shows the plain colour instead of a broken image.",
+          "Click a card (or reach it with Tab and press Enter) to open it: its name, logo, lane and when it was added, with Edit and Delete. Editing lets you rename it, change its logo, or move it to another lane, where it goes to the bottom. Delete asks first.",
+          "The logo dropdown searches Next Up's logo library and shows each game with a small preview, with “No logo” always first. The library is empty for now, and the dropdown says so. Picking a logo for an untitled card fills in the game's name, which you can still change. Logos are added to the library by Path; nobody can upload images.",
+          "The first time this browser changes anything (creating a board counts), Next Up asks who you are, so the board's history can say who changed what. It's a label, not an account. “Not now” is remembered: your changes show as “Someone” and it won't ask again here. You can set or change the name any time in Settings.",
+          "Every add, edit and delete is recorded in the board's history with what the card was before and after, so a later History page can undo them. Deleted cards are kept, not erased. History itself isn't built yet, so there is no way to restore one from the app today.",
+          "If someone else changes a card while you're editing it, saving doesn't overwrite their change: Next Up shows their version and asks you to make yours again."
+        ],
+        "Improved": [
+          "If your connection drops, the board says you're offline, shows the board as it was and when it was loaded, and pauses adding and editing until you reconnect, with a Retry button. If a save can't reach Next Up, the sheet says nothing was saved and keeps what you typed.",
+          "If a password board is locked from another tab, or its password changes, while you have it open, your next change takes you back to its lock screen instead of failing."
+        ],
+        "Fixed": [
+          "Glass panels, sheets and the blurred backdrop behind dialogs had no blur in Chrome and Edge on the live site (the published build dropped the setting those browsers read). They now blur as designed."
+        ]
+      }
+    },
+    {
       "version": "0.3.0",
       "date": "2026-10-15",
       "title": "Boards and access",

@@ -39,14 +39,14 @@ body {
 /* Glass surfaces */
 .glass-1 {
   background: var(--surface-1);
-  backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
   box-shadow: var(--shadow-card);
 }
 .glass-2 {
   background: var(--surface-2);
-  backdrop-filter: var(--glass-filter-strong);
   -webkit-backdrop-filter: var(--glass-filter-strong);
+  backdrop-filter: var(--glass-filter-strong);
   box-shadow: var(--shadow-sheet);
 }
 
@@ -321,6 +321,33 @@ body {
 .dropdown-option[aria-selected='true'] {
   color: var(--accent-text);
   font-weight: 600;
+}
+/* chrome/Dropdown.jsx: the menu opens under its trigger, over whatever follows. */
+.dropdown-wrap {
+  position: relative;
+}
+.dropdown-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.dropdown-pop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  outline: none;
+  animation: hd-pop var(--dur-fast) var(--ease-out);
+}
+.dropdown-option {
+  cursor: pointer;
 }
 .dropdown-option > .dropdown-check {
   margin-left: auto;
