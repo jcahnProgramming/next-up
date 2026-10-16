@@ -5,6 +5,9 @@ html {
   background: var(--backdrop);
   background-attachment: fixed;
   min-height: 100%;
+  /* Anything scrolled into view (a focused card, a keyboard move) stops clear of the sticky top bar and the strip. */
+  scroll-padding-top: calc(var(--topbar-h, 0px) + 8px);
+  scroll-padding-bottom: calc(var(--coffee-bar-h, 0px) + 8px);
 }
 body {
   min-height: 100vh;

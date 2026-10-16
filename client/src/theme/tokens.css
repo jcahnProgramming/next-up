@@ -16,7 +16,13 @@
    Text is never set on --accent itself (dark: 3.65:1 with white); buttons use --accent-fill.
 
    Legacy is the flat theme: opaque surfaces, no blur, 1 px edges, small radii, squared buttons (cards stay pills).
-   Dark is the glass one; at a glance they differ by that. */
+   Dark is the glass one; at a glance they differ by that.
+
+   Glass (0.7.0): a pane reads as glass only if there is colour behind it to blur and an edge to catch the light.
+   So Light and Dark have a backdrop with real colour fields (--blob-*, plus one warm field in --backdrop-pattern),
+   every glass pane has a hairline rim and a top sheen (--edge: --glass-rim, --glass-sheen; a true hairline on
+   high-density screens), the top bar and bottom strip have their own fill (--surface-bar), and the page scrolls
+   under both. Text contrast on glass was measured in a browser over the brightest part of each backdrop. */
 
 @font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
@@ -42,6 +48,9 @@
 @property --accent-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --hairline { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --highlight { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --glass-rim { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --glass-sheen { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --surface-bar { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --separator { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --success { syntax: "<color>"; inherits: true; initial-value: green; }
 @property --success-text { syntax: "<color>"; inherits: true; initial-value: green; }
@@ -80,6 +89,7 @@
   --card-unit: 324px;          /* every card is exactly this tall; overflow scrolls inside the card */
   --card-min: 288px;           /* column min width before the grid reflows */
   --control-h: 44px;           /* the touch minimum; fields and dropdowns are this tall */
+  --hairline-w: 1px;           /* the glass rim; one device pixel on high-density screens (below) */
   --control-h-sm: 36px;
   --row-h: 52px;
   --section-gap: 44px;
@@ -164,7 +174,8 @@
   /* composites (resolved per theme) */
   --glass-filter: blur(var(--blur-md)) saturate(var(--saturate));
   --glass-filter-strong: blur(var(--blur-lg)) saturate(var(--saturate));
-  --edge: inset 0 0 0 0.5px var(--hairline), inset 0 1px 0 var(--highlight);
+  /* The glass edge: a hairline rim all round and a sheen along the top, so a pane reads as a pane, not a tint. */
+  --edge: inset 0 0 0 var(--hairline-w) var(--glass-rim), inset 0 1px 0 var(--glass-sheen);
   --shadow-card: var(--elev-1), var(--edge);
   --shadow-card-hover: var(--elev-2), var(--edge);
   --shadow-sheet: var(--elev-3), var(--edge);
@@ -182,6 +193,7 @@
     --text-1 var(--dur-theme) ease, --text-2 var(--dur-theme) ease, --text-3 var(--dur-theme) ease, --text-on-accent var(--dur-theme) ease,
     --accent var(--dur-theme) ease, --accent-text var(--dur-theme) ease, --accent-soft var(--dur-theme) ease,
     --hairline var(--dur-theme) ease, --highlight var(--dur-theme) ease, --separator var(--dur-theme) ease,
+    --glass-rim var(--dur-theme) ease, --glass-sheen var(--dur-theme) ease, --surface-bar var(--dur-theme) ease,
     --success var(--dur-theme) ease, --success-text var(--dur-theme) ease, --success-soft var(--dur-theme) ease,
     --warning var(--dur-theme) ease, --warning-text var(--dur-theme) ease, --warning-soft var(--dur-theme) ease,
     --error var(--dur-theme) ease, --error-text var(--dur-theme) ease, --error-soft var(--dur-theme) ease,
@@ -196,11 +208,13 @@
 /* ───────────── LIGHT — clean, bright, generous ───────────── */
 :root, [data-theme="light"] {
   color-scheme: light;
-  --bg: #f2f2f6;
-  --blob-1: oklch(0.93 0.035 250); --blob-2: oklch(0.95 0.025 320); --blob-3: oklch(0.95 0.03 190);
-  --backdrop-pattern: linear-gradient(transparent, transparent);
-  --surface-1: rgb(255 255 255 / 0.74);
-  --surface-2: rgb(252 252 254 / 0.84);
+  --bg: #eef0f6;
+  /* sky, rose and mint fields, and a warm one: soft, but enough for the glass to pick up */
+  --blob-1: oklch(0.85 0.09 255); --blob-2: oklch(0.87 0.08 335); --blob-3: oklch(0.88 0.08 175);
+  --backdrop-pattern: radial-gradient(38% 34% at 80% 60%, oklch(0.91 0.07 75 / 0.85), transparent 70%);
+  --surface-1: rgb(255 255 255 / 0.56);
+  --surface-2: rgb(252 252 254 / 0.76);
+  --surface-bar: rgb(255 255 255 / 0.5);
   --surface-3: rgb(118 118 128 / 0.10);
   --surface-4: rgb(118 118 128 / 0.17);
   --surface-solid: #ffffff;
@@ -210,6 +224,7 @@
   --accent: #0a6fe0; --accent-text: #0060c4; --accent-soft: rgb(10 111 224 / 0.11);
   --accent-fill: #0a6fe0;
   --hairline: rgb(0 0 0 / 0.06); --highlight: rgb(255 255 255 / 0.75); --separator: rgb(60 60 67 / 0.10);
+  --glass-rim: rgb(0 0 0 / 0.08); --glass-sheen: rgb(255 255 255 / 0.95);
   --focus-ring: 0 0 0 3px rgb(10 111 224 / 0.35);
   --success: #28a745; --success-text: #157a34; --success-soft: rgb(40 167 69 / 0.13); --success-fill: #34b75a;
   --warning: #f09a0a; --warning-text: #995800; --warning-soft: rgb(240 154 10 / 0.15); --warning-fill: #f5a623;
@@ -235,11 +250,13 @@
 /* ───────────── DARK — true Apple dark, deep neutrals, never #000 ───────────── */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #141416;
-  --blob-1: oklch(0.27 0.035 260); --blob-2: oklch(0.25 0.03 310); --blob-3: oklch(0.24 0.025 200);
-  --backdrop-pattern: linear-gradient(transparent, transparent);
-  --surface-1: rgb(44 44 48 / 0.62);
-  --surface-2: rgb(34 34 38 / 0.80);
+  --bg: #121215;
+  /* indigo, plum and teal fields, and a dim amber one: dark enough for white text, coloured enough to blur */
+  --blob-1: oklch(0.42 0.13 268); --blob-2: oklch(0.38 0.13 328); --blob-3: oklch(0.40 0.09 195);
+  --backdrop-pattern: radial-gradient(36% 32% at 82% 62%, oklch(0.40 0.08 60 / 0.7), transparent 70%);
+  --surface-1: rgb(36 36 42 / 0.58);
+  --surface-2: rgb(30 30 36 / 0.74);
+  --surface-bar: rgb(26 26 31 / 0.58);
   --surface-3: rgb(118 118 128 / 0.20);
   --surface-4: rgb(118 118 128 / 0.30);
   --surface-solid: #1e1e21;
@@ -249,6 +266,7 @@
   --accent: #0a84ff; --accent-text: #5aaeff; --accent-soft: rgb(10 132 255 / 0.18);
   --accent-fill: #006edb;
   --hairline: rgb(255 255 255 / 0.08); --highlight: rgb(255 255 255 / 0.06); --separator: rgb(255 255 255 / 0.08);
+  --glass-rim: rgb(255 255 255 / 0.14); --glass-sheen: rgb(255 255 255 / 0.16);
   --focus-ring: 0 0 0 3px rgb(10 132 255 / 0.45);
   --success: #30d158; --success-text: #52dd77; --success-soft: rgb(48 209 88 / 0.16); --success-fill: #30d158;
   --warning: #ff9f0a; --warning-text: #ffb446; --warning-soft: rgb(255 159 10 / 0.16); --warning-fill: #ff9f0a;
@@ -284,6 +302,7 @@
   --surface-3: #1f2832;
   --surface-4: #29343f;
   --surface-solid: #1c252e;
+  --surface-bar: #151c24;
   --scrim: rgb(4 7 10 / 0.78);
   --well-shade: rgb(0 0 0 / 0.35);
   --blur-md: 0px; --blur-lg: 0px; --saturate: 100%;
@@ -298,6 +317,7 @@
   --accent: #3fc1ff; --accent-text: #6dd0ff; --accent-soft: rgb(63 193 255 / 0.13);
   --accent-fill: #3fc1ff;
   --hairline: #2a3540; --highlight: transparent; --separator: #26303a;
+  --glass-rim: #2a3540; --glass-sheen: transparent;
   --focus-ring: 0 0 0 2px #0e1318, 0 0 0 4px #3fc1ff;
   --success: #3fb950; --success-text: #56d364; --success-soft: rgb(63 185 80 / 0.14); --success-fill: #3fb950;
   --warning: #d29922; --warning-text: #e3b341; --warning-soft: rgb(210 153 34 / 0.15); --warning-fill: #d29922;
@@ -331,6 +351,7 @@
     radial-gradient(30% 28% at 25% 70%, oklch(0.96 0.1 98 / 0.85), transparent 70%);
   --surface-1: rgb(255 246 251 / 0.62);
   --surface-2: rgb(255 244 250 / 0.80);
+  --surface-bar: rgb(255 246 251 / 0.58);
   --surface-3: rgb(212 70 150 / 0.10);
   --surface-4: rgb(212 70 150 / 0.17);
   --surface-solid: #fff3f8;
@@ -340,6 +361,7 @@
   --accent: #d4208a; --accent-text: #b5136f; --accent-soft: rgb(212 32 138 / 0.13);
   --accent-fill: linear-gradient(135deg, #d01f86 0%, #b03ee0 100%);
   --hairline: rgb(255 255 255 / 0.65); --highlight: rgb(255 255 255 / 0.9); --separator: rgb(180 40 120 / 0.12);
+  --glass-rim: rgb(255 255 255 / 0.7); --glass-sheen: rgb(255 255 255 / 0.95);
   --focus-ring: 0 0 0 3px rgb(212 32 138 / 0.35), 0 0 18px rgb(255 95 176 / 0.45);
   --success: #12b88f; --success-text: #066d53; --success-soft: rgb(30 210 165 / 0.20); --success-fill: linear-gradient(135deg, #52e8c0, #12b88f);
   --warning: #f59b1f; --warning-text: #934800; --warning-soft: rgb(255 190 70 / 0.28); --warning-fill: linear-gradient(135deg, #ffd25e, #ff9d3a);
@@ -375,6 +397,7 @@
     repeating-linear-gradient(90deg, rgb(0 240 255 / 0.035) 0 1px, transparent 1px 44px);
   --surface-1: rgb(22 14 42 / 0.70);
   --surface-2: rgb(17 11 33 / 0.86);
+  --surface-bar: rgb(20 12 40 / 0.66);
   --surface-3: rgb(0 240 255 / 0.07);
   --surface-4: rgb(0 240 255 / 0.13);
   --surface-solid: #140c27;
@@ -384,6 +407,7 @@
   --accent: #00eaff; --accent-text: #4ff3ff; --accent-soft: rgb(0 234 255 / 0.12);
   --accent-fill: linear-gradient(90deg, #00eaff 0%, #ff3ad8 100%);
   --hairline: rgb(0 234 255 / 0.20); --highlight: rgb(255 255 255 / 0.04); --separator: rgb(0 234 255 / 0.12);
+  --glass-rim: rgb(0 234 255 / 0.24); --glass-sheen: rgb(255 255 255 / 0.07);
   --focus-ring: 0 0 0 2px #00eaff, 0 0 16px rgb(0 234 255 / 0.6);
   --success: #3dff8f; --success-text: #6dffab; --success-soft: rgb(61 255 143 / 0.12); --success-fill: #3dff8f;
   --warning: #ffd60a; --warning-text: #ffe24f; --warning-soft: rgb(255 214 10 / 0.13); --warning-fill: #ffd60a;
@@ -410,6 +434,11 @@
   --avatar-l: 0.58; --avatar-c: 0.17;
   --card-fb-bg: #1d0f3a; --card-fb-text: #eeecff; --card-fb-text-2: #b3acdf;
   --card-fb-chip: rgb(0 234 255 / 0.12); --card-fb-mark: #ff7ae6; --card-fb-ring: inset 0 0 0 1px rgb(255 58 216 / 0.50);
+}
+
+/* A true hairline where the screen can draw one. */
+@media (min-resolution: 2dppx) {
+  :root { --hairline-w: 0.5px; }
 }
 
 /* ───────────── Scales ───────────── */

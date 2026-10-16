@@ -7,8 +7,8 @@ import { CheckIcon, CopyIcon, LockIcon, WarningIcon } from './icons.jsx';
  *
  *   null                              no board (landing, Settings from landing, What's new): wordmark + Settings
  *   { code, plain: true }             lock screen / not open yet: only the code as typed
- *   { code, onLock? }                 an open board: the code chip with copy-link; onLock adds the lock button
- *                                     (a password board unlocked in this browser)
+ *   { code, onLock?, onHistory? }     an open board: the code chip with copy-link; onLock adds the lock button
+ *                                     (a password board unlocked in this browser); onHistory the History button
  *
  * A page sets it with useTopbarBoard(); the shell renders it.
  */
@@ -34,7 +34,7 @@ export function useTopbar() {
 /** Shows `board` in the top bar while the calling page is mounted. */
 export function useTopbarBoard(board) {
   const { setBoard } = useContext(TopbarContext);
-  const key = board ? `${board.code}|${board.plain ? 'plain' : 'open'}|${board.onLock ? 'lock' : ''}` : '';
+  const key = board ? `${board.code}|${board.plain ? 'plain' : 'open'}|${board.onLock ? 'lock' : ''}|${board.onHistory ? 'history' : ''}` : '';
   const latest = useRef(board);
   latest.current = board;
   useEffect(() => {

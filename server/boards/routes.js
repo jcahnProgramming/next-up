@@ -1,5 +1,6 @@
 import express from 'express';
 import { createCardsRouter } from '../cards/routes.js';
+import { createHistoryRouter } from '../history/routes.js';
 import { checkCode, checkNewPassword } from '../core/codes.js';
 import { appendEvent } from '../core/events.js';
 import { hashPassword, verifyPassword } from '../core/passwords.js';
@@ -19,6 +20,7 @@ export const MAX_BOARDS = 500;
  *   ── everything below needs access: a password board without it answers ONLY { status: 'locked', code } ──
  *   GET  /:code                 the board
  *   …    /:code/cards/…         its cards (cards/routes.js)
+ *   …    /:code/history/…       its change log, and Restore (history/routes.js)
  *   ...                       every later board route goes here, after requireAccess, and is protected by
  *                               construction (server/test/boards.test.js checks an unknown sub-route stays locked)
  *
@@ -132,6 +134,7 @@ export function createBoardsRouter({ db, limits, networkOf, maxBoards = MAX_BOAR
 
   board.get('/', (req, res) => res.json(openBody(req.board)));
   board.use('/cards', createCardsRouter({ db }));
+  board.use('/history', createHistoryRouter({ db }));
 
   return router;
 }

@@ -1,6 +1,27 @@
 {
   "releases": [
     {
+      "version": "0.7.0",
+      "date": "2026-10-16",
+      "title": "History and Restore, and glass that looks like glass",
+      "sections": {
+        "New": [
+          "History: the clock button in the top bar opens the board's history, newest first, 50 changes at a time with “Load more” for older ones. Each line says who did what, for example “Bunzato moved Valheim · Now Playing → Played” or “Path removed player Larias from V Rising”, grouped under Today, Yesterday and earlier dates. Today's changes say how long ago they happened (“12 min ago”); hover over a time, or tap or long-press it on a phone, to see the exact date and time. Changes made without a display name show as “Someone”. Names are whatever each browser typed, and History says so.",
+          "“This card's history” in a card's panel opens History showing only that card's changes, with a button to widen it to the whole board. Closing it takes you back to the card.",
+          "Restore: card edits (name and logo), go-live date and server info changes, moves, deleted cards and removed players each have a Restore button. Restoring first shows what will change, with what the card has now beside what it will have afterwards, and only then does it. Like any change, it asks a browser that has never given a display name for one first.",
+          "A restore never deletes or rewrites anything in History. It makes the change and adds a new line, such as “Path moved Valheim back to Now Playing, 1st”, which says whose change it undid. That line has its own Restore, so a restore can be undone too. The change that was restored is marked “Restored” with who did it and when, and can't be restored a second time.",
+          "Restoring is careful when the board has moved on. If a card has been edited again since, only the fields that change touched go back and the rest stay as they are now. If its old lane has changed, it goes as close to its old place as the lane allows, and the confirmation says so. If the card has been deleted since, Restore offers to bring the card back too. It refuses, and says why, when a player of that name has signed up again, when the board already has 200 games, when the card already has 100 players, or when there is nothing left to undo. If someone else changes the card while the confirmation is open, it shows the new confirmation instead of restoring something you didn't agree to."
+        ],
+        "Improved": [
+          "The glass looks like glass. Dark and Light now have soft colour behind them (blue, rose, teal and a warm glow) for the lanes and bars to blur, every glass panel has a fine edge and a bright line along its top, and Light's panels are clearer instead of nearly solid white. The top bar now stays at the top of the screen as frosted glass, and the board scrolls underneath it and under the bottom bar. Text on the glass was measured at 4.5:1 contrast or better in every theme. Legacy stays flat and solid by design, cards with no logo keep their solid colour, and Pastel and Cyberpunk keep their look.",
+          "The version number and “What's new” moved onto the bottom bar, on the left, with “Buy me a coffee” on the right. On a phone both fit on one line."
+        ],
+        "Removed": [
+          "The separate version line under the board, now that the version is on the bottom bar."
+        ]
+      }
+    },
+    {
       "version": "0.6.0",
       "date": "2026-10-15",
       "title": "Card details: go-live date, server info and sign-ups",

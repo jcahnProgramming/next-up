@@ -2,13 +2,14 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { NamePromptProvider } from '../prefs/NamePrompt.jsx';
 import { APP_VERSION } from '../release.js';
-import { ArrowRight, CoffeeIcon, SettingsIcon } from './icons.jsx';
+import { ArrowRight, CoffeeIcon, HistoryIcon, SettingsIcon } from './icons.jsx';
 import { createScrollMemory, focusMainHeading, restoreScroll, scrollDecision } from './scrollMemory.js';
 import { CodeChip, TopbarProvider, useTopbar } from './topbar.jsx';
 import './chrome.css';
 
-// From home-dashboard: no navigation menu, sidebar or tab bar. A top bar with the app name and one button,
-// and a bottom bar with the version.
+// From home-dashboard: no navigation menu, sidebar or tab bar. A sticky glass top bar with the app name and its
+// buttons, and one glass strip pinned to the bottom: the version and What's new on the left, Buy me a coffee on the
+// right. The page scrolls under both.
 export function AppShell() {
   return (
     <TopbarProvider>
@@ -23,52 +24,60 @@ function Shell() {
   const { pathname } = useLocation();
   const { board } = useTopbar();
   return (
-    <div className="shell">
+    <>
       <ScrollManager />
-      <header className={`topbar${board ? ' has-board' : ''}`}>
-        <Link to="/" className="topbar-name display" aria-label="Next Up, home">
-          <span className="topbar-mark" aria-hidden="true"><ArrowRight size={16} /></span>
-          <span className="topbar-word">Next Up</span>
-        </Link>
-        {board && (
-          <>
-            <span className="topbar-sep" aria-hidden="true" />
-            <CodeChip board={board} />
-          </>
-        )}
-        <div className="topbar-actions">
-          <NavLink to="/settings" className="round-button" aria-label="Settings" title="Settings">
-            <SettingsIcon />
-          </NavLink>
+      {/* Sticky glass: the page scrolls under it. The bar spans the window; its contents line up with the page. */}
+      <header className="topbar-bar">
+        <div className={`topbar${board ? ' has-board' : ''}`}>
+          <Link to="/" className="topbar-name display" aria-label="Next Up, home">
+            <span className="topbar-mark" aria-hidden="true"><ArrowRight size={16} /></span>
+            <span className="topbar-word">Next Up</span>
+          </Link>
+          {board && (
+            <>
+              <span className="topbar-sep" aria-hidden="true" />
+              <CodeChip board={board} />
+            </>
+          )}
+          <div className="topbar-actions">
+            {board?.onHistory && (
+              <button type="button" className="round-button" onClick={board.onHistory} aria-label="History" title="History">
+                <HistoryIcon />
+              </button>
+            )}
+            <NavLink to="/settings" className="round-button" aria-label="Settings" title="Settings">
+              <SettingsIcon />
+            </NavLink>
+          </div>
         </div>
       </header>
 
-      {/* Keyed by path so each page plays the rise-in once when you arrive. */}
-      <main className="page" key={pathname}>
-        <Outlet />
-      </main>
+      <div className="shell">
+        {/* Keyed by path so each page plays the rise-in once when you arrive. */}
+        <main className="page" key={pathname}>
+          <Outlet />
+        </main>
+      </div>
 
-      <footer className="bottombar">
-        {/* Separate parts spaced by the flex gap, never by literal spaces: inside a flex box, bare text runs become
-            items and lose their edge whitespace (on the design canvas it read "Next Upv0.1.0· What's new"). */}
+      {/* The bottom strip, pinned to the viewport on every page (the page clears it through the shell's bottom
+          padding, and scrolls under it). The version and What's new on the left, the coffee link on the right: a
+          plain link, no script, pixel or widget. Parts are spaced by the flex gap, never by literal spaces: inside a
+          flex box, bare text runs become items and lose their edge whitespace ("Next Upv0.1.0· What's new"). It
+          keeps the class coffee-bar: drag auto-scroll measures from its top edge (cards/useCardDrag.js). */}
+      <footer className="coffee-bar">
         <NavLink to="/changelog" className="version-link" aria-label={`Next Up v${APP_VERSION}, What's new`}>
-          <span>Next Up</span>
+          <span className="version-name">Next Up</span>
           <span className="version-number">v{APP_VERSION}</span>
           <span aria-hidden="true">·</span>
           <span>What's new</span>
         </NavLink>
-      </footer>
-
-      {/* Pinned to the bottom of the viewport on every page, separate from the version link above (which stays in
-          the page and clears it through the shell's bottom padding). A plain link: no script, pixel or widget. */}
-      <aside className="coffee-bar" aria-label="Support Next Up">
         <a className="coffee-link" href={COFFEE_URL} target="_blank" rel="noopener noreferrer">
           <CoffeeIcon />
           <span>Buy me a coffee</span>
           <span className="sr-only">(opens in a new tab)</span>
         </a>
-      </aside>
-    </div>
+      </footer>
+    </>
   );
 }
 

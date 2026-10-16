@@ -139,4 +139,25 @@ export const coreMigrations = [
       `);
     },
   },
+  {
+    // History and restore. A restore never edits the event it undoes: it is a new event whose `restores` names that
+    // one, so the log stays append-only and a restore can itself be restored. `card_id` is read from the payload (a
+    // VIRTUAL column: no stored row changes, old events included) so one card's history is an index lookup.
+    id: '004_history_restore',
+    up(db) {
+      db.exec(`
+        -- Set only on the events a restore writes. NULL on every event that isn't a restore (all events before 0.7.0).
+        ALTER TABLE events ADD COLUMN restores INTEGER REFERENCES events (id);
+        ALTER TABLE events ADD COLUMN card_id INTEGER GENERATED ALWAYS AS (json_extract(payload, '$.cardId')) VIRTUAL;
+
+        -- An event is restored at most once: a second Restore of it is refused by the database too.
+        CREATE UNIQUE INDEX events_restored_once ON events (restores) WHERE restores IS NOT NULL;
+        CREATE INDEX events_board_card_time ON events (board_id, card_id, created_at);
+
+        CREATE TRIGGER events_restore_same_board BEFORE INSERT ON events
+          WHEN NEW.restores IS NOT NULL AND (SELECT board_id FROM events WHERE id = NEW.restores) IS NOT NEW.board_id
+          BEGIN SELECT RAISE(ABORT, 'a restore undoes an event on its own board'); END;
+      `);
+    },
+  },
 ];

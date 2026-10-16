@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { DatePicker } from '../chrome/DatePicker.jsx';
 import { Dropdown } from '../chrome/Dropdown.jsx';
-import { CloseIcon, EditIcon, ErrorIcon, TrashIcon, WarningIcon } from '../chrome/icons.jsx';
+import { CloseIcon, EditIcon, ErrorIcon, HistoryIcon, TrashIcon, WarningIcon } from '../chrome/icons.jsx';
 import { Overlay } from '../chrome/Overlay.jsx';
 import { usePhone } from '../chrome/usePhone.js';
 import { SERVER_INFO_MAX, checkServerInfo, cleanServerInfo } from '../../../server/core/cardDetail.js';
@@ -16,12 +16,13 @@ import { LOGOS } from './logos.js';
  * sheet on a phone):
  *
  *   CardPanel      the card: its header pill and lane, go-live date, server info and sign-ups (CardDetail.jsx);
- *                  Edit and Delete. Players are added and removed right here, with no edit mode.
+ *                  Edit, Delete and This card's history. Players are added and removed right here, with no edit
+ *                  mode.
  *   CardEditor     add or edit: game name, logo, lane, go-live date (the themed DatePicker) and server info
  *   ConfirmDelete  "Delete Valheim?"
  */
 
-export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose, onCount, onLocked, onGone }) {
+export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onHistory, onClose, onCount, onLocked, onGone }) {
   const titleId = useId();
   return (
     <Overlay kind="side" labelledBy={titleId} onClose={onClose} className="card-panel">
@@ -56,6 +57,10 @@ export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose
         <span className="sheet-foot-note">
           Added <time dateTime={card.createdAt}>{formatInstant(card.createdAt)}</time>
         </span>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onHistory}>
+          <HistoryIcon size={14} />
+          This card’s history
+        </button>
         <button type="button" className="btn btn-ghost btn-sm btn-delete" onClick={onDelete} disabled={paused}>
           <TrashIcon />
           Delete card

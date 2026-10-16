@@ -156,3 +156,24 @@ export function TrashIcon({ size = 14 }) {
     </svg>
   );
 }
+
+// design/v1 Topbar-Options / History: the top bar's History button (a clock turning back).
+export function HistoryIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+// design/v1 History: Restore (an arrow turning back).
+export function RestoreIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  );
+}

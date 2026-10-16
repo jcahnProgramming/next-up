@@ -9,6 +9,7 @@ import { keyBetween, tooLong } from '../../../server/core/positions.js';
 import { addCard, deleteCard, editCard, loadCards, moveCard } from './api.js';
 import { CardPill } from './Card.jsx';
 import { CardEditor, CardPanel, ConfirmDelete } from './CardSheets.jsx';
+import { HistoryPanel } from '../history/HistoryPanel.jsx';
 import { useCardDrag } from './useCardDrag.js';
 import './board.css';
 
@@ -24,8 +25,11 @@ import './board.css';
  *
  * Cards move by drag and drop, long-press on a phone, or the keyboard (useCardDrag.js); every step is announced in
  * a live region. A drop shows the card in its new place at once and puts it back if the server refuses.
+ *
+ * History (`history`, opened from the top bar or a card's panel; history/HistoryPanel.jsx) lists the board's changes
+ * and restores them; after a restore the board reloads, since a restore can move, bring back or change any card.
  */
-export function Board({ board, onLocked }) {
+export function Board({ board, onLocked, history, onHistory }) {
   const code = board.code;
   const { toast } = useTopbar();
   const askName = useAskName();
@@ -156,7 +160,7 @@ export function Board({ board, onLocked }) {
     return undefined;
   };
 
-  const dnd = useCardDrag({ enabled: load.kind === 'ready' && online && !sheet, lanes, rootRef: lanesRef, onDrop: move, announce });
+  const dnd = useCardDrag({ enabled: load.kind === 'ready' && online && !sheet && !history, lanes, rootRef: lanesRef, onDrop: move, announce });
   const drag = dnd.drag;
 
   const openAdd = (lane) => setSheet({ mode: 'add', lane });
@@ -261,6 +265,10 @@ export function Board({ board, onLocked }) {
           toast={toast}
           onEdit={(focus) => setSheet({ mode: 'edit', id: sheetCard.id, back: 'view', focus })}
           onDelete={() => setSheet({ mode: 'delete', id: sheetCard.id, back: 'view' })}
+          onHistory={() => {
+            setSheet(null);
+            onHistory({ cardId: sheetCard.id, back: sheetCard.id });
+          }}
           onClose={() => setSheet(null)}
           onCount={(n) => setPlayerCount(sheetCard.id, n)}
           onLocked={(changed) => common({ kind: 'locked', changed })}
@@ -282,6 +290,23 @@ export function Board({ board, onLocked }) {
           onSave={(values) => save(sheet.mode, sheetCard, values)}
           onDelete={() => setSheet({ mode: 'delete', id: sheetCard.id, back: 'edit' })}
           onClose={() => setSheet(sheet.back === 'view' ? { mode: 'view', id: sheet.id } : null)}
+        />
+      )}
+      {history && (
+        <HistoryPanel
+          key={history.cardId ?? 'board'}
+          code={code}
+          cardId={history.cardId}
+          onClose={() => {
+            // Opened from a card: back to that card, if it's still on the board.
+            if (history.back && cardById(history.back)) setSheet({ mode: 'view', id: history.back });
+            onHistory(null);
+          }}
+          onLocked={(changed) => common({ kind: 'locked', changed })}
+          onRestored={(r) => {
+            reload();
+            toast(r.rebalanced ? 'Restored. The board has been reloaded.' : 'Restored. History shows it as a new change.');
+          }}
         />
       )}
       {sheet?.mode === 'delete' && sheetCard && (

@@ -47,10 +47,13 @@ export function BoardPage() {
 function BoardView({ code, state, setState, retry }) {
   const navigate = useNavigate();
   const { toast } = useTopbar();
+  // History (history/HistoryPanel.jsx): null, or { cardId } (null: the whole board). Opened from the top bar or a card.
+  const [history, setHistory] = useState(null);
 
   const relock = useCallback(async () => {
     const result = await lockBoard(code);
     if (result.kind === 'done') {
+      setHistory(null);
       setState({ kind: 'locked', changed: false });
       toast('Locked on this browser');
     } else {
@@ -59,10 +62,22 @@ function BoardView({ code, state, setState, retry }) {
   }, [code, setState, toast]);
 
   // The board locked under us (its lock pressed in another tab, or its password changed): back to the lock screen.
-  const onLocked = useCallback((changed) => setState({ kind: 'locked', changed }), [setState]);
+  const onLocked = useCallback(
+    (changed) => {
+      setHistory(null);
+      setState({ kind: 'locked', changed });
+    },
+    [setState],
+  );
+  const openHistory = useCallback(() => setHistory({ cardId: null }), []);
 
   const open = state.kind === 'open';
-  useTopbarBoard({ code, plain: !open, onLock: open && state.board.hasPassword ? relock : undefined });
+  useTopbarBoard({
+    code,
+    plain: !open,
+    onLock: open && state.board.hasPassword ? relock : undefined,
+    onHistory: open ? openHistory : undefined,
+  });
 
   switch (state.kind) {
     case 'loading':
@@ -77,7 +92,7 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
     case 'open':
-      return <Board board={state.board} onLocked={onLocked} />;
+      return <Board board={state.board} onLocked={onLocked} history={history} onHistory={setHistory} />;
     case 'locked':
       return (
         <Centered>

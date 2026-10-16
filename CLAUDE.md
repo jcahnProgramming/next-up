@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.6.0 has boards, access, lanes, cards, drag and drop and card details; not history or live sync yet)
+## What Next Up will be (the agreed spec; 0.7.0 has boards, access, lanes, cards, drag and drop, card details, and history and restore; not live sync, board retiring or Settings' "This board" yet)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -151,12 +151,32 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   `{ cardId, before, after }` (restorable), `card.deleted` `{ cardId, card }` (restorable), where a card state is
   `{ title, logo, lane, position, index }` (created and deleted also carry `goLive` and `serverInfo` from 0.6.0);
   `card.moved` `{ cardId, before, after }` (restorable), where each is only the place `{ lane, position, index }`;
-  `card.detail_edited` `{ cardId, before, after }` (restorable), each `{ goLive, serverInfo }`
+  `card.detail_edited` `{ cardId, before, after }` (restorable), each `{ goLive, serverInfo }`;
+  `card.restored` `{ cardId, card }` (restorable: deletes it again; written only by restoring a delete)
   (`server/cards/events.js`). One save that renames, re-dates and moves logs card.edited, card.detail_edited,
-  card.moved in that order. `player.added` and `player.removed` `{ cardId, playerId, name, position }` (only removed
-  is restorable; `position` is the 0-based place in the sign-up list; `server/players/events.js`).
-- History offers Restore on card edits (details included), deletes, moves and removed players. Restoring a move puts the card as close to its old lane
-  and position as the board now allows. Password changes are logged but never restorable.
+  card.moved in that order. `player.added`, `player.removed` and `player.restored`
+  `{ cardId, playerId, name, position }` (removed and restored are restorable; `position` is the 0-based place in the
+  sign-up list; `server/players/events.js`). Card and player queries shared by routes and restores live in
+  `server/cards/store.js` and `server/players/store.js`.
+- **History** (`server/history/routes.js`, `client/src/history/`): `GET /api/boards/:code/history` pages the log
+  newest first, 50 at a time (`?before=` cursor, at most 100 per answer, `?card=` for one card through the
+  `(board_id, card_id, created_at)` index; `card_id` is a VIRTUAL column read from the payload, so no stored row was
+  rewritten to add it). Each event type **declares** its line and its restore next to the feature that writes it:
+  `declareEventType({ type, restorable, payload, line(payload, { cardTitle, isRestore }), restore: { plan } })`.
+  Nothing in shared code switches on a type: the history route, `lineOf` and `planRestore` (`server/core/events.js`)
+  only call what the declaration gives them. A restorable type must declare `restore.plan`.
+- **Restore** offers on card edits (details included), deletes, moves and removed players, and on restores
+  themselves. `restore.plan(ctx, event, opts)` only reads, and returns `{ refuse }` or `{ preview, apply(actor) }`;
+  `GET …/history/:id/restore` shows the preview (now vs after, with a token), `POST` re-plans inside the write and
+  applies only if the token still matches (else 409 `changed` with the new preview). A restore **never edits or
+  removes an event**: `apply` makes the change and appends NEW events of the ordinary types, marked with the
+  `events.restores` column (the event undone; a unique partial index lets each event be restored once, and a trigger
+  keeps it on the same board). Undoing a delete writes `card.restored`, undoing a removal `player.restored`; both
+  are restorable (delete / remove again), so a restore of a restore works. Restoring a move puts the card as close to
+  its old lane and position as the board now allows and says so. An edit restores only the fields that event
+  changed. A change to a card deleted since asks first and, with `withCard`, brings the card back too (refused at
+  the 200-card cap). A removed player whose name has signed up again, or at the 100-player cap, is refused. A restore
+  is a change: it needs access and asks the display name first. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
 - Every query takes limit/cursor. No unbounded selects, ever.
 - One SQLite file (`data/next-up.db`), shared by the web and MCP containers. On <HOST> it lives in
@@ -221,20 +241,30 @@ and after and fails if it changed.
 **`design/v1/` is the source of truth for the UI.** Read the relevant artboards and `design/v1/nu.css` before
 building any screen; where an artboard contradicts this file, this file wins and the conflict gets raised.
 
-Apple styling: glass, translucency, restraint, content-forward. No navigation menu: a top bar with the name and a
-settings button, a bottom bar with the version.
+Apple styling: glass, translucency, restraint, content-forward. No navigation menu: a sticky glass top bar with the
+name and its buttons (History on a board you can open, Settings), and one glass strip along the bottom with the
+version on the left and the coffee link on the right.
 
-- **The coffee bar** (`client/src/chrome/AppShell.jsx`) is a thin bar pinned to the bottom of the viewport on every
-  page, separate from the version link: one plain link to https://buymeacoffee.com/PathPlays (new tab,
-  `rel="noopener noreferrer"`) with an inline stroke icon. **Never** a script, widget, pixel, third-party logo or
-  analytics. It sits below dialogs, sheets and toasts; the page clears it with `--coffee-bar-h` of bottom padding
-  (so the version link sits just above it), toasts and the drag hint sit above it, and drag auto-scroll measures from
-  its top edge. It takes no pointer events during a drag.
+- **The bottom strip** (`client/src/chrome/AppShell.jsx`, class `coffee-bar`) is pinned to the bottom of the
+  viewport on every page: "Next Up v0.x.y · What's new" (to /changelog) on the left, and on the right one plain link
+  to https://buymeacoffee.com/PathPlays (new tab, `rel="noopener noreferrer"`) with an inline stroke icon. There is
+  no other version element. **Never** a script, widget, pixel, third-party logo or analytics. It is glass the page
+  scrolls under; it sits below dialogs, sheets and toasts; the page's end clears it with `--coffee-bar-h` of bottom
+  padding, toasts and the drag hint sit above it, and drag auto-scroll measures from its top edge (it keeps the
+  class `coffee-bar` for that). It takes no pointer events during a drag. At 390 px both links fit on one line;
+  narrower than 360 px they wrap and `--coffee-bar-h` doubles.
+- **The top bar** is sticky glass across the window (`.topbar-bar`); the page scrolls under it, and `html`'s
+  `scroll-padding` keeps anything scrolled into view clear of both bars.
 
 - **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script in `client/index.html` applies the stored
   theme (`nu.theme` in localStorage) before first paint; unset, Light/Dark follow the device ("Match device"). Dark
   is glass. **Legacy is flat**: no blur or translucency, 1 px borders, small radii, squared buttons; cards stay
-  pills. The app still ships the home-dashboard tokens (`client/src/theme/tokens.css`) until the UI is converted to
+  pills.
+- **Glass needs something to blur and an edge.** Light and Dark have coloured backdrop fields (`--blob-*` and a warm
+  field in `--backdrop-pattern`); every glass pane has `--edge` (a `--hairline-w` rim in `--glass-rim` and a 1 px top
+  `--glass-sheen`); the bars use `--surface-bar`. All are theme tokens in `client/src/theme/tokens.css`, never
+  one-off styles. Text on glass is checked at 4.5:1 or better against the brightest backdrop pixel under it, in a
+  browser, in every theme, including with cards scrolled under the bars. No-logo cards stay solid. The app still ships the home-dashboard tokens (`client/src/theme/tokens.css`) until the UI is converted to
   `design/v1/nu.css`.
 - **Top bar option A**, with the board's code chip. On a password board unlocked in this browser, the chip carries the
   lock button that forgets the unlock.

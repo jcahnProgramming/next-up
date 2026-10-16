@@ -1,10 +1,10 @@
 import express from 'express';
 import { checkGoLive, checkServerInfo } from '../core/cardDetail.js';
-import { MAX_CARDS, checkLane, checkLogo, checkTitle } from '../core/cardRules.js';
+import { MAX_CARDS, cardLimitMessage, checkLane, checkLogo, checkTitle } from '../core/cardRules.js';
 import { appendEvent } from '../core/events.js';
-import { keyAfter, keyBetween, spreadKeys, tooLong } from '../core/positions.js';
 import { createPlayersRouter } from '../players/routes.js';
 import { CARD_CREATED, CARD_DELETED, CARD_DETAIL_EDITED, CARD_EDITED, CARD_MOVED } from './events.js';
+import { cardBody, cardStore, detailOf, editableOf, placeOf, stateOf, wholeStateOf } from './store.js';
 
 /**
  * /api/boards/:code/cards. Mounted by boards/routes.js AFTER requireAccess, so a password board without access never
@@ -30,7 +30,7 @@ import { CARD_CREATED, CARD_DELETED, CARD_DETAIL_EDITED, CARD_EDITED, CARD_MOVED
  */
 export function createCardsRouter({ db }) {
   const router = express.Router({ mergeParams: true });
-  const q = queries(db);
+  const { q, bottomOf, placeBetween } = cardStore(db);
 
   router.get('/', (req, res) => {
     const limit = Math.min(Math.max(1, Number.parseInt(req.query.limit, 10) || MAX_CARDS), MAX_CARDS);
@@ -231,85 +231,8 @@ export function createCardsRouter({ db }) {
 
   router.use('/:id/players', createPlayersRouter({ db }));
 
-  // The bottom of a lane: a key after its last live card, and the index the card will have. A key that would pass the
-  // length cap rebalances the lane first (core/positions.js). Call inside the write transaction.
-  function bottomOf(boardId, lane) {
-    const last = q.lastPosition(boardId, lane);
-    const index = q.laneCount(boardId, lane);
-    let position = keyAfter(last);
-    let rebalanced = false;
-    if (tooLong(position)) {
-      rebalance(boardId, q.laneIds(boardId, lane));
-      position = keyAfter(q.lastPosition(boardId, lane));
-      rebalanced = true;
-    }
-    return { position, index, rebalanced };
-  }
-
-  // A key for a card going in at `index` among `others` (the lane's other live cards, in order), written by the
-  // caller onto that one card. Rebalances the others first if the gap's key would pass the cap, or if the neighbours
-  // share a key (nothing fits between equal keys). Call inside the write transaction.
-  function placeBetween(boardId, lane, others, index) {
-    const keyAt = (rows, i) => rows[i]?.position ?? null;
-    const prev = keyAt(others, index - 1);
-    const next = keyAt(others, index);
-    const position = prev !== null && next !== null && prev >= next ? null : keyBetween(prev, next);
-    if (position !== null && !tooLong(position)) return { position, rebalanced: false };
-    const keys = rebalance(boardId, others.map((r) => r.id));
-    return { position: keyBetween(keys[index - 1] ?? null, keys[index] ?? null), rebalanced: true };
-  }
-
-  // Evenly spaced short keys for these cards, in this order (core/positions.js). Returns the keys.
-  function rebalance(boardId, ids) {
-    const keys = spreadKeys(ids.length);
-    keys.forEach((key, i) => q.setPosition(boardId, ids[i], key));
-    return keys;
-  }
-
   return router;
 }
-
-/** What the API says about a card. */
-function cardBody(row) {
-  return {
-    id: row.id,
-    title: row.title,
-    logo: row.logo,
-    lane: row.lane,
-    position: row.position,
-    goLive: row.go_live,
-    serverInfo: row.server_info,
-    playerCount: row.player_count,
-    version: row.version,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-// A card.edited's before or after: the name and logo, and the card's place.
-function stateOf(row, index) {
-  return { title: row.title, logo: row.logo, lane: row.lane, position: row.position, index };
-}
-
-// A card.created's or card.deleted's card: everything a person can set on it, and its place.
-function wholeStateOf(row, index) {
-  return { ...stateOf(row, index), goLive: row.go_live, serverInfo: row.server_info };
-}
-
-// A card.detail_edited's before or after.
-const detailOf = (row) => ({ goLive: row.go_live, serverInfo: row.server_info });
-
-// What q.update writes, as the card has it now.
-const editableOf = (row) => ({
-  title: row.title,
-  logo: row.logo,
-  lane: row.lane,
-  position: row.position,
-  goLive: row.go_live,
-  serverInfo: row.server_info,
-});
-
-const placeOf = ({ lane, position, index }) => ({ lane, position, index });
 
 const withRebalanced = (body, rebalanced) => (rebalanced ? { ...body, rebalanced: true } : body);
 
@@ -341,77 +264,11 @@ function invalid(res, field, error) {
   return res.status(400).json({ error, field });
 }
 function cardLimit(res) {
-  return res.status(409).json({ error: `This board has ${MAX_CARDS} games, the most a board can hold. Delete one to add another.`, code: 'card_limit' });
+  return res.status(409).json({ error: cardLimitMessage, code: 'card_limit' });
 }
 function gone(res) {
   return res.status(404).json({ error: 'That card has been deleted.', code: 'card_gone' });
 }
 function conflict(res, row) {
   return res.status(409).json({ error: 'Someone else changed this card first.', code: 'conflict', card: cardBody(row) });
-}
-
-function queries(db) {
-  const cache = new Map();
-  const st = (sql) => {
-    if (!cache.has(sql)) cache.set(sql, db().prepare(sql));
-    return cache.get(sql);
-  };
-  // player_count: the card's live sign-ups (players_live_name's index; at most MAX_PLAYERS).
-  const COLS = `id, board_id, lane, position, title, logo, go_live, server_info, version, created_at, updated_at, deleted_at,
-    (SELECT COUNT(*) FROM players p WHERE p.card_id = cards.id AND p.deleted_at IS NULL) AS player_count`;
-  const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
-  return {
-    byId: (boardId, id) => st(`SELECT ${COLS} FROM cards WHERE board_id = ? AND id = ? LIMIT 1`).get(boardId, id) ?? null,
-    page: (boardId, after, limit) =>
-      after
-        ? st(
-            `SELECT ${COLS} FROM cards WHERE board_id = ? AND deleted_at IS NULL AND (lane, position, id) > (?, ?, ?)
-             ORDER BY lane, position, id LIMIT ?`,
-          ).all(boardId, after.lane, after.position, after.id, limit)
-        : st(`SELECT ${COLS} FROM cards WHERE board_id = ? AND deleted_at IS NULL ORDER BY lane, position, id LIMIT ?`).all(boardId, limit),
-    liveCount: (boardId) => st('SELECT COUNT(*) FROM cards WHERE board_id = ? AND deleted_at IS NULL').pluck().get(boardId),
-    laneCount: (boardId, lane) =>
-      st('SELECT COUNT(*) FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL').pluck().get(boardId, lane),
-    lastPosition: (boardId, lane) =>
-      st('SELECT position FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL ORDER BY position DESC, id DESC LIMIT 1')
-        .pluck()
-        .get(boardId, lane) ?? null,
-    // Bounded by MAX_CARDS: a lane never holds more live cards than the board does.
-    laneIds: (boardId, lane) =>
-      st(`SELECT id FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL ORDER BY position, id LIMIT ${MAX_CARDS}`)
-        .pluck()
-        .all(boardId, lane),
-    laneRows: (boardId, lane) =>
-      st(`SELECT id, position FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL ORDER BY position, id LIMIT ${MAX_CARDS}`).all(
-        boardId,
-        lane,
-      ),
-    indexOf: (card) =>
-      st(
-        `SELECT COUNT(*) FROM cards WHERE board_id = ? AND lane = ? AND deleted_at IS NULL
-         AND (position < ? OR (position = ? AND id < ?))`,
-      )
-        .pluck()
-        .get(card.board_id, card.lane, card.position, card.position, card.id),
-    insert: (boardId, c) =>
-      Number(
-        st('INSERT INTO cards (board_id, lane, position, title, logo, go_live, server_info) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-          boardId,
-          c.lane,
-          c.position,
-          c.title,
-          c.logo,
-          c.goLive,
-          c.serverInfo,
-        ).lastInsertRowid,
-      ),
-    update: (boardId, id, c) =>
-      st(
-        `UPDATE cards SET title = ?, logo = ?, lane = ?, position = ?, go_live = ?, server_info = ?, version = version + 1,
-         updated_at = ${NOW} WHERE board_id = ? AND id = ?`,
-      ).run(c.title, c.logo, c.lane, c.position, c.goLive, c.serverInfo, boardId, id),
-    tombstone: (boardId, id) =>
-      st(`UPDATE cards SET deleted_at = ${NOW}, version = version + 1, updated_at = ${NOW} WHERE board_id = ? AND id = ?`).run(boardId, id),
-    setPosition: (boardId, id, position) => st('UPDATE cards SET position = ? WHERE board_id = ? AND id = ?').run(position, boardId, id),
-  };
 }

@@ -98,8 +98,8 @@ export function ServerInfo({ value, paused, onSet, toast }) {
  * this browser's display name first if it never has (adding is a change), then opens an inline box, pre-filled with
  * that name unless it's already on the card: still editable, so anyone can add someone else. Enter adds and keeps the
  * box open for the next name. A name already on the card (ignoring case) is refused inline before anything is sent,
- * and again by the server. Each chip's × removes that player at once, with no confirmation: History will be able to
- * put them back.
+ * and again by the server. Each chip's × removes that player at once, with no confirmation: History can put
+ * them back.
  */
 export function Players({ code, card, paused, onCount, onLocked, onGone }) {
   const askName = useAskName();
