@@ -3,6 +3,9 @@ import { ChevronLeft } from '../../chrome/icons.jsx';
 import { APP_VERSION, RELEASES } from '../../release.js';
 import './changelog.css';
 
+// design/v1 Changelog.dc.html: New is accent, Improved success, Fixed warning, Removed neutral.
+const SECTION_BADGE = { New: 'badge-accent', Improved: 'badge-success', Fixed: 'badge-warning' };
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // "2026-10-02" → "2 Oct 2026", read as a calendar date (no time zone can shift it a day).
@@ -17,7 +20,7 @@ export function ChangelogPage() {
   return (
     <div className="changelog">
       <div className="changelog-head">
-        <button type="button" className="changelog-back" onClick={() => navigate('/')}>
+        <button type="button" className="btn btn-ghost btn-sm changelog-back" onClick={() => navigate('/')}>
           <ChevronLeft />
           Home
         </button>
@@ -32,7 +35,7 @@ export function ChangelogPage() {
           <div className="release-meta">
             <div className="release-version-row">
               <h2 id={`v-${release.version}`} className="release-version">v{release.version}</h2>
-              {i === 0 && <span className="release-installed">Installed</span>}
+              {i === 0 && <span className="badge badge-accent">Installed</span>}
             </div>
             <time className="release-date" dateTime={release.date}>{formatDate(release.date)}</time>
           </div>
@@ -40,7 +43,7 @@ export function ChangelogPage() {
             <p className="release-headline">{release.title}</p>
             {Object.entries(release.sections).map(([section, items]) => (
               <div key={section} className="release-group">
-                <h3 className={`release-group-label release-group-${section.toLowerCase()}`}>{section}</h3>
+                <h3 className={`badge release-group-label ${SECTION_BADGE[section] ?? ''}`}>{section}</h3>
                 <ul>
                   {items.map((item) => (
                     <li key={item}>{item}</li>

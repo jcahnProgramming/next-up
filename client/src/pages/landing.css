@@ -1,20 +1,32 @@
 .landing {
   flex: 1;
   display: grid;
+  /* minmax(0, …): the code box's intrinsic width must never widen the page on a phone. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 32px 0;
 }
 .landing-sheet {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 10px;
-  padding: 48px 36px 40px;
+  gap: 12px;
+  padding: 52px 44px 40px;
   border-radius: var(--r-sheet);
   animation: hd-sheet-in var(--dur-slow) var(--spring);
+}
+.landing-mark {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 6px;
+  border-radius: calc(20px * var(--radius-k));
+  display: grid;
+  place-items: center;
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
 }
 .landing-title {
   font-size: var(--fs-large);
@@ -24,6 +36,8 @@
   color: var(--text-2);
   text-wrap: pretty;
 }
+
+/* design/v1 Landing-Desktop.dc.html and nu.css .code-form. */
 
 /* One pill: the input with its go button inside. */
 .code-form {
@@ -42,26 +56,32 @@
 }
 .code-input {
   flex: 1;
+  width: 100%;
   min-width: 0;
-  height: 44px;
+  height: 46px;
   border: 0;
   outline: none;
   background: transparent;
   color: var(--text-1);
-  font-size: var(--fs-headline);
+  font-family: var(--font-mono);
+  font-size: 18px;
   font-weight: 500;
+  letter-spacing: 0.02em;
 }
 .code-input::placeholder {
   color: var(--text-3);
+  font-family: var(--font-sans);
+  font-size: 17px;
   font-weight: 400;
+  letter-spacing: 0;
 }
 .code-input:focus-visible {
   box-shadow: none;
 }
 .code-go {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border: 0;
   border-radius: 50%;
   display: grid;
@@ -73,6 +93,9 @@
 }
 .code-go:active:not(:disabled) {
   transform: scale(var(--press));
+}
+.code-go:focus-visible {
+  box-shadow: var(--focus-ring);
 }
 .code-go:disabled {
   opacity: 0.35;

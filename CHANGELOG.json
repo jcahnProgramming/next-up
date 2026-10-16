@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "version": "0.2.0",
+      "date": "2026-10-15",
+      "title": "Themes and your display name",
+      "sections": {
+        "New": [
+          "Settings now has a theme picker: Light, Dark, Legacy, Pastel and Cyberpunk, each shown as a small preview, plus Match device, which uses Light or Dark and follows your device when it switches. The change applies at once with a short cross-fade and is remembered in this browser only.",
+          "Settings has a display name field. It is kept in this browser only and is a label, not an account: anyone can type any name. Nothing uses it yet; it is for the change history that comes with boards. Until you set one it says Not set.",
+          "If your browser blocks Next Up from saving anything, Settings says so, and your theme and name still work until you close or reload the page."
+        ],
+        "Improved": [
+          "Every page now uses the Next Up design: its colours, buttons, fields and badges, in all five themes.",
+          "Legacy is now the flat theme: solid surfaces with no blur or see-through glass, crisp 1 px edges, small corners and squared-off buttons, so it no longer looks like a darker copy of Dark.",
+          "Buttons and the settings, back and What's new links have touch targets at least 44 px tall, so they are easier to hit on a phone.",
+          "The top bar shows the Next Up mark next to the name, and the board code box uses a code-style font."
+        ]
+      }
+    },
+    {
       "version": "0.1.0",
       "date": "2026-10-15",
       "title": "Skeleton",

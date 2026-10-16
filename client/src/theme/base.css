@@ -50,67 +50,96 @@ body {
   box-shadow: var(--shadow-sheet);
 }
 
-/* Pill buttons, shared by Settings and cards. */
-.pill-button {
-  height: 32px;
-  padding: 0 14px;
+/* Buttons (design/v1 nu.css .btn). Pills size to their label: padding and a min-width, never a fixed width, never
+   shrinking, never truncating. Sizes come only from the --btn-* tokens. Legacy squares them via --r-btn. */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  height: var(--btn-h);
+  min-width: var(--btn-min-w);
+  padding: 0 var(--btn-pad-x);
+  flex: none;
   border: 0;
-  border-radius: var(--r-full);
+  border-radius: var(--r-btn);
   background: transparent;
   color: var(--text-1);
-  font-size: var(--fs-footnote);
-  font-weight: 600;
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  line-height: 1;
   white-space: nowrap;
-  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--spring);
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--spring), background var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
 }
-.pill-button:active:not(:disabled) {
-  transform: scale(var(--press));
+.btn:has(> svg:first-child) {
+  padding-left: var(--btn-pad-x-icon);
 }
-.pill-button:disabled {
-  opacity: 0.5;
-}
-.pill-solid {
-  background: var(--surface-solid);
-  box-shadow: var(--elev-1);
-}
-.pill-accent {
+.btn-primary {
   background: var(--accent-fill);
   color: var(--text-on-accent);
   box-shadow: var(--glow-accent);
 }
-.pill-link {
+.btn-secondary {
+  background: var(--surface-solid);
+  box-shadow: var(--elev-1), var(--edge);
+}
+.btn-tint {
+  background: var(--accent-soft);
   color: var(--accent-text);
 }
-.pill-link:hover {
-  background: var(--accent-soft);
+.btn-ghost {
+  color: var(--accent-text);
 }
-.pill-quiet {
-  color: var(--text-2);
-  font-weight: 500;
-}
-.pill-quiet:hover {
+.btn-quiet {
   background: var(--surface-3);
 }
-.pill-danger {
-  color: var(--error-text);
-  font-weight: 500;
-}
-.pill-danger:hover {
-  background: var(--error-soft);
-}
-.pill-danger-solid {
+.btn-danger {
   background: var(--error-soft);
   color: var(--error-text);
-  box-shadow: inset 0 0 0 1px var(--error);
 }
-.pill-warning-solid {
-  background: var(--warning-soft);
-  color: var(--warning-text);
-  box-shadow: inset 0 0 0 1px var(--warning);
+.btn-sm {
+  height: var(--btn-h-sm);
+  min-width: var(--btn-min-w-sm);
+  padding: 0 var(--btn-pad-x-sm);
+  font-size: var(--btn-fs-sm);
+}
+.btn-sm:has(> svg:first-child) {
+  padding-left: 12px;
+}
+/* The small pill draws at 36 px; this keeps its touch target at 44. */
+.btn-sm::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--hit-min);
+  transform: translateY(-50%);
+}
+.btn-block {
+  width: 100%;
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(calc(var(--lift) / 2));
+}
+.btn:active:not(:disabled) {
+  filter: brightness(0.96);
+  transform: scale(var(--press));
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 
-/* Inline panels (confirmations, forms, results) and form fields, shared. */
+/* Inline panels (confirmations, forms, results), shared. From home-dashboard; no page uses them yet. */
 .panel {
   padding: 14px;
   border-radius: var(--r-md);
@@ -162,31 +191,50 @@ body {
   flex-wrap: wrap;
 }
 
+/* Form fields (design/v1 nu.css .field / .input; the input is .field-input here). */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .field-label {
-  font-size: var(--fs-caption);
+  font-size: var(--fs-footnote);
   font-weight: 600;
   color: var(--text-2);
 }
+.field-hint {
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--error-text);
+}
 .field-input {
-  height: 40px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--surface-3);
-  color: var(--text-1);
-  outline: none;
+  width: 100%;
   min-width: 0;
+  height: var(--control-h);
+  padding: 0 14px;
+  border: 0;
+  outline: none;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  box-shadow: var(--well);
+  color: var(--text-1);
+  font-size: var(--fs-body);
 }
 .field-input::placeholder {
   color: var(--text-3);
 }
 .field-input:focus-visible {
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--well), var(--focus-ring);
+}
+.field-input[aria-invalid='true'] {
+  box-shadow: var(--well), 0 0 0 2px var(--error);
 }
 .field-mono {
   font-family: var(--font-mono);
@@ -221,3 +269,103 @@ body {
   color: var(--text-1);
 }
 
+/* Themed dropdown (design/v1 nu.css .dd / .menu). Never a native <select>: its popup ignores the theme. The trigger
+   is a button with aria-haspopup="listbox"; the list's keyboard-active option carries data-active. */
+.dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 12px 0 14px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  box-shadow: var(--well);
+  color: var(--text-1);
+  text-align: left;
+}
+.dropdown[aria-expanded='true'],
+.dropdown:focus-visible {
+  box-shadow: var(--well), var(--focus-ring);
+}
+.dropdown > svg:last-child {
+  color: var(--text-3);
+}
+.dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 6px;
+  border-radius: var(--r-lg);
+}
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: var(--hit-min);
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-1);
+  font-size: var(--fs-body);
+  text-align: left;
+}
+.dropdown-option:hover,
+.dropdown-option[data-active] {
+  background: var(--surface-3);
+}
+.dropdown-option[aria-selected='true'] {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.dropdown-option > .dropdown-check {
+  margin-left: auto;
+  color: var(--accent-text);
+}
+
+/* Badges (design/v1 nu.css .badge). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-accent { background: var(--accent-soft); color: var(--accent-text); }
+.badge-success { background: var(--success-soft); color: var(--success-text); }
+.badge-warning { background: var(--warning-soft); color: var(--warning-text); }
+.badge-error { background: var(--error-soft); color: var(--error-text); }
+/* the rate-limit countdown: one size everywhere it appears */
+.badge-countdown { height: 30px; padding: 0 14px; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+/* Banners (design/v1 nu.css .banner): a tinted strip that says what's wrong, with an optional action. */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  text-wrap: pretty;
+}
+.banner > svg {
+  flex: none;
+}
+.banner-warn {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+}
+.banner b {
+  color: var(--text-1);
+  font-weight: 600;
+}

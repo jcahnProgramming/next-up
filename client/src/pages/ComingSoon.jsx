@@ -19,7 +19,7 @@ export function ComingSoon({ feature, children, label = 'Coming soon', back = tr
           {children ?? "This part of Next Up isn't built yet. When it ships it'll appear in What's new."}
         </p>
         {back && (
-          <button type="button" className="soon-back" onClick={() => navigate('/')}>
+          <button type="button" className="btn btn-secondary soon-back" onClick={() => navigate('/')}>
             Back to Home
           </button>
         )}

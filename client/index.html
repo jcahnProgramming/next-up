@@ -6,17 +6,41 @@
     <title>Next Up</title>
     <link rel="icon" href="data:," />
     <!-- Theme boot (from home-dashboard). Runs before the stylesheet paints, so a reload never flashes the wrong
-         theme. The theme is per browser in localStorage (nu.theme); unset, it follows the OS colour scheme.
-         Settings has no theme picker yet, so for now every visitor gets Light or Dark from their device. -->
+         theme. The theme is per browser in localStorage (nu.theme); unset ("Match device"), it follows the OS colour
+         scheme. Settings changes it through window.nuTheme, so there is one copy of this logic. -->
     <script>
       (function () {
         var d = document.documentElement, KEY = 'nu.theme';
         var themes = ['light', 'dark', 'legacy', 'pastel', 'cyberpunk'];
         var dark = matchMedia('(prefers-color-scheme: dark)');
+        // When the browser blocks storage, a choice made in Settings still applies until this page is closed.
+        var inMemory = false, memory = null;
+        function valid(v) { return themes.indexOf(v) >= 0 ? v : null; }
         function stored() {
-          try { var v = localStorage.getItem(KEY); return themes.indexOf(v) >= 0 ? v : null; } catch (e) { return null; }
+          if (inMemory) return memory;
+          try { return valid(localStorage.getItem(KEY)); } catch (e) { return null; }
         }
-        function apply() { d.setAttribute('data-theme', stored() || (dark.matches ? 'dark' : 'light')); }
+        function apply() {
+          d.setAttribute('data-theme', stored() || (dark.matches ? 'dark' : 'light'));
+          window.dispatchEvent(new Event('nu-theme'));
+        }
+        window.nuTheme = {
+          themes: themes.slice(),
+          // The stored choice, or null for "Match device".
+          choice: stored,
+          // Returns true if the choice was saved in this browser, false if it only lasts until the page closes.
+          set: function (v) {
+            v = valid(v);
+            try {
+              if (v) localStorage.setItem(KEY, v); else localStorage.removeItem(KEY);
+              inMemory = false;
+            } catch (e) {
+              inMemory = true; memory = v;
+            }
+            apply();
+            return !inMemory;
+          },
+        };
         apply();
         // An unset theme keeps following the device when its setting changes.
         if (dark.addEventListener) dark.addEventListener('change', apply);

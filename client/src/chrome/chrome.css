@@ -1,14 +1,15 @@
-/* App chrome: top bar, page frame, bottom bar. From home-dashboard (its design/v1 Dashboard header + footer). */
+/* App chrome: top bar, page frame, bottom bar. design/v1 nu.css .shell / .topbar / .wordmark / .bottombar
+   (top bar option A), on the app's own page frame. */
 
 .shell {
   width: 100%;
   max-width: 1480px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 40px 44px 28px;
+  padding: 28px 40px 18px;
   display: flex;
   flex-direction: column;
-  gap: var(--section-gap);
+  gap: 28px;
   color: var(--text-1);
 }
 
@@ -16,32 +17,46 @@
 .topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  min-height: var(--hit-min);
 }
 .topbar-name {
-  flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-size: var(--fs-title3);
+  white-space: nowrap;
   color: var(--text-1);
 }
 .topbar-name:hover {
   color: var(--text-1);
   text-decoration: none;
 }
+.topbar-mark {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: calc(8px * var(--radius-k));
+  display: grid;
+  place-items: center;
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
+}
 .topbar-actions {
+  margin-left: auto;
   display: flex;
   gap: 10px;
   align-items: center;
   flex: none;
 }
 
+/* design/v1 nu.css .round: the glass circle for top-bar buttons. */
 .round-button {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: var(--hit-min);
+  height: var(--hit-min);
   border: 0;
   border-radius: 50%;
   display: grid;
@@ -59,6 +74,9 @@
 }
 .round-button:active {
   transform: scale(calc(1 - 0.06 * var(--motion-k)));
+}
+.round-button:focus-visible {
+  box-shadow: var(--shadow-card), var(--focus-ring);
 }
 .round-button[aria-current='page'] {
   background: var(--surface-4);
@@ -78,21 +96,21 @@
 .bottombar {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding: 8px 0 4px;
-  font-size: var(--fs-caption);
-  color: var(--text-3);
 }
 .version-link {
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--hit-min);
+  padding: 0 14px;
   border-radius: var(--r-full);
   color: var(--text-3);
   font-size: var(--fs-caption);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.version-link:hover {
+.version-link:hover,
+.version-link[aria-current='page'] {
   background: var(--surface-3);
   color: var(--text-1);
   text-decoration: none;
@@ -105,16 +123,16 @@
 /* ---------- phone ---------- */
 @media (max-width: 600px) {
   .shell {
-    padding: 20px 16px 28px;
+    padding: 16px 16px 12px;
+    gap: 16px;
   }
   .topbar {
     gap: 10px;
   }
   .topbar-name {
-    font-size: var(--fs-headline);
+    font-size: 18px;
   }
   .topbar-actions {
     gap: 8px;
   }
 }
-

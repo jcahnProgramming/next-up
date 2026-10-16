@@ -1,4 +1,4 @@
-/* From home-dashboard (design/v1 ComingSoon.dc.html) */
+/* From home-dashboard (its design/v1 ComingSoon.dc.html); the button is the shared .btn. */
 .soon {
   flex: 1;
   display: grid;
@@ -49,20 +49,6 @@
 }
 .soon-back {
   margin-top: 12px;
-  height: 42px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: var(--r-full);
-  background: var(--surface-3);
-  color: var(--text-1);
-  font-weight: 600;
-  transition: transform var(--dur-fast) var(--spring), background var(--dur-fast) var(--ease-out);
-}
-.soon-back:hover {
-  background: var(--surface-4);
-}
-.soon-back:active {
-  transform: scale(var(--press));
 }
 
 @media (max-width: 600px) {

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { APP_VERSION } from '../release.js';
-import { SettingsIcon } from './icons.jsx';
+import { ArrowRight, SettingsIcon } from './icons.jsx';
 import { createScrollMemory, focusMainHeading, restoreScroll, scrollDecision } from './scrollMemory.js';
 import './chrome.css';
 
@@ -13,7 +13,10 @@ export function AppShell() {
     <div className="shell">
       <ScrollManager />
       <header className="topbar">
-        <Link to="/" className="topbar-name display">Next Up</Link>
+        <Link to="/" className="topbar-name display">
+          <span className="topbar-mark" aria-hidden="true"><ArrowRight size={16} /></span>
+          Next Up
+        </Link>
         <div className="topbar-actions">
           <NavLink to="/settings" className="round-button" aria-label="Settings" title="Settings">
             <SettingsIcon />
@@ -27,9 +30,14 @@ export function AppShell() {
       </main>
 
       <footer className="bottombar">
-        <Link to="/changelog" className="version-link">
-          Next Up <span className="version-number">v{APP_VERSION}</span> · What's new
-        </Link>
+        {/* Separate parts spaced by the flex gap, never by literal spaces: inside a flex box, bare text runs become
+            items and lose their edge whitespace (on the design canvas it read "Next Upv0.1.0· What's new"). */}
+        <NavLink to="/changelog" className="version-link" aria-label={`Next Up v${APP_VERSION}, What's new`}>
+          <span>Next Up</span>
+          <span className="version-number">v{APP_VERSION}</span>
+          <span aria-hidden="true">·</span>
+          <span>What's new</span>
+        </NavLink>
       </footer>
     </div>
   );

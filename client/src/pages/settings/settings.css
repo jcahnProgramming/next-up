@@ -1,89 +1,185 @@
-/* Settings stub: the changelog page's header, then one glass sheet listing what will live here. */
+/* design/v1 Settings.dc.html: a Back button, the title, then one glass section per setting. */
 .settings {
   width: 100%;
-  max-width: 640px;
+  max-width: 960px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px;
 }
 .settings-head {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
 }
-.settings-back {
-  align-self: flex-start;
-  height: 32px;
-  padding: 0 10px 0 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  border-radius: var(--r-full);
-  background: transparent;
-  color: var(--accent-text);
-  font-size: var(--fs-body);
-  font-weight: 500;
-}
-.settings-back:hover {
-  background: var(--accent-soft);
-}
 .settings-title {
-  font-size: var(--fs-display);
-}
-.settings-sub {
-  margin: 0;
-  color: var(--text-2);
-  font-size: var(--fs-headline);
+  font-size: var(--fs-large);
 }
 
-.settings-list {
-  border-radius: var(--r-sheet);
-  padding: 8px 24px;
-  animation: hd-sheet-in var(--dur-slow) var(--spring);
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  border-radius: var(--r-card);
 }
-.settings-row {
-  padding: 18px 0;
+.settings-section-title {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: var(--fs-headline);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+.settings-section-title .badge {
+  align-self: center;
+}
+.settings-scope {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text-3);
+}
+.settings-note {
+  margin: 0;
+}
+
+/* ---------- theme picker (design/v1 nu.css .tp) ---------- */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--r-lg);
+  text-align: left;
+  color: var(--text-1);
+  transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.theme-option:hover {
+  background: var(--surface-3);
+}
+.theme-option[aria-checked='true'] {
+  box-shadow: 0 0 0 2.5px var(--accent);
+}
+.theme-option:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+.theme-option[aria-checked='true']:focus-visible {
+  box-shadow: 0 0 0 2.5px var(--accent), var(--focus-ring);
+}
+.theme-name {
+  padding: 0 4px 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+/* The check sits on the preview's corner, so it never pushes the name onto a second line. */
+.theme-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
+  box-shadow: var(--elev-1);
+}
+
+/* Each preview carries its own data-theme, so everything inside it is drawn in that theme's tokens. */
+.theme-shot {
+  position: relative;
+  height: 80px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--backdrop);
+  box-shadow: var(--edge);
 }
-.settings-row + .settings-row {
-  border-top: 1px solid var(--separator);
+.theme-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 12px;
+  overflow: hidden;
 }
-.settings-row-head {
+.theme-split .theme-shot {
+  border-radius: 0;
+}
+.theme-shot-bar {
+  height: 8px;
+  width: 46%;
+  border-radius: 4px;
+  background: var(--text-1);
+  opacity: 0.8;
+}
+.theme-shot-lanes {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+.theme-shot-lane {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 7px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
+}
+.theme-shot-card {
+  height: 11px;
+  border-radius: var(--r-full);
+  background: var(--card-fb-bg);
+  box-shadow: var(--card-fb-ring);
+}
+.theme-shot-btn {
+  height: 9px;
+  width: 70%;
+  border-radius: 5px;
+  background: var(--accent-fill);
+}
+
+/* ---------- display name ---------- */
+.name-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-}
-.settings-row-title {
-  margin: 0;
-  font-size: var(--fs-headline);
-  font-weight: 600;
-}
-.settings-soon {
-  padding: 2px 9px;
-  border-radius: var(--r-full);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  text-transform: var(--label-transform);
-  letter-spacing: var(--label-tracking);
-}
-.settings-row-body {
-  margin: 0;
-  color: var(--text-2);
-  text-wrap: pretty;
 }
 
-@media (max-width: 600px) {
-  .settings-title {
-    font-size: var(--fs-large);
+/* ---------- phone ---------- */
+@media (max-width: 720px) {
+  .theme-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
-  .settings-list {
-    padding: 4px 18px;
+  .theme-shot {
+    height: 62px;
+    padding: 7px;
+  }
+}
+@media (max-width: 600px) {
+  .settings {
+    gap: 12px;
+  }
+  .settings-title {
+    font-size: var(--fs-title1);
+  }
+  .settings-section {
+    padding: 14px;
+    gap: 10px;
   }
 }

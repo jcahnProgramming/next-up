@@ -1,15 +1,22 @@
-/* Next Up — design tokens (copied from home-dashboard client/src/theme/tokens.css, the same five themes)
+/* Next Up — design tokens. The five themes and every shared token come from design/v1/nu.css (the Next Up design,
+   itself built on home-dashboard's tokens); copy changes from there.
    Themes: light · dark · legacy · pastel · cyberpunk  (data-theme on <html>, or any wrapper)
    Scales: data-radius (small|default|large) · data-text (s|m|l|xl) · data-density (comfortable|compact) · data-motion (full|reduced|off)
    Apply before first paint with the theme boot script inlined in client/index.html.
 
-   Copied from design/v1/tokens.css, the single source of design tokens for the app. Changes from the design copy,
-   all to reach WCAG AA (4.5:1) for text on the darkest well (surface-3 over surface-2 over bg):
+   Kept here that nu.css doesn't have: the @property cross-fade, the radius/text/density/motion scales, --press,
+   --lift, --spring-bounce, the *-fill status colours, --stopped and the hd-* keyframes.
+
+   Light, Dark, Pastel and Cyberpunk carry these contrast fixes, which nu.css already includes, all to reach WCAG AA
+   (4.5:1) for text on the darkest well (surface-3 over surface-2 over bg):
      light      --text-3, --unknown-text  #6e6e77 → #65656e
      dark       --text-3 #8e8e96 → #9b9ba3 · --accent-fill #0a7cf0 → #006edb (white button text)
      legacy     --text-2, --unknown-text #8d96a0 → #9ba4ae · --text-3 #7d8691 → #8c95a0
      pastel     --success-text #08765b → #066d53 · --accent-fill first stop #e7309a → #d01f86
-   Text is never set on --accent itself (dark: 3.65:1 with white); buttons use --accent-fill. */
+   Text is never set on --accent itself (dark: 3.65:1 with white); buttons use --accent-fill.
+
+   Legacy is the flat theme: opaque surfaces, no blur, 1 px edges, small radii, squared buttons (cards stay pills).
+   Dark is the glass one; at a glance they differ by that. */
 
 @font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: "Inter"; src: url("fonts/InterVariable-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
@@ -52,6 +59,16 @@
 @property --unknown-text { syntax: "<color>"; inherits: true; initial-value: grey; }
 @property --unknown-soft { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --stopped { syntax: "<color>"; inherits: true; initial-value: #555; }
+@property --lane-upnext { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --lane-playing { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --lane-played { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --placeholder-edge { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --placeholder-fill { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --card-fb-bg { syntax: "<color>"; inherits: true; initial-value: grey; }
+@property --card-fb-text { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --card-fb-text-2 { syntax: "<color>"; inherits: true; initial-value: #444; }
+@property --card-fb-chip { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --card-fb-mark { syntax: "<color>"; inherits: true; initial-value: grey; }
 
 /* ───────────── Scale defaults (root only, so nested theme wrappers inherit the user's scales) ───────────── */
 :root {
@@ -62,7 +79,8 @@
   --gap-grid: 16px;
   --card-unit: 324px;          /* every card is exactly this tall; overflow scrolls inside the card */
   --card-min: 288px;           /* column min width before the grid reflows */
-  --control-h: 36px;
+  --control-h: 44px;           /* the touch minimum; fields and dropdowns are this tall */
+  --control-h-sm: 36px;
   --row-h: 52px;
   --section-gap: 44px;
   --lh-tight: 1.15; --lh-snug: 1.3; --lh-body: 1.5; --lh-mono: 1.65;
@@ -88,6 +106,31 @@
   --r-card: calc(22px * var(--radius-k));
   --r-sheet: calc(30px * var(--radius-k));
   --r-full: 999px;
+  --r-btn: 999px;              /* pills; Legacy squares them off */
+
+  /* buttons: pills size to their label (padding + min-width, never a fixed width, never shrink). Every target is
+     at least 44 px tall; the small pill draws at 36 and extends its hit area to 44. */
+  --btn-h: 44px; --btn-h-sm: 36px; --hit-min: 44px;
+  --btn-pad-x: 20px; --btn-pad-x-sm: 14px; --btn-pad-x-icon: 16px;
+  --btn-min-w: 88px; --btn-min-w-sm: 64px;
+  --btn-gap: 8px; --btn-fs: calc(15px * var(--text-k)); --btn-fs-sm: calc(13.5px * var(--text-k)); --btn-fw: 600;
+  --icon-btn: 44px; --icon-btn-dot: 36px;
+
+  /* the card (theme-independent on purpose: its scrim and text sit on the game art, not on the theme) */
+  --card-h: 84px; --card-h-phone: 72px; --card-pad-x: 28px; --card-pad-x-phone: 22px;
+  --card-gap: 10px;
+  --card-text: #ffffff;
+  --card-text-2: rgb(255 255 255 / 0.82);
+  --card-scrim:
+    linear-gradient(90deg, rgb(8 8 12 / 0.80) 0%, rgb(8 8 12 / 0.58) 34%, rgb(8 8 12 / 0.16) 68%, rgb(8 8 12 / 0) 100%),
+    linear-gradient(0deg, rgb(8 8 12 / 0.28), rgb(8 8 12 / 0) 55%);
+  --card-title-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 12px rgb(0 0 0 / 0.35);
+  --card-chip-bg: rgb(12 12 16 / 0.55);
+  --card-chip-edge: inset 0 0 0 0.5px rgb(255 255 255 / 0.22);
+  --card-lift-scale: 1.035; --card-lift-rotate: -1.2deg; --card-press-scale: 0.98; --card-hover-y: -2px;
+  --lane-w-min: 320px; --lane-gap: 20px;
+  --fb-mark-size: 40px;
+  --autoscroll-zone: 96px;
 
   /* type scale — tight, purposeful */
   --fs-caption: calc(12px * var(--text-k));
@@ -103,14 +146,17 @@
 
   /* translucency */
   --blur-sm: 10px; --blur-md: 24px; --blur-lg: 44px; --saturate: 180%;
+  --scrim-filter: blur(6px);   /* behind modals; none in Legacy */
+  --chip-filter: blur(8px);    /* card chips over art; none in Legacy */
 
   /* motion — physical springs, never linear */
-  --spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  --spring: cubic-bezier(0.34, 1.3, 0.64, 1);
   --spring-bounce: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: calc(180ms * var(--motion-k));
   --dur-base: calc(380ms * var(--motion-k));
   --dur-slow: calc(620ms * var(--motion-k));
+  --dur-flash: calc(1600ms * var(--motion-k));  /* the live-update ring fade */
   --dur-theme: 700ms;
   --lift: calc(-2px * var(--motion-k));
   --press: calc(1 - 0.03 * var(--motion-k));
@@ -140,7 +186,11 @@
     --warning var(--dur-theme) ease, --warning-text var(--dur-theme) ease, --warning-soft var(--dur-theme) ease,
     --error var(--dur-theme) ease, --error-text var(--dur-theme) ease, --error-soft var(--dur-theme) ease,
     --info var(--dur-theme) ease, --info-text var(--dur-theme) ease, --info-soft var(--dur-theme) ease,
-    --unknown var(--dur-theme) ease, --unknown-text var(--dur-theme) ease, --unknown-soft var(--dur-theme) ease, --stopped var(--dur-theme) ease;
+    --unknown var(--dur-theme) ease, --unknown-text var(--dur-theme) ease, --unknown-soft var(--dur-theme) ease, --stopped var(--dur-theme) ease,
+    --lane-upnext var(--dur-theme) ease, --lane-playing var(--dur-theme) ease, --lane-played var(--dur-theme) ease,
+    --placeholder-edge var(--dur-theme) ease, --placeholder-fill var(--dur-theme) ease,
+    --card-fb-bg var(--dur-theme) ease, --card-fb-text var(--dur-theme) ease, --card-fb-text-2 var(--dur-theme) ease,
+    --card-fb-chip var(--dur-theme) ease, --card-fb-mark var(--dur-theme) ease;
 }
 
 /* ───────────── LIGHT — clean, bright, generous ───────────── */
@@ -171,6 +221,15 @@
   --elev-2: 0 2px 6px rgb(0 0 0 / 0.05), 0 14px 32px rgb(0 0 0 / 0.09);
   --elev-3: 0 10px 24px rgb(0 0 0 / 0.08), 0 36px 72px rgb(0 0 0 / 0.18);
   --glow-accent: 0 0 0 transparent;
+  --lane-upnext: #0a6fe0; --lane-playing: #28a745; --lane-played: #9a9aa2;
+  --card-ring: inset 0 0 0 1px rgb(0 0 0 / 0.10);
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 6px 16px rgb(0 0 0 / 0.10);
+  --card-shadow-lift: 0 18px 40px rgb(0 0 0 / 0.22), 0 6px 12px rgb(0 0 0 / 0.12);
+  --placeholder-edge: rgb(10 111 224 / 0.45); --placeholder-fill: rgb(10 111 224 / 0.06);
+  --flash-ring: 0 0 0 2px #0a6fe0, 0 0 0 7px rgb(10 111 224 / 0.20);
+  --avatar-l: 0.52; --avatar-c: 0.14;
+  --card-fb-bg: #dfe8f5; --card-fb-text: #13233d; --card-fb-text-2: #3d4f6b;
+  --card-fb-chip: rgb(19 35 61 / 0.09); --card-fb-mark: #0a6fe0; --card-fb-ring: inset 0 0 0 1px rgb(10 111 224 / 0.20);
 }
 
 /* ───────────── DARK — true Apple dark, deep neutrals, never #000 ───────────── */
@@ -201,37 +260,65 @@
   --elev-2: 0 2px 8px rgb(0 0 0 / 0.35), 0 16px 36px rgb(0 0 0 / 0.40);
   --elev-3: 0 12px 28px rgb(0 0 0 / 0.40), 0 40px 80px rgb(0 0 0 / 0.55);
   --glow-accent: 0 0 0 transparent;
+  --lane-upnext: #0a84ff; --lane-playing: #30d158; --lane-played: #7c7c84;
+  --card-ring: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 18px rgb(0 0 0 / 0.35);
+  --card-shadow-lift: 0 22px 48px rgb(0 0 0 / 0.6), 0 6px 14px rgb(0 0 0 / 0.4);
+  --placeholder-edge: rgb(10 132 255 / 0.55); --placeholder-fill: rgb(10 132 255 / 0.08);
+  --flash-ring: 0 0 0 2px #0a84ff, 0 0 0 7px rgb(10 132 255 / 0.25);
+  --avatar-l: 0.56; --avatar-c: 0.14;
+  --card-fb-bg: #26303f; --card-fb-text: #f2f5fa; --card-fb-text-2: #b4bfcf;
+  --card-fb-chip: rgb(255 255 255 / 0.10); --card-fb-mark: #5aaeff; --card-fb-ring: inset 0 0 0 1px rgb(10 132 255 / 0.28);
 }
 
-/* ───────────── LEGACY — near-black slate, one bright accent, muted grey ───────────── */
+/* ───────────── LEGACY — the FLAT theme: near-black slate, one bright accent, crisp edges ───────────── */
+/* Opaque surfaces, no blur or translucency anywhere, no backdrop blobs, 1 px borders, small radii, short shadows,
+   squared buttons. Cards stay pills. Dark is the glass theme; tell them apart by this. */
 [data-theme="legacy"] {
   color-scheme: dark;
   --bg: #0e1318;
-  --blob-1: oklch(0.2 0.015 240); --blob-2: oklch(0.18 0.01 240); --blob-3: oklch(0.19 0.012 230);
+  --blob-1: transparent; --blob-2: transparent; --blob-3: transparent;
   --backdrop-pattern: linear-gradient(transparent, transparent);
-  --surface-1: rgb(23 30 38 / 0.88);
-  --surface-2: rgb(27 35 44 / 0.94);
-  --surface-3: rgb(148 163 184 / 0.09);
-  --surface-4: rgb(148 163 184 / 0.15);
-  --surface-solid: #171e26;
-  --scrim: rgb(4 7 10 / 0.6);
-  --well-shade: rgb(0 0 0 / 0.3);
-  --blur-md: 12px; --blur-lg: 20px; --saturate: 120%;
+  --surface-1: #151c24;
+  --surface-2: #19212a;
+  --surface-3: #1f2832;
+  --surface-4: #29343f;
+  --surface-solid: #1c252e;
+  --scrim: rgb(4 7 10 / 0.78);
+  --well-shade: rgb(0 0 0 / 0.35);
+  --blur-md: 0px; --blur-lg: 0px; --saturate: 100%;
+  --glass-filter: none; --glass-filter-strong: none; --scrim-filter: none; --chip-filter: none;
+  --edge: inset 0 0 0 1px var(--hairline);
+  --r-xs: calc(4px * var(--radius-k)); --r-sm: calc(6px * var(--radius-k)); --r-md: calc(6px * var(--radius-k));
+  --r-lg: calc(8px * var(--radius-k)); --r-card: calc(10px * var(--radius-k)); --r-sheet: calc(14px * var(--radius-k));
+  --r-btn: calc(6px * var(--radius-k));
+  --card-chip-bg: #0b1016; --card-chip-edge: inset 0 0 0 1px rgb(148 163 184 / 0.28);
+  --display-weight: 650; --display-tracking: -0.01em;
   --text-1: #e6edf3; --text-2: #9ba4ae; --text-3: #8c95a0; --text-on-accent: #04121c;
   --accent: #3fc1ff; --accent-text: #6dd0ff; --accent-soft: rgb(63 193 255 / 0.13);
   --accent-fill: #3fc1ff;
-  --hairline: rgb(148 163 184 / 0.10); --highlight: rgb(255 255 255 / 0.03); --separator: rgb(148 163 184 / 0.10);
-  --focus-ring: 0 0 0 3px rgb(63 193 255 / 0.4);
+  --hairline: #2a3540; --highlight: transparent; --separator: #26303a;
+  --focus-ring: 0 0 0 2px #0e1318, 0 0 0 4px #3fc1ff;
   --success: #3fb950; --success-text: #56d364; --success-soft: rgb(63 185 80 / 0.14); --success-fill: #3fb950;
   --warning: #d29922; --warning-text: #e3b341; --warning-soft: rgb(210 153 34 / 0.15); --warning-fill: #d29922;
   --error: #f85149; --error-text: #ff7b72; --error-soft: rgb(248 81 73 / 0.14); --error-fill: #f85149;
   --info: #3fc1ff; --info-text: #6dd0ff; --info-soft: rgb(63 193 255 / 0.13);
   --unknown: #6e7681; --unknown-text: #9ba4ae; --unknown-soft: rgb(110 118 129 / 0.16);
   --stopped: #b1bac4;
-  --elev-1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --elev-2: 0 4px 12px rgb(0 0 0 / 0.45), 0 12px 28px rgb(0 0 0 / 0.35);
-  --elev-3: 0 16px 40px rgb(0 0 0 / 0.6);
+  --elev-1: 0 1px 0 rgb(0 0 0 / 0.45);
+  --elev-2: 0 2px 6px rgb(0 0 0 / 0.40);
+  --elev-3: 0 8px 22px rgb(0 0 0 / 0.50);
   --glow-accent: 0 0 0 transparent;
+  --lane-upnext: #3fc1ff; --lane-playing: #3fb950; --lane-played: #6e7681;
+  --card-ring: inset 0 0 0 1px rgb(148 163 184 / 0.30);
+  --card-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+  --card-shadow-lift: 0 8px 20px rgb(0 0 0 / 0.6);
+  --placeholder-edge: #3fc1ff; --placeholder-fill: rgb(63 193 255 / 0.06);
+  --flash-ring: 0 0 0 2px #3fc1ff;
+  --avatar-l: 0.55; --avatar-c: 0.10;
+  /* flat no-logo card: near-black fill with a crisp accent outline (Dark's is a soft blue-grey fill) */
+  --card-fb-bg: #0b1016; --card-fb-text: #e6edf3; --card-fb-text-2: #9ba4ae;
+  --card-fb-chip: #1f2832; --card-fb-mark: #3fc1ff; --card-fb-ring: inset 0 0 0 1.5px #3fc1ff;
 }
 
 /* ───────────── PASTEL — unapologetically girlypop ───────────── */
@@ -266,6 +353,16 @@
   --glow-accent: 0 0 22px rgb(240 60 160 / 0.45);
   --display-weight: 800;
   --display-tracking: -0.03em;
+  --lane-upnext: #8a4ff0; --lane-playing: #12b88f; --lane-played: #a3949c;
+  --card-ring: inset 0 0 0 1.5px rgb(255 255 255 / 0.7);
+  --card-shadow: 0 4px 14px rgb(240 80 165 / 0.22);
+  --card-shadow-lift: 0 22px 50px rgb(210 60 160 / 0.38), 0 0 40px rgb(190 110 255 / 0.25);
+  --placeholder-edge: rgb(212 32 138 / 0.45); --placeholder-fill: rgb(255 255 255 / 0.45);
+  --flash-ring: 0 0 0 2px #d4208a, 0 0 22px rgb(240 60 160 / 0.55);
+  --avatar-l: 0.55; --avatar-c: 0.16;
+  /* lavender, not pink, so a no-logo card separates from the pink lane by hue as well as edge */
+  --card-fb-bg: #d9c8ff; --card-fb-text: #2e1257; --card-fb-text-2: #54308f;
+  --card-fb-chip: rgb(255 255 255 / 0.62); --card-fb-mark: #6430c9; --card-fb-ring: inset 0 0 0 1.5px rgb(100 48 201 / 0.38);
 }
 
 /* ───────────── CYBERPUNK — neon on dark, loud but disciplined ───────────── */
@@ -304,6 +401,15 @@
   --display-transform: uppercase;
   --label-transform: uppercase;
   --label-tracking: 0.08em;
+  --lane-upnext: #00eaff; --lane-playing: #3dff8f; --lane-played: #77709a;
+  --card-ring: inset 0 0 0 1px rgb(0 234 255 / 0.40);
+  --card-shadow: 0 0 0 1px rgb(0 234 255 / 0.08), 0 6px 20px rgb(0 0 0 / 0.55);
+  --card-shadow-lift: 0 0 34px rgb(255 58 216 / 0.40), 0 24px 50px rgb(0 0 0 / 0.7);
+  --placeholder-edge: rgb(0 234 255 / 0.6); --placeholder-fill: rgb(0 234 255 / 0.05);
+  --flash-ring: 0 0 0 2px #ff3ad8, 0 0 24px rgb(255 58 216 / 0.7);
+  --avatar-l: 0.58; --avatar-c: 0.17;
+  --card-fb-bg: #1d0f3a; --card-fb-text: #eeecff; --card-fb-text-2: #b3acdf;
+  --card-fb-chip: rgb(0 234 255 / 0.12); --card-fb-mark: #ff7ae6; --card-fb-ring: inset 0 0 0 1px rgb(255 58 216 / 0.50);
 }
 
 /* ───────────── Scales ───────────── */
@@ -313,8 +419,9 @@
 [data-text="l"] { --text-k: 1.1; }
 [data-text="xl"] { --text-k: 1.22; }
 [data-density="compact"] {
+  /* --control-h stays 44 here: compact never shrinks a touch target. */
   --pad-card: 14px; --gap-grid: 12px; --card-unit: 284px; --card-min: 256px;
-  --control-h: 30px; --row-h: 40px; --section-gap: 30px; --lh-body: 1.4; --lh-mono: 1.5;
+  --row-h: 40px; --section-gap: 30px; --lh-body: 1.4; --lh-mono: 1.5;
 }
 [data-motion="reduced"] { --motion-k: 0.6; --spring: var(--ease-out); --spring-bounce: var(--ease-out); --lift: 0px; --press: 1; }
 [data-motion="off"] { --motion-k: 0; --dur-theme: 0ms; --lift: 0px; --press: 1; }
@@ -337,18 +444,20 @@
 [data-card-scroll]::-webkit-scrollbar { display: none; }
 
 /* ───────────── Resets ───────────── */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; }
+/* Every reset carries zero specificity (:where), so any component class beats it. On the design canvas a reset
+   that outranked .btn wiped every button's padding and font: the label-clipping bug. */
+:where(*, *::before, *::after) { box-sizing: border-box; }
+:where(html, body) { margin: 0; }
 body {
   font-family: var(--font-sans); font-size: var(--fs-body); line-height: var(--lh-body);
   color: var(--text-1); background: var(--bg);
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv11", "ss01", "ss03";
 }
-button, input, textarea, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
-button:disabled { cursor: not-allowed; }
-:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-a { color: var(--accent-text); text-decoration: none; }
-a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+:where(button, input, textarea, select) { font: inherit; color: inherit; }
+:where(button) { cursor: pointer; border: 0; background: none; padding: 0; }
+:where(button:disabled) { cursor: not-allowed; }
+:where(:focus-visible) { outline: none; box-shadow: var(--focus-ring); }
+:where(a) { color: var(--accent-text); text-decoration: none; }
+:where(a:hover) { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 ::selection { background: var(--accent-soft); }

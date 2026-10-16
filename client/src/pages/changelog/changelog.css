@@ -15,23 +15,9 @@
 }
 .changelog-back {
   align-self: flex-start;
-  height: 32px;
-  padding: 0 10px 0 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  border-radius: var(--r-full);
-  background: transparent;
-  color: var(--accent-text);
-  font-size: var(--fs-body);
-  font-weight: 500;
-}
-.changelog-back:hover {
-  background: var(--accent-soft);
 }
 .changelog-title {
-  font-size: var(--fs-display);
+  font-size: var(--fs-large);
 }
 .changelog-sub {
   margin: 0;
@@ -62,16 +48,6 @@
   letter-spacing: -0.015em;
   font-variant-numeric: tabular-nums;
 }
-.release-installed {
-  height: 22px;
-  padding: 0 9px;
-  border-radius: var(--r-full);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  line-height: 22px;
-}
 .release-date {
   font-size: var(--fs-footnote);
   color: var(--text-3);
@@ -101,16 +77,10 @@
 }
 .release-group-label {
   margin: 0;
-  font-size: var(--fs-caption);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  align-self: flex-start;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-tracking);
 }
-.release-group-new { color: var(--accent-text); }
-.release-group-improved { color: var(--info-text); }
-.release-group-fixed { color: var(--success-text); }
-/* Not in the design; a removal is neither good nor bad news, so it stays neutral. */
-.release-group-removed { color: var(--text-2); }
 
 .release-group ul {
   margin: 0;
@@ -131,6 +101,9 @@
 }
 
 @media (max-width: 600px) {
+  .changelog-title {
+    font-size: var(--fs-title1);
+  }
   .release {
     grid-template-columns: minmax(0, 1fr);
   }
