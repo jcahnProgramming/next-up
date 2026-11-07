@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.6.1",
+      "date": "2026-11-07",
+      "title": "A README for visitors and a deploy you can point at your own server",
+      "sections": {
+        "Improved": [
+          "The project's README is rewritten for people finding Next Up for the first time: what it is and why it exists, a screenshot, how boards, codes, passwords and the abuse limits work, an FAQ, and how to run it yourself, with every command tried on a fresh copy.",
+          "Running your own copy: docker-compose.yml no longer has an address written into it. Set BIND_IP to the address your proxy or tunnel reaches the app on (or 127.0.0.1 for one machine), and Docker refuses to start until you do, rather than opening Next Up on every network the machine is on.",
+          "The automatic deploy now reads its server folder, Gitea address and published address from Gitea Actions variables instead of the workflow file, and stops before changing anything if one of them is missing. Nothing changes for anyone using a board."
+        ]
+      }
+    },
+    {
       "version": "0.6.0",
       "date": "2026-10-15",
       "title": "Card details: go-live date, server info and sign-ups",
@@ -103,7 +115,7 @@
           "Every page has a bottom bar with the version number. Clicking it opens What's new: this list.",
           "A settings button in the top right opens a Settings page that says what will live there: your theme and your display name, both kept in this browser only. Neither can be changed yet. The page follows your device's light or dark mode until the theme picker exists.",
           "An AI access point (MCP) that reads and never changes anything. It needs a bearer token and has one tool so far, get_version, which reports the running version.",
-          "Behind the scenes: pushing to main rebuilds and restarts Next Up on <HOST>, and the deploy fails if either container doesn't answer its health check, keeps restarting, or reports a different version than this list. The deploy never touches the server's .env file, and checks that it didn't."
+          "Behind the scenes: pushing to main rebuilds and restarts Next Up on its server, and the deploy fails if either container doesn't answer its health check, keeps restarting, or reports a different version than this list. The deploy never touches the server's .env file, and checks that it didn't."
         ]
       }
     }

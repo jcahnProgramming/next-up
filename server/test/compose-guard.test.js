@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-// docker-compose.yml: every published port binds to <HOST>'s LAN address, never 0.0.0.0 (Docker's default when no
-// address is given). The app is public through the Cloudflare tunnel; nothing else may be.
+// docker-compose.yml: every published port binds to the host address in BIND_IP, never 0.0.0.0 (Docker's default
+// when no address is given). The web app is public through a proxy or tunnel; nothing else may be.
 const compose = readFileSync(new URL('../../docker-compose.yml', import.meta.url), 'utf8');
 
 function publishedPorts() {
@@ -27,8 +27,16 @@ function publishedPorts() {
   return ports;
 }
 
-test('both containers publish exactly one port each, on <LAN_IP>', () => {
-  assert.deepEqual(publishedPorts(), ['<LAN_IP>:3230:3230', '<LAN_IP>:3231:3231']);
+// The address comes from BIND_IP, required (`:?`) with no default: an unset BIND_IP must stop compose, never fall
+// back to 0.0.0.0 (Docker's default) or to any address written here.
+const ON_BIND_IP = (port) => new RegExp(`^\\$\\{BIND_IP:\\?[^}]*\\}:${port}:${port}$`);
+
+test('both containers publish exactly one port each, on BIND_IP, which is required and has no default', () => {
+  const ports = publishedPorts();
+  assert.equal(ports.length, 2, ports.join(', '));
+  assert.match(ports[0], ON_BIND_IP(3230));
+  assert.match(ports[1], ON_BIND_IP(3231));
+  assert.doesNotMatch(compose, /BIND_IP:?-/);
 });
 
 test('no long-form port syntax, host networking or 0.0.0.0 anywhere', () => {

@@ -13,7 +13,7 @@ if (!existsSync(config.clientDist)) {
   console.warn(`[web] No built client at ${config.clientDist}: run \`npm run build\` (or use Vite in dev).`);
 }
 
-// config.listenHost: loopback locally, the container's own interfaces in Docker (published on <LAN_IP> only).
+// config.listenHost: loopback locally, the container's own interfaces in Docker (published on BIND_IP only, see docker-compose.yml).
 const httpServer = createApp().listen(config.port, config.listenHost, () => {
   console.log(`[web] Next Up ${APP_VERSION} listening on ${config.listenHost}:${config.port}`);
   console.log(`[web] Rate limits per network: ${describeTrust()}`);

@@ -3,7 +3,7 @@
 A game-planning kanban for the WoW guild Post Nerf Clarity, at https://nextup.postnerfclarity.com. Built for Path and
 the guild. Stack, structure and deploy are copied from `D:\Dev\home-dashboard`; when in doubt, do it the way it does.
 
-**Hard boundary: PUBLIC on the internet** through the Cloudflare tunnel "<TUNNEL_NAME>". **No user accounts, ever**: no
+**Hard boundary: PUBLIC on the internet** through a Cloudflare tunnel. **No user accounts, ever**: no
 login, no sign-up, no user table, no email, no OAuth. The board code is the access key, plus the board's password if
 it has one.
 
@@ -159,18 +159,23 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   and position as the board now allows. Password changes are logged but never restorable.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
 - Every query takes limit/cursor. No unbounded selects, ever.
-- One SQLite file (`data/next-up.db`), shared by the web and MCP containers. On <HOST> it lives in
-  `<DEPLOY_DIR>/data`, never `<USER_SHARE>/...`.
+- One SQLite file (`data/next-up.db`), shared by the web and MCP containers. On the server it lives in the deploy
+  folder's `data/`, on a local disk, never on a network or merged share.
 - Migrations live in `server/core/schema.js` (`{ id, up(db) }`). Never edit or reorder one that has shipped.
 
 ## Hosting and networking
 
-- <HOST> (Unraid), deploy folder `<DEPLOY_DIR>`. Two containers from one image: `next-up` (web, port
+- **This repo is public.** Never commit the server's hostname, addresses, paths, network ranges, tunnel name or
+  internal URLs, in code, comments, docs, tests, commit messages or branch names. They live in Gitea Actions
+  variables and the owner's private ops notes, outside this repo. Test fixtures use made-up or documentation
+  addresses.
+- A home server, one deploy folder (Gitea variable `DEPLOY_DIR`). Two containers from one image: `next-up` (web, port
   **3230**) and `next-up-mcp` (MCP, port **3231**).
-- **Host ports bind to `<LAN_IP>` only, never `0.0.0.0`** (`server/test/compose-guard.test.js` fails otherwise).
+- **Host ports bind to `BIND_IP` only, never `0.0.0.0`** (`server/test/compose-guard.test.js` fails otherwise).
+  `BIND_IP` is required in `docker-compose.yml` with no default; the deploy passes it from the Gitea variable.
   Inside the containers the processes listen on `LISTEN_HOST=0.0.0.0`, the container's own interfaces; locally they
   default to `127.0.0.1`.
-- **Only the web app is in the tunnel**: `nextup.postnerfclarity.com` → `http://<LAN_IP>:3230`. The MCP server is
+- **Only the web app is in the tunnel**: `nextup.postnerfclarity.com` → port 3230 on `BIND_IP`. The MCP server is
   LAN-only; never add it to the tunnel.
 - The tunnel's ingress is managed in the Cloudflare Zero Trust dashboard by the owner. Never change tunnel config,
   the cloudflared container, Gitea or its runners from this repo.
@@ -179,9 +184,10 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 ## Deploy
 
 Push to `main` → `.gitea/workflows/deploy.yml`: fast-forward the host checkout, `docker compose up -d --build`, then
-probe both ports on <LAN_IP> until healthy (~90 s), fail on any restart in the following 15 s (a crash on boot fails
+probe both ports on `BIND_IP` until healthy (~90 s), fail on any restart in the following 15 s (a crash on boot fails
 the deploy), and fail unless both report the version in the pulled `CHANGELOG.json`. It fingerprints `.env` before
-and after and fails if it changed.
+and after and fails if it changed. Host-specific values are Gitea Actions variables (`DEPLOY_DIR`,
+`GITEA_INTERNAL_URL`, `BIND_IP`); preflight fails if any is unset. Never hardcode them back into the workflow.
 
 ## Credentials
 

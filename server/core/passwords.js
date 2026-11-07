@@ -5,7 +5,7 @@ import argon2 from 'argon2';
  * they can be raised later without breaking existing boards). Plain passwords are never stored, logged or returned.
  *
  * 64 MiB, 3 passes, 1 lane: RFC 9106's second recommended setting, with one lane so a single check costs the
- * server one thread. Measured on the dev machine: ~78 ms per check; <HOST> is slower.
+ * server one thread. Measured on the dev machine: ~78 ms per check; a small home server is slower.
  */
 export const HASH_OPTIONS = Object.freeze({ type: argon2.argon2id, memoryCost: 65536, timeCost: 3, parallelism: 1 });
 
