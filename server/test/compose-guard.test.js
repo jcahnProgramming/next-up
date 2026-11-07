@@ -43,3 +43,10 @@ test('no long-form port syntax, host networking or 0.0.0.0 anywhere', () => {
   const code = compose.replace(/#.*$/gm, '');
   assert.doesNotMatch(code, /host_ip|published:|network_mode:\s*host|0\.0\.0\.0/);
 });
+
+test('the backup folder comes from BACKUP_DIR, required and with no default: no host path is written here', () => {
+  const code = compose.replace(/#.*$/gm, '');
+  assert.match(code, /source:\s*"\$\{BACKUP_DIR:\?[^}]*\}"/);
+  assert.doesNotMatch(code, /BACKUP_DIR:?-/);
+  assert.doesNotMatch(code, /source:\s*["']?\//);
+});

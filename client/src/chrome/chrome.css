@@ -1,31 +1,50 @@
-/* App chrome: top bar, page frame, bottom bar. design/v1 nu.css .shell / .topbar / .wordmark / .bottombar
-   (top bar option A), on the app's own page frame. */
+/* App chrome: top bar, page frame, bottom strip. design/v1 nu.css .shell / .topbar / .wordmark / .bottombar
+   (top bar option A), on the app's own page frame. Both bars are glass the page scrolls under (--surface-bar,
+   --glass-filter, --edge); Legacy's tokens make the same rules flat and opaque. */
 
 :root {
-  /* The coffee bar pinned to the bottom of the viewport: one touch target tall, plus the phone's home-indicator inset. */
+  /* The bottom strip pinned to the viewport: one touch target tall, plus the phone's home-indicator inset. */
   --coffee-bar-h: calc(var(--hit-min) + env(safe-area-inset-bottom));
+  /* The sticky top bar: one touch target plus its padding. Scrolling into view keeps clear of it (base.css). */
+  --topbar-h: calc(var(--hit-min) + 24px);
+  --page-max: 1480px;
+  --page-pad: 40px;
 }
 
 .shell {
   width: 100%;
-  max-width: 1480px;
-  min-height: 100vh;
+  max-width: var(--page-max);
+  min-height: calc(100vh - var(--topbar-h));
   margin: 0 auto;
-  padding: 28px 40px 18px;
-  /* the page (its last card, the version link) always scrolls clear of the coffee bar */
-  padding-bottom: calc(18px + var(--coffee-bar-h));
+  padding: 16px var(--page-pad) 18px;
+  /* The page scrolls under the strip, and its end (the last card, a drop slot) always scrolls clear of it. */
+  padding-bottom: calc(24px + var(--coffee-bar-h));
   display: flex;
   flex-direction: column;
-  gap: 28px;
   color: var(--text-1);
 }
 
-/* ---------- top bar ---------- */
+/* ---------- top bar: sticky glass across the window ---------- */
+.topbar-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 12px 0;
+  background: var(--surface-bar);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  /* the rim along its bottom edge and the sheen along its top */
+  box-shadow: inset 0 calc(-1 * var(--hairline-w)) 0 var(--glass-rim), inset 0 1px 0 var(--glass-sheen);
+}
 .topbar {
   display: flex;
   align-items: center;
   gap: 14px;
+  width: 100%;
+  max-width: var(--page-max);
   min-height: var(--hit-min);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
 }
 .topbar-name {
   min-width: 0;
@@ -99,11 +118,7 @@
   animation: hd-rise var(--dur-slow) var(--spring);
 }
 
-/* ---------- bottom bar ---------- */
-.bottombar {
-  display: flex;
-  justify-content: center;
-}
+/* ---------- the version, on the bottom strip's left ---------- */
 .version-link {
   display: inline-flex;
   align-items: center;
@@ -111,10 +126,14 @@
   min-height: var(--hit-min);
   padding: 0 14px;
   border-radius: var(--r-full);
-  color: var(--text-3);
+  color: var(--text-2);
   font-size: var(--fs-caption);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+.version-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 .version-link:hover,
 .version-link[aria-current='page'] {
@@ -129,10 +148,16 @@
 
 /* ---------- phone ---------- */
 @media (max-width: 600px) {
+  :root {
+    --page-pad: 16px;
+    --topbar-h: calc(var(--hit-min) + 16px);
+  }
   .shell {
-    padding: 16px 16px 12px;
-    padding-bottom: calc(12px + var(--coffee-bar-h));
-    gap: 16px;
+    padding-top: 12px;
+    padding-bottom: calc(16px + var(--coffee-bar-h));
+  }
+  .topbar-bar {
+    padding: 8px 0;
   }
   .topbar {
     gap: 10px;
@@ -199,8 +224,8 @@
   position: fixed;
   left: 0;
   right: 0;
-  /* above the coffee bar and the version link, never over either */
-  bottom: calc(var(--hit-min) + 30px + var(--coffee-bar-h));
+  /* above the bottom strip, never over it */
+  bottom: calc(16px + var(--coffee-bar-h));
   z-index: 60;
   display: flex;
   justify-content: center;
@@ -256,25 +281,29 @@
   }
 }
 
-/* ---------- coffee bar: pinned to the bottom of every page, separate from the version link ----------
-   The theme's glass (Legacy's tokens make the same rules flat and opaque). Below dialogs (50), toasts (60) and the
+/* ---------- the bottom strip: the version and What's new on the left, the coffee link on the right ----------
+   Pinned to the bottom of every page, glass the page scrolls under. Below dialogs (50), toasts (60) and the
    landing's create sheet (40), so it never covers their buttons; the page and toasts keep clear of it through
-   --coffee-bar-h. It never takes part in a drag: auto-scroll measures from its top edge. */
+   --coffee-bar-h. It never takes part in a drag: auto-scroll measures from its top edge. Its contents line up with
+   the page's edges. */
 .coffee-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 30;
-  height: var(--coffee-bar-h);
-  padding: 0 16px env(safe-area-inset-bottom);
+  min-height: var(--coffee-bar-h);
+  padding: 0 max(calc(var(--page-pad) - 14px), calc((100% - var(--page-max)) / 2 + var(--page-pad) - 14px)) env(safe-area-inset-bottom);
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  background: var(--surface-1);
+  column-gap: 8px;
+  background: var(--surface-bar);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
-  box-shadow: inset 0 1px 0 var(--separator);
+  /* the rim along its top edge, with the sheen just under it */
+  box-shadow: inset 0 var(--hairline-w) 0 var(--glass-rim), inset 0 calc(1px + var(--hairline-w)) 0 var(--glass-sheen);
 }
 .coffee-link {
   display: inline-flex;
@@ -302,4 +331,27 @@
 }
 html.is-card-dragging .coffee-bar {
   pointer-events: none;
+}
+
+/* A phone: the two links sit closer to the edges so both fit on one line at 390 px. Narrower than 360 px they may
+   wrap to two lines, and the page clears the taller strip. */
+@media (max-width: 600px) {
+  .coffee-bar {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .version-link {
+    padding: 0 10px;
+  }
+  .coffee-link {
+    padding: 0 12px;
+  }
+}
+@media (max-width: 359px) {
+  :root {
+    --coffee-bar-h: calc(2 * var(--hit-min) + env(safe-area-inset-bottom));
+  }
+  .coffee-bar {
+    justify-content: center;
+  }
 }

@@ -2,6 +2,7 @@ import express from 'express';
 import { MAX_PLAYERS, checkPlayerName, playerExistsMessage, playerKey, playerLimitMessage } from '../core/cardDetail.js';
 import { appendEvent } from '../core/events.js';
 import { PLAYER_ADDED, PLAYER_REMOVED } from './events.js';
+import { playerBody, playerQueries } from './store.js';
 
 /**
  * /api/boards/:code/cards/:id/players: who's signed up to a card. Mounted by cards/routes.js, which boards/routes.js
@@ -18,7 +19,7 @@ import { PLAYER_ADDED, PLAYER_REMOVED } from './events.js';
  */
 export function createPlayersRouter({ db }) {
   const router = express.Router({ mergeParams: true });
-  const q = queries(db);
+  const q = playerQueries(db);
 
   // Every route here needs the card live on this board.
   router.use((req, res, next) => {
@@ -99,11 +100,6 @@ export function createPlayersRouter({ db }) {
   return router;
 }
 
-/** What the API says about a player. Never the board or card internals beyond the ids. */
-function playerBody(row) {
-  return { id: row.id, name: row.name, addedAt: row.created_at };
-}
-
 function playerGone(res) {
   return res.status(404).json({ error: 'That player has already been removed.', code: 'player_gone' });
 }
@@ -112,39 +108,4 @@ function parseCursor(raw) {
   if (raw === undefined) return null;
   const m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)~(\d{1,15})$/.exec(String(raw));
   return m ? { at: m[1], id: Number(m[2]) } : false;
-}
-
-function queries(db) {
-  const cache = new Map();
-  const st = (sql) => {
-    if (!cache.has(sql)) cache.set(sql, db().prepare(sql));
-    return cache.get(sql);
-  };
-  const COLS = 'id, card_id, name, name_key, created_at, deleted_at';
-  const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
-  return {
-    card: (boardId, id) => st('SELECT id, deleted_at FROM cards WHERE board_id = ? AND id = ? LIMIT 1').get(boardId, id) ?? null,
-    byId: (cardId, id) => st(`SELECT ${COLS} FROM players WHERE card_id = ? AND id = ? LIMIT 1`).get(cardId, id) ?? null,
-    liveByKey: (cardId, key) =>
-      st(`SELECT ${COLS} FROM players WHERE card_id = ? AND name_key = ? AND deleted_at IS NULL LIMIT 1`).get(cardId, key) ?? null,
-    liveCount: (cardId) => st('SELECT COUNT(*) FROM players WHERE card_id = ? AND deleted_at IS NULL').pluck().get(cardId),
-    page: (cardId, after, limit) =>
-      after
-        ? st(
-            `SELECT ${COLS} FROM players WHERE card_id = ? AND deleted_at IS NULL AND (created_at, id) > (?, ?)
-             ORDER BY created_at, id LIMIT ?`,
-          ).all(cardId, after.at, after.id, limit)
-        : st(`SELECT ${COLS} FROM players WHERE card_id = ? AND deleted_at IS NULL ORDER BY created_at, id LIMIT ?`).all(cardId, limit),
-    // Where a player sits in the card's live sign-up list (0 = first).
-    indexOf: (p) =>
-      st(
-        `SELECT COUNT(*) FROM players WHERE card_id = ? AND deleted_at IS NULL
-         AND (created_at < ? OR (created_at = ? AND id < ?))`,
-      )
-        .pluck()
-        .get(p.card_id, p.created_at, p.created_at, p.id),
-    insert: (boardId, cardId, name, key) =>
-      Number(st('INSERT INTO players (board_id, card_id, name, name_key) VALUES (?, ?, ?, ?)').run(boardId, cardId, name, key).lastInsertRowid),
-    tombstone: (cardId, id) => st(`UPDATE players SET deleted_at = ${NOW} WHERE card_id = ? AND id = ?`).run(cardId, id),
-  };
 }

@@ -10,10 +10,12 @@ import { initials, markBroken, useLogo } from './logos.js';
  * `dnd`; `describedBy` points at the instructions). Nothing clickable sits inside it yet; anything that ever does
  * must sit above this whole-card target (CLAUDE.md, "Bugs that cost us").
  *
+ * `flash` (Card-States "changed by someone else") rings it for a moment; the name tag sits beside it in the lane.
+ *
  * Its badges (Card-States): the go-live date when one is set, and how many players are signed up when anyone is.
  * Neither shows when there's nothing to say.
  */
-export function CardPill({ card, onOpen, dnd, lifted = false, describedBy }) {
+export function CardPill({ card, onOpen, dnd, lifted = false, describedBy, flash = null }) {
   const onKeyDown = (e) => {
     if (dnd?.onKeyDown(e, card)) return;
     if (e.key === 'Enter') {
@@ -24,7 +26,8 @@ export function CardPill({ card, onOpen, dnd, lifted = false, describedBy }) {
   return (
     <CardFace
       card={card}
-      className={lifted ? 'is-lifted' : ''}
+      // flash: someone else just changed it (live/live.css); its two names restart the ring for each new change.
+      className={lifted ? 'is-lifted' : flash ? `is-flash is-flash-${flash.n % 2}` : ''}
       role="button"
       tabIndex={0}
       aria-haspopup="dialog"

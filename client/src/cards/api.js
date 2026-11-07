@@ -12,17 +12,23 @@ import { readDisplayName } from '../prefs/displayName.js';
  *   { kind: 'full', error }            the board holds the most cards it can
  *   { kind: 'error', offline }         couldn't reach Next Up, or it failed
  *
+ * A change refused because the board is being deleted is `invalid` with the server's words, and `deleting`: the board
+ * as it is now (its countdown), so the page can show the banner even if the live stream hasn't said so yet.
+ *
  * Changes carry this browser's display name as `actor` (a label; "Someone" when there's none).
  */
 const base = (code) => `/api/boards/${code}/cards`;
 
+const deleting = (data) => ({ kind: 'invalid', field: null, error: data.error, deleting: data.board ?? null });
+
 function read(r) {
-  if (r.failed) return { kind: 'error', offline: r.offline };
+  if (r.failed) return { kind: 'error', offline: r.offline, timedOut: Boolean(r.timedOut) };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
+  if (data?.code === 'board_deleting') return deleting(data);
   if (status === 200 || status === 201) {
     if (data?.card) return { kind: 'ok', card: data.card, rebalanced: data.rebalanced === true };
-    if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit };
+    if (Array.isArray(data?.cards)) return { kind: 'ok', cards: data.cards, next: data.next ?? null, limit: data.limit, head: data.head };
   }
   if (data?.code === 'conflict' && data.card) return { kind: 'conflict', card: data.card };
   if (data?.code === 'card_gone') return { kind: 'gone' };
@@ -31,17 +37,23 @@ function read(r) {
   return { kind: 'error', offline: false };
 }
 
-/** Every live card on the board, following the server's pages (a board holds at most its limit, so a page or two). */
+/**
+ * Every live card on the board, following the server's pages (a board holds at most its limit, so a page or two).
+ * `head` is the board's newest event id as of the first page: where its live stream picks up (changes after it are
+ * replayed, and applying one the cards already show is harmless).
+ */
 export async function loadCards(code) {
   const cards = [];
   let after = null;
   let limit = null;
+  let head = null;
   for (let page = 0; page < 20; page++) {
     const r = read(await request(`${base(code)}${after ? `?after=${encodeURIComponent(after)}` : ''}`));
     if (r.kind !== 'ok') return r;
     cards.push(...r.cards);
     limit = r.limit;
-    if (!r.next) return { kind: 'ok', cards, limit };
+    head ??= Number.isSafeInteger(r.head) ? r.head : null;
+    if (!r.next) return { kind: 'ok', cards, limit, head };
     after = r.next;
   }
   return { kind: 'error', offline: false };
@@ -75,9 +87,10 @@ export const deleteCard = async (code, card) =>
 const players = (code, card) => `${base(code)}/${card.id}/players`;
 
 function readPlayers(r) {
-  if (r.failed) return { kind: 'error', offline: r.offline };
+  if (r.failed) return { kind: 'error', offline: r.offline, timedOut: Boolean(r.timedOut) };
   const { status, data } = r;
   if (data?.status === 'locked') return { kind: 'locked', changed: data.reason === 'password_changed' };
+  if (data?.code === 'board_deleting') return deleting(data);
   if ((status === 200 || status === 201) && data?.player) return { kind: 'ok', player: data.player, playerCount: data.playerCount };
   if (status === 200 && Array.isArray(data?.players)) return { kind: 'ok', players: data.players, next: data.next ?? null, limit: data.limit };
   if (data?.code === 'player_exists') return { kind: 'exists', error: data.error, player: data.player };

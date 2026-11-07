@@ -7,6 +7,7 @@ import { CreateBoard } from '../boards/CreateBoard.jsx';
 import { BoardLimit, TooManyLookups } from '../boards/states.jsx';
 import '../boards/boards.css';
 import './landing.css';
+import { usePhone } from '../chrome/usePhone.js';
 
 // The front door (design/v1 Landing-Desktop, Landing-States, Landing-Phone): one box for a board's code. An existing
 // code opens its board (or its lock screen); a free one offers to create it.
@@ -20,6 +21,7 @@ export function LandingPage() {
   const [phase, setPhase] = useState({ kind: 'typing' });
   const [showError, setShowError] = useState(false);
   const inputRef = useRef(null);
+  const phone = usePhone();
 
   const check = checkCode(code);
   // Bad characters show at once; too short only once you try to go (everyone is "too short" while typing).
@@ -66,7 +68,9 @@ export function LandingPage() {
         }}
         placeholder="Board code"
         maxLength={MAX_TYPED}
-        disabled={busy || blocked}
+        // Read-only, not disabled, while it checks: a disabled field drops keyboard focus.
+        readOnly={busy}
+        disabled={blocked}
         autoComplete="off"
         autoCapitalize="off"
         autoCorrect="off"
@@ -90,7 +94,7 @@ export function LandingPage() {
   let body;
   if (phase.kind === 'limited') {
     body = (
-      <TooManyLookups retryAfter={phase.retryAfter} onDone={backToTyping}>
+      <TooManyLookups retryAfter={phase.retryAfter} onDone={backToTyping} heading="h1">
         {codeBox}
       </TooManyLookups>
     );
@@ -143,6 +147,8 @@ export function LandingPage() {
         {creating && (
           <CreateBoard
             code={phase.code}
+            // On a desktop the create step replaces the intro and its heading; on a phone it slides up over them.
+            heading={phone ? 'h2' : 'h1'}
             sheetOnPhone
             onBack={backToTyping}
             onCreated={(board) => navigate(`/b/${board.code}`)}

@@ -1,3 +1,6 @@
+import getBoard from './getBoard.js';
+import getCard from './getCard.js';
+import getHistory from './getHistory.js';
 import version from './version.js';
 
 /**
@@ -13,5 +16,8 @@ import version from './version.js';
  *
  * Read-only, always: every tool is registered with readOnlyHint, and nothing here may change data. No tool may
  * return a board password (or its hash) or anything else that grants editing.
+ *
+ * Boards are read by the code the caller gives (resolvers/board.js): no tool lists, searches or enumerates boards or
+ * codes, and a board with a password answers only { status: 'locked' }.
  */
-export const resolvers = [version];
+export const resolvers = [version, getBoard, getCard, getHistory];

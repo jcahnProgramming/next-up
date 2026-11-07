@@ -10,6 +10,7 @@ import { LANES, laneName } from '../../../server/core/cardRules.js';
  *                 { lane, index }, index counted among the lane's OTHER cards (0 = top)
  *   dnd.settling  true for the frame after a drop, while the lanes take their new order without animating
  *   dnd.onPointerDown(e, card) / dnd.onKeyDown(e, card) → true if it handled the key
+ *   dnd.cancel()  ends a drag as Escape would (live sync: someone else deleted the card being held)
  *
  * CLAUDE.md "Bugs that cost us": the dragged node never moves in the DOM during a drag. The board draws the drag
  * from `drag` with transforms only (neighbours slide by whole card pitches, the slot is absolutely placed), the
@@ -20,7 +21,7 @@ import { LANES, laneName } from '../../../server/core/cardRules.js';
  *
  * Touch: a press only lifts after LONG_PRESS_MS without moving more than TOUCH_SLOP; moving sooner is a scroll and
  * the drag never starts. Once lifted, touchmove is cancelled so the page doesn't scroll under the finger, and the
- * page auto-scrolls instead when the card is held near the top or bottom edge (above the coffee bar).
+ * page auto-scrolls instead when the card is held near the top or bottom edge (below the top bar, above the coffee bar).
  */
 const LONG_PRESS_MS = 350;
 const TOUCH_SLOP = 8;
@@ -152,8 +153,9 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
 
   const scrollSpeed = (y) => {
     const zone = autoscrollZone();
+    const top = topBarBottom();
     const bottom = window.innerHeight - coffeeBarHeight();
-    if (y < zone) return -MAX_SCROLL * Math.min(1, (zone - y) / zone);
+    if (y < top + zone) return -MAX_SCROLL * Math.min(1, (top + zone - y) / zone);
     if (y > bottom - zone) return MAX_SCROLL * Math.min(1, (y - (bottom - zone)) / zone);
     return 0;
   };
@@ -359,7 +361,7 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
       s.dy = to.top - (r.top - s.dy);
       s.li.style.transition = 'transform var(--dur-base) var(--spring)';
       s.li.style.transform = `translate3d(${s.dx}px, ${s.dy}px, 0)`;
-      slot.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      slot.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     });
   }, [drag, guard, rootRef]);
 
@@ -396,7 +398,11 @@ export function useCardDrag({ enabled, lanes, rootRef, onDrop, announce }) {
     };
   }, [end]);
 
-  return { drag, settling, onPointerDown, onKeyDown };
+  const cancel = useCallback(() => {
+    if (session.current) end(session.current, 'cancel');
+  }, [end]);
+
+  return { drag, settling, onPointerDown, onKeyDown, cancel };
 }
 
 // The auto-scroll band's height (--autoscroll-zone), read once.
@@ -404,6 +410,12 @@ let zone = null;
 function autoscrollZone() {
   if (zone === null) zone = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--autoscroll-zone')) || 96;
   return zone;
+}
+
+// Auto-scroll measures from the sticky top bar's bottom edge: the bar covers the top of the viewport, so a band that
+// started at the window's top would sit mostly under it.
+function topBarBottom() {
+  return Math.max(0, document.querySelector('.topbar-bar')?.getBoundingClientRect().bottom ?? 0);
 }
 
 // Auto-scroll measures from the coffee bar's top edge: the bar covers the bottom of the viewport.

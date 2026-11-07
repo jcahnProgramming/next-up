@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { DatePicker } from '../chrome/DatePicker.jsx';
 import { Dropdown } from '../chrome/Dropdown.jsx';
-import { CloseIcon, EditIcon, ErrorIcon, TrashIcon, WarningIcon } from '../chrome/icons.jsx';
+import { CloseIcon, EditIcon, ErrorIcon, HistoryIcon, TrashIcon, WarningIcon } from '../chrome/icons.jsx';
 import { Overlay } from '../chrome/Overlay.jsx';
 import { usePhone } from '../chrome/usePhone.js';
 import { SERVER_INFO_MAX, checkServerInfo, cleanServerInfo } from '../../../server/core/cardDetail.js';
@@ -10,19 +10,27 @@ import { CardFace } from './Card.jsx';
 import { GoLive, Players, ServerInfo } from './CardDetail.jsx';
 import { LogoPicker } from './LogoPicker.jsx';
 import { LOGOS } from './logos.js';
+import { PausedBanner } from '../live/Live.jsx';
 
 /**
  * The sheets a card opens (design/v1 Detail-Desktop, Detail-Edit, Detail-Phone; a side sheet on a desktop, a bottom
  * sheet on a phone):
  *
  *   CardPanel      the card: its header pill and lane, go-live date, server info and sign-ups (CardDetail.jsx);
- *                  Edit and Delete. Players are added and removed right here, with no edit mode.
+ *                  Edit, Delete and This card's history. Players are added and removed right here, with no edit
+ *                  mode.
  *   CardEditor     add or edit: game name, logo, lane, go-live date (the themed DatePicker) and server info
  *   ConfirmDelete  "Delete Valheim?"
+ *
+ * Live sync: the panel shows the card as it is now, updating in place; if someone else deletes it (`goneBy`), the
+ * panel says so instead of its details. The edit sheet keeps what's being typed when someone else changes the card:
+ * it says "Changed by …" with Load their changes, and saving still names the version it started from, so the
+ * server's conflict check catches it rather than overwriting.
  */
 
-export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose, onCount, onLocked, onGone }) {
+export function CardPanel({ code, card, goneBy = null, paused, toast, onEdit, onDelete, onHistory, onClose, onCount, onLocked, onGone }) {
   const titleId = useId();
+  const gone = goneBy !== null;
   return (
     <Overlay kind="side" labelledBy={titleId} onClose={onClose} className="card-panel">
       <div className="panel-hero">
@@ -35,7 +43,7 @@ export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose
           </span>
         </CardFace>
         <div className="panel-hero-actions">
-          <button type="button" className="btn btn-sm hero-btn" onClick={() => onEdit()} disabled={paused}>
+          <button type="button" className="btn btn-sm hero-btn" onClick={() => onEdit()} disabled={paused || gone}>
             <EditIcon />
             Edit
           </button>
@@ -46,17 +54,34 @@ export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose
       </div>
 
       <div className="sheet-body card-detail">
-        {paused && <PausedBanner />}
-        <GoLive value={card.goLive} paused={paused} onSet={() => onEdit('goLive')} />
-        <ServerInfo value={card.serverInfo} paused={paused} onSet={() => onEdit('serverInfo')} toast={toast} />
-        <Players key={card.id} code={code} card={card} paused={paused} onCount={onCount} onLocked={onLocked} onGone={onGone} />
+        {gone ? (
+          <div className="sheet-gone">
+            <div className="banner banner-warn" role="alert">
+              <WarningIcon />
+              <span className="banner-text">
+                <b>{goneBy} deleted this card.</b> It’s off the board for everyone. History can bring it back.
+              </span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {paused && <PausedBanner />}
+            <GoLive value={card.goLive} paused={paused} onSet={() => onEdit('goLive')} />
+            <ServerInfo value={card.serverInfo} paused={paused} onSet={() => onEdit('serverInfo')} toast={toast} />
+            <Players key={card.id} code={code} card={card} paused={paused} onCount={onCount} onLocked={onLocked} onGone={onGone} />
+          </>
+        )}
       </div>
 
       <div className="sheet-foot">
         <span className="sheet-foot-note">
           Added <time dateTime={card.createdAt}>{formatInstant(card.createdAt)}</time>
         </span>
-        <button type="button" className="btn btn-ghost btn-sm btn-delete" onClick={onDelete} disabled={paused}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onHistory}>
+          <HistoryIcon size={14} />
+          This card’s history
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm btn-delete" onClick={onDelete} disabled={paused || gone}>
           <TrashIcon />
           Delete card
         </button>
@@ -65,7 +90,7 @@ export function CardPanel({ code, card, paused, toast, onEdit, onDelete, onClose
   );
 }
 
-export function CardEditor({ card, lane: startLane, focus, paused, full, onSave, onDelete, onClose }) {
+export function CardEditor({ card, changedBy = null, goneBy = null, lane: startLane, focus, paused, full, onSave, onDelete, onClose }) {
   const titleId = useId();
   const nameId = useId();
   const logoId = useId();
@@ -83,10 +108,26 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
   const [infoError, setInfoError] = useState(null);
   const [failure, setFailure] = useState(null); // { kind: 'offline' | 'error' | 'full' | 'conflict', text? }
   const [busy, setBusy] = useState(false);
+  // The card as this sheet last loaded it: what the fields started from, and the version a save is an edit of.
+  const [base, setBase] = useState(card);
+  const changed = !adding && card && base && card.version !== base.version;
+  const gone = goneBy !== null;
+
+  // Someone else's newer version, put in the fields (the person chose to, or it's what a conflict showed them).
+  const adopt = (c) => {
+    setTitle(c.title);
+    setLogo(c.logo);
+    setLane(c.lane);
+    setGoLive(c.goLive);
+    setServerInfo(c.serverInfo);
+    setTitleError(null);
+    setInfoError(null);
+    setBase(c);
+  };
 
   const submit = async (e) => {
     e?.preventDefault();
-    if (busy) return;
+    if (busy || gone) return;
     const t = checkTitle(title);
     if (!t.ok) {
       setTitleError(t.error);
@@ -101,12 +142,12 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
     setInfoError(null);
     let values = { title: t.title, logo, lane, goLive, serverInfo: info.serverInfo };
     if (!adding) {
-      values = Object.fromEntries(Object.entries(values).filter(([k, v]) => v !== card[k]));
+      values = Object.fromEntries(Object.entries(values).filter(([k, v]) => v !== base[k]));
       if (Object.keys(values).length === 0) return onClose();
     }
     setFailure(null);
     setBusy(true);
-    const r = await onSave(values);
+    const r = await onSave(values, base);
     setBusy(false);
     if (r.kind === 'invalid') {
       if (r.field === 'title') setTitleError(r.error);
@@ -114,11 +155,7 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
       else setFailure({ kind: 'refused', text: r.error });
     } else if (r.kind === 'conflict') {
       // Show what's there now; the person makes their change again on top of it.
-      setTitle(r.card.title);
-      setLogo(r.card.logo);
-      setLane(r.card.lane);
-      setGoLive(r.card.goLive);
-      setServerInfo(r.card.serverInfo);
+      adopt(r.card);
       setFailure({ kind: 'conflict' });
     } else if (r.kind === 'full') {
       setFailure({ kind: 'full', text: r.error });
@@ -134,7 +171,7 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
     </button>
   );
   const saveButton = (
-    <button type="submit" className="btn btn-primary btn-sm" aria-disabled={busy || undefined} disabled={adding && full}>
+    <button type="submit" className="btn btn-primary btn-sm" aria-disabled={busy || undefined} disabled={(adding && full) || gone}>
       {busy ? (
         <>
           <span className="spin" aria-hidden="true" />
@@ -161,7 +198,32 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
         </div>
 
         <div className="sheet-body">
-          {failure ? <Failure failure={failure} onRetry={submit} /> : paused && <PausedBanner onRetry={submit} />}
+          {gone ? (
+            <div className="banner banner-warn" role="alert">
+              <WarningIcon />
+              <span className="banner-text">
+                <b>{goneBy} deleted this card,</b> so these changes can’t be saved. History can bring it back.
+              </span>
+            </div>
+          ) : failure ? (
+            <Failure failure={failure} onRetry={submit} />
+          ) : (
+            paused && <PausedBanner />
+          )}
+          {changed && !gone && (
+            <div className="banner banner-info" role="status">
+              <span className="banner-text">
+                <b>Changed by {changedBy ?? 'someone else'}.</b> What you’ve typed is kept; saving checks it against
+                their version first.
+              </span>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => {
+                adopt(card);
+                setFailure(null);
+              }}>
+                Load their changes
+              </button>
+            </div>
+          )}
           {adding && full && !failure && (
             <p className="banner banner-info" role="status">
               <span className="banner-text">
@@ -238,7 +300,7 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
                 onChange={setLane}
                 options={LANES.map((l) => ({ value: l.id, label: l.name, icon: <span className={`lane-dot ld-${l.id}`} aria-hidden="true" /> }))}
               />
-              {!adding && lane !== card.lane && <span className="field-hint">It goes to the bottom of {laneName(lane)}.</span>}
+              {!adding && lane !== base.lane && <span className="field-hint">It goes to the bottom of {laneName(lane)}.</span>}
             </div>
             <div className="field">
               <span className="field-label" id={dateId}>
@@ -283,11 +345,11 @@ export function CardEditor({ card, lane: startLane, focus, paused, full, onSave,
 
         {!adding && (
           <div className="sheet-foot">
-            <button type="button" className="btn btn-danger btn-sm" onClick={onDelete} disabled={busy}>
+            <button type="button" className="btn btn-danger btn-sm" onClick={onDelete} disabled={busy || gone || paused}>
               <TrashIcon />
               Delete card
             </button>
-            <span className="sheet-foot-note">Deleted cards are kept, so History can restore them once it’s built.</span>
+            <span className="sheet-foot-note">Deleted cards are kept, so History can restore them.</span>
           </div>
         )}
       </form>
@@ -301,13 +363,14 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
   const [failure, setFailure] = useState(null);
 
   const confirm = async () => {
-    if (busy) return;
+    if (busy || paused) return;
     setFailure(null);
     setBusy(true);
     const r = await onDelete();
     setBusy(false);
     if (r.kind === 'conflict') setFailure({ kind: 'conflict-delete' });
     else if (r.kind === 'error') setFailure({ kind: r.offline ? 'offline' : 'error' });
+    else if (r.kind === 'invalid') setFailure({ kind: 'refused', text: r.error });
   };
 
   return (
@@ -317,15 +380,14 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
           Delete {card.title}?
         </h2>
         <p className="modal-text">
-          It comes off the board for everyone with the code. Next Up keeps deleted cards, so it can be restored once
-          History is built.
+          It comes off the board for everyone with the code. Next Up keeps deleted cards, so History can restore it.
         </p>
-        {failure ? <Failure failure={failure} onRetry={confirm} /> : paused && <PausedBanner onRetry={confirm} />}
+        {failure ? <Failure failure={failure} onRetry={confirm} /> : paused && <PausedBanner />}
         <div className="modal-actions">
           <button type="button" className="btn btn-quiet" onClick={onClose} disabled={busy} data-autofocus>
             Cancel
           </button>
-          <button type="button" className="btn btn-danger" onClick={confirm} aria-disabled={busy || undefined}>
+          <button type="button" className="btn btn-danger" onClick={confirm} aria-disabled={busy || paused || undefined}>
             {busy ? (
               <>
                 <span className="spin" aria-hidden="true" />
@@ -344,26 +406,13 @@ export function ConfirmDelete({ card, paused, onDelete, onClose }) {
   );
 }
 
-// "Editing paused until we reconnect." with a Retry, wherever editing is paused by being offline (CLAUDE.md).
-function PausedBanner({ onRetry }) {
-  return (
-    <div className="banner banner-err" role="status">
-      <WarningIcon />
-      <span className="banner-text">
-        <b>You’re offline.</b> Editing paused until we reconnect.
-      </span>
-      {onRetry && (
-        <button type="button" className="btn btn-secondary btn-sm" onClick={onRetry}>
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
 function Failure({ failure, onRetry }) {
-  if (failure.kind === 'offline') return <PausedBanner onRetry={onRetry} />;
   const text = {
+    offline: (
+      <>
+        <b>You’re offline.</b> Nothing was saved. Check your connection, then try again.
+      </>
+    ),
     error: (
       <>
         <b>Couldn’t reach Next Up.</b> Nothing was saved. Check your connection, then try again.
@@ -390,9 +439,9 @@ function Failure({ failure, onRetry }) {
       </>
     ),
   }[failure.kind];
-  const retry = failure.kind === 'error';
+  const retry = failure.kind === 'error' || failure.kind === 'offline';
   return (
-    <div className={`banner ${failure.kind === 'error' ? 'banner-err' : 'banner-warn'}`} role="alert">
+    <div className={`banner ${retry ? 'banner-err' : 'banner-warn'}`} role="alert">
       <WarningIcon />
       <span className="banner-text">{text}</span>
       {retry && (

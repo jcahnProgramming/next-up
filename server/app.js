@@ -2,11 +2,14 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import express from 'express';
 import { createBoardsRouter } from './boards/routes.js';
+import { sweepRetired } from './boards/retire.js';
 import { config } from './core/config.js';
 import { getDb } from './core/db.js';
 import { createErrorHandler } from './core/errors.js';
+import { securityHeaders } from './core/headers.js';
 import { createNetworkResolver } from './core/network.js';
 import { createLimits } from './core/rateLimit.js';
+import { createLiveHub } from './live/hub.js';
 import { APP_VERSION } from './core/version.js';
 
 /**
@@ -18,15 +21,29 @@ import { APP_VERSION } from './core/version.js';
  * @param {() => number} [opts.now] the clock the rate limits run on
  * @param {number} [opts.maxBoards]
  * @param {string} [opts.trustedProxies] see core/network.js (default: TRUSTED_PROXIES)
+ * @param {Function} [opts.onHeader] told where each CF-Connecting-IP arrived from (index.js logs it: core/network.js)
+ * @param {object} [opts.live] live sync options for live/hub.js ({ heartbeatMs, limits, replayMax }); the hub is
+ *   app.locals.live (index.js closes its streams on shutdown). app.locals.sweep() purges retired boards past their 24 h
  */
-export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxies } = {}) {
+export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxies, onHeader, live: liveOpts = {} } = {}) {
   const app = express();
   app.disable('x-powered-by');
+  app.use(securityHeaders);
   app.use(express.json({ limit: '100kb' }));
 
   // One set of limits per app: the password limiter is the single counter every password check shares.
   const limits = createLimits({ now });
-  const networkOf = createNetworkResolver({ trustedProxies });
+  const networkOf = createNetworkResolver({ trustedProxies, onHeader });
+  // Live sync: the board streams, in this process (no broker; one web container writes every change).
+  const live = createLiveHub({ db, now, ...liveOpts });
+  app.locals.live = live;
+  // Purges boards past their 24 hours of deleting (boards/retire.js), and ends their live streams. index.js runs it
+  // every SWEEP_MS; tests call it with their clock moved on. Returns the purged board ids.
+  app.locals.sweep = () => {
+    const purged = sweepRetired(db(), now());
+    for (const id of purged) live.notify(id);
+    return purged;
+  };
 
   // The deploy probes this (and checks the version against CHANGELOG.json), as do the container healthcheck and
   // anyone curious. It says nothing but status and version: the app is public.
@@ -36,11 +53,14 @@ export function createApp({ db = getDb, now = Date.now, maxBoards, trustedProxie
     res.set('Cache-Control', 'no-store');
     next();
   });
-  app.use('/api/boards', createBoardsRouter({ db, limits, networkOf, maxBoards }));
+  app.use('/api/boards', createBoardsRouter({ db, limits, networkOf, live, now, maxBoards }));
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   // Serve the built client (production / Docker). In dev, Vite serves it instead.
   if (existsSync(config.clientDist)) {
+    // Vite names everything in assets/ by its content hash: a changed file gets a new name, so these never go stale.
+    // index.html and theme-boot.js keep the default (revalidated every load), so a deploy shows at once.
+    app.use('/assets', express.static(join(config.clientDist, 'assets'), { immutable: true, maxAge: '365d', fallthrough: false }));
     app.use(express.static(config.clientDist));
     app.get('/{*splat}', (req, res) => res.sendFile(join(config.clientDist, 'index.html')));
   }

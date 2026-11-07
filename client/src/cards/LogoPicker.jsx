@@ -12,6 +12,7 @@ import { LOGOS, logoById } from './logos.js';
  */
 export function LogoPicker({ labelledBy, value, onChange, title, disabled = false }) {
   const listId = useId();
+  const valueId = useId();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -95,7 +96,7 @@ export function LogoPicker({ labelledBy, value, onChange, title, disabled = fals
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-labelledby={labelledBy}
+        aria-labelledby={`${labelledBy} ${valueId}`}
         disabled={disabled}
         onClick={() => (open ? close() : show())}
         onKeyDown={(e) => {
@@ -106,7 +107,7 @@ export function LogoPicker({ labelledBy, value, onChange, title, disabled = fals
         }}
       >
         <LogoThumb logoId={current?.id ?? null} title={title} />
-        <span className="lcb-value">{current ? current.name : 'No logo'}</span>
+        <span id={valueId} className="lcb-value">{current ? current.name : 'No logo'}</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
         </svg>
@@ -170,7 +171,7 @@ export function LogoPicker({ labelledBy, value, onChange, title, disabled = fals
 
             {LOGOS.length === 0 ? (
               <div className="st-empty lcb-empty" role="presentation">
-                <span className="lcb-empty-title">No logos in the library yet</span>
+                <span className="lcb-empty-title">No logos yet</span>
                 <span className="lcb-empty-text">Cards use a colour until logos are added.</span>
               </div>
             ) : matches.length === 0 ? (

@@ -3,9 +3,10 @@
 #
 # Host-specific values are Gitea Actions variables (repo Settings → Actions → Variables), never written here:
 #   DEPLOY_DIR          absolute path of the host checkout that docker compose runs in
+#   BACKUP_DIR          absolute host path for the nightly backups (mounted at /backups by docker-compose.yml)
 #   GITEA_INTERNAL_URL  Gitea's base URL as job containers can reach it (no trailing slash)
 #   BIND_IP             host address the ports are published on (docker-compose.yml) and probed at
-# Preflight fails if any of them is unset.
+# Preflight fails if any of them is unset, before anything is stopped.
 #
 # How it reaches the host: the job container can see the host's Docker daemon (the
 # runner passes its mounted /var/run/docker.sock into job containers), but NOT
@@ -32,6 +33,9 @@ on:
 
 env:
   DEPLOY_DIR: ${{ vars.DEPLOY_DIR }}
+  # Nightly database backups (docker-compose.yml mounts it at /backups in the web container). Also passed to
+  # docker compose, which refuses to start without it.
+  BACKUP_DIR: ${{ vars.BACKUP_DIR }}
   # Gitea's address as job containers reach it: its usual hostname may not resolve from inside a container.
   GITEA_INTERNAL_URL: ${{ vars.GITEA_INTERNAL_URL }}
   # The ports are published on this address only (docker-compose.yml), so that is where they are probed:
@@ -61,6 +65,7 @@ jobs:
           set -eu
           unset_vars=""
           [ -n "$DEPLOY_DIR" ] || unset_vars="$unset_vars DEPLOY_DIR"
+          [ -n "$BACKUP_DIR" ] || unset_vars="$unset_vars BACKUP_DIR"
           [ -n "$GITEA_INTERNAL_URL" ] || unset_vars="$unset_vars GITEA_INTERNAL_URL"
           [ -n "$BIND_IP" ] || unset_vars="$unset_vars BIND_IP"
           if [ -n "$unset_vars" ]; then
@@ -90,6 +95,14 @@ jobs:
               echo "Host deploy dir OK: $PWD"
               echo ".env sha256: $(sha256sum .env | cut -d" " -f1)"
             '
+
+          # The backup folder docker-compose.yml mounts into the web container. Checked here, before compose stops
+          # anything: if it's missing, `up` would fail after taking the running site down.
+          docker run --rm \
+            --mount "type=bind,source=$BACKUP_DIR,target=/backups,readonly" \
+            --entrypoint sh "$GIT_IMAGE" -c 'test -d /backups' \
+            || { echo "::error::$BACKUP_DIR not found on host. Create it, owned by PUID:PGID, before deploying."; exit 1; }
+          echo "Backup folder OK: $BACKUP_DIR"
 
       - name: Record .env fingerprint
         run: |
@@ -150,7 +163,7 @@ jobs:
           docker run --rm \
             --mount "type=bind,source=$DEPLOY_DIR,target=$DEPLOY_DIR" \
             --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" \
-            -e BIND_IP \
+            -e BIND_IP -e BACKUP_DIR \
             -w "$DEPLOY_DIR" "$DOCKER_IMAGE" \
             docker compose up -d --build
 
@@ -227,6 +240,6 @@ jobs:
           docker run --rm \
             --mount "type=bind,source=$DEPLOY_DIR,target=$DEPLOY_DIR,readonly" \
             --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" \
-            -e BIND_IP \
+            -e BIND_IP -e BACKUP_DIR \
             -w "$DEPLOY_DIR" "$DOCKER_IMAGE" \
             sh -c 'docker compose ps -a; echo; docker compose logs --no-color --tail=150' || true

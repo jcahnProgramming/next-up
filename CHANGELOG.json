@@ -1,14 +1,140 @@
 {
   "releases": [
     {
-      "version": "0.6.1",
+      "version": "1.0.1",
       "date": "2026-11-07",
       "title": "A README for visitors and a deploy you can point at your own server",
       "sections": {
         "Improved": [
-          "The project's README is rewritten for people finding Next Up for the first time: what it is and why it exists, a screenshot, how boards, codes, passwords and the abuse limits work, an FAQ, and how to run it yourself, with every command tried on a fresh copy.",
-          "Running your own copy: docker-compose.yml no longer has an address written into it. Set BIND_IP to the address your proxy or tunnel reaches the app on (or 127.0.0.1 for one machine), and Docker refuses to start until you do, rather than opening Next Up on every network the machine is on.",
-          "The automatic deploy now reads its server folder, Gitea address and published address from Gitea Actions variables instead of the workflow file, and stops before changing anything if one of them is missing. Nothing changes for anyone using a board."
+          "The project’s README is rewritten for people finding Next Up for the first time: what it is and why it exists, a screenshot, how boards, passwords, history, live updates and the abuse limits work, an FAQ, and how to run it yourself, with each command tried on a fresh copy.",
+          "Running your own copy: docker-compose.yml no longer has an address or folder of ours written into it. Set BIND_IP to the address your proxy or tunnel reaches the app on (or 127.0.0.1 for one machine) and BACKUP_DIR to the folder for nightly backups. Docker refuses to start until both are set, rather than opening Next Up on every network the machine is on. RESTORE.md now works for any server.",
+          "The automatic deploy reads its server folder, backup folder, Gitea address and published address from Gitea Actions variables instead of the workflow file, and stops before changing anything if one of them is missing. Nothing changes for anyone using a board."
+        ]
+      }
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-10-16",
+      "title": "Next Up 1.0: the guild’s game board, ready for the rotation",
+      "sections": {
+        "New": [
+          "Next Up 1.0. Everything below already works and has been used by Post Nerf Clarity on a real board, on desktop and phone. This release adds no new features; it marks the board as ready.",
+          "Boards open by code: type one on the front page to open that board, or create it if it’s free. There are no accounts. Anyone with the code can use the board.",
+          "An optional password, chosen when the board is created. A password board shows nothing but a lock screen until it is unlocked, and this browser remembers the unlock until you press the lock on the code chip. The password can be changed later but never removed.",
+          "Three lanes, Up Next, Now Playing and Played. Drag cards between and within them with a mouse, by long-press on a phone, or with the keyboard.",
+          "Each card shows the game’s art and opens to its go-live date, server info (links work) and a sign-up list where anyone can add or remove players.",
+          "History logs every change with the name of whoever made it, and Restore undoes card edits, deletes, moves and removed sign-ups.",
+          "Live updates: changes show up for everyone viewing the board as they happen. If the connection drops, the board says so and pauses editing until it’s back.",
+          "Settings: pick one of five themes (Light, Dark, Legacy, Pastel, Cyberpunk, or Match device), set your display name, and for the board you came from, change its password or delete it. A deleted board can be restored for 24 hours, then it and its code are gone.",
+          "Card art for 31 games: 7 Days to Die, Abiotic Factor, ARK: Survival Ascended, Conan Exiles, Core Keeper, DayZ, Don’t Starve Together, Dune: Awakening, Enshrouded, Everwind, Factorio, Hytale, ICARUS, Minecraft, Night of the Dead, Once Human, Palworld, Pax Dei, Project Zomboid, Rust, Satisfactory, Sons of the Forest, Soulmask, Space Engineers, Stardew Valley, Stormforge, Subnautica 2, Terraria, Unturned, V Rising and Valheim. Pick one from a card’s logo list."
+        ]
+      }
+    },
+    {
+      "version": "0.10.1",
+      "date": "2026-10-16",
+      "title": "Hardening before the guild test: nightly backups, safer headers, clearer states, better keyboard use",
+      "sections": {
+        "New": [
+          "Nightly backups. Every night at 04:00 UTC the database is copied to a backup folder on the server, separate from the live database, checked for corruption before it is kept, and named by date. The last 30 days are kept. A backup that fails says so loudly in the web container’s log, and the earlier ones stay. RESTORE.md walks through putting one back.",
+          "The web app now says in its log which connection address the visitor-address header arrives from, so the rate limits can be told to trust only the tunnel (TRUSTED_PROXIES). The README’s TRUSTED_PROXIES section has the steps."
+        ],
+        "Improved": [
+          "Security headers on every page and answer: a Content-Security-Policy that allows only Next Up’s own scripts, styles, fonts and images, no framing by other sites, no sniffing, no referrer (a board’s address holds its code), and every device permission (camera, microphone, location and the rest) switched off.",
+          "Repeat visits load faster: the app’s files are cached by the browser until they change, instead of being checked again on every visit.",
+          "Keyboard use: focus now lands somewhere sensible everywhere. A board opened from the landing page or a lock screen focuses the board; closing a dialog goes back to what opened it (or to History, after a restore); removing a player moves to the next one; a wrong password selects it to retype; “too many tries” moves to the message.",
+          "Screen readers hear the value on the Lane, Logo and Go-live buttons (“Lane, Up Next”), not just their label.",
+          "Reduce motion is fully respected: with it on, sheets and pages fade in instead of sliding or rising, and the live dot and loading shimmer hold still.",
+          "A board that couldn’t load now says “Timed out after 10 s” when that’s what happened, and offers Back to Home.",
+          "Text that was too faint is now readable (4.5:1 or better): the deleting countdown banner’s text in Light and Pastel, and the next and previous month’s days in the date picker in every theme.",
+          "Drag auto-scroll near the top of the window now starts below the top bar, not underneath it."
+        ],
+        "Fixed": [
+          "If reloading a board failed after it fell behind (many changes while disconnected), the top bar still said Live and editing stayed on. It now says “Out of date”, pauses editing, and Retry reloads it.",
+          "A board’s whole History could show its loading shimmer for ever if the board had been erased meanwhile. It now says it couldn’t load.",
+          "Failures that were silent now say what happened: removing a player, deleting a card while the board is being deleted, and deleting, restoring or changing the password of a board when the server answers unexpectedly.",
+          "The lock screen now says “You’re offline” when you are, instead of “Couldn’t check it”.",
+          "Inside a card or a confirmation, “You’re offline” no longer showed as “Reconnecting…” while still connected.",
+          "A board that couldn’t load no longer shows “Connecting…” in the top bar.",
+          "A server error’s log line no longer includes the board’s code."
+        ],
+        "Removed": [
+          "The leftover “coming soon” page and its “isn’t built yet” wording. Unknown addresses still get “Page not found”."
+        ]
+      }
+    },
+    {
+      "version": "0.10.0",
+      "date": "2026-10-16",
+      "title": "Claude can read open boards through the MCP server",
+      "sections": {
+        "New": [
+          "The MCP server (on the home network only, port 3231, with its bearer token) has three new read-only tools, so Claude can answer questions like “what's up next on pnc-raids, and who's signed up for Dune?” mid-conversation.",
+          "get_board reads a board by its code: the three lanes in order, and in each its cards top to bottom with title, logo, go-live date and how many players have signed up. An empty lane says it's empty. A board being deleted says when it will be erased.",
+          "get_card reads one card in full: lane and position, go-live date, server info exactly as typed, the players in sign-up order, and when it was made and last edited. Name the card by its id or its exact title (case doesn't matter). If two cards share that title, it lists both instead of guessing.",
+          "get_history reads a board's change log, newest first, worded exactly as the History panel words it, with who and when. 20 changes at a time by default, up to 100, with a cursor to read further back.",
+          "Boards with a password stay closed to the MCP. Every tool answers only “locked” for them: no name, cards, counts, logos, players, dates or history. There's no way to give the MCP a password.",
+          "You have to give the MCP a board's code. It can't list, search or guess codes, and nothing it says ever mentions a code you didn't give it. It still can't change anything: its connection to the database refuses every write."
+        ]
+      }
+    },
+    {
+      "version": "0.9.0",
+      "date": "2026-10-16",
+      "title": "This board: change a board's password, or delete a board with 24 hours to undo it",
+      "sections": {
+        "New": [
+          "Settings has a “This board” section when you open Settings from a board you're in. It isn't there when you open Settings from the front page or from a lock screen.",
+          "Change a board's password: type the current one, then the new one twice (8 to 128 characters, as when a board is made). Next Up asks you to confirm first. This browser stays in. Everyone else, including anyone with the board open at that moment, goes straight to “The board’s password changed” and needs the new one. History records who changed it and when, never the password, and it can't be undone from History. An open board still can't get a password, and a password still can't be removed.",
+          "Wrong current passwords in Settings count against the same limit as the lock screen: 10 wrong tries from your network in 15 minutes, wherever they happen, then a “Too many tries for now” countdown in both places.",
+          "Delete a board from Settings by typing its code. Nothing is erased straight away. For 24 hours the board shows “This board will be deleted in 23h 12m.” with a live countdown and a Restore button, for everyone who opens it and for anyone already looking at it. Cards, players, details, dragging and History's Restore are paused, but the board, its cards and History can still be read. A board with a password still needs it.",
+          "Restore puts the board back to normal with one click and a confirmation, and anyone who can open the board can do it during those 24 hours. History shows who deleted the board and who restored it.",
+          "After 24 hours the board is erased for good: every card, player and line of its history. Its code is free again, and the old link shows the normal “create it?” page. Until then the code stays taken, and the board still counts towards Next Up's 500-board limit."
+        ],
+        "Improved": [
+          "The create-a-board screen no longer says changing the password is “coming soon”."
+        ]
+      }
+    },
+    {
+      "version": "0.8.0",
+      "date": "2026-10-16",
+      "title": "Live sync: everyone sees changes as they happen",
+      "sections": {
+        "New": [
+          "Boards update live. When anyone adds, edits, moves or deletes a card, changes a go-live date or server info, signs up or removes a player, or restores something from History, everyone else with the board open sees it within a moment, without reloading. An open card panel and an open History panel update in place too.",
+          "A card someone else just changed lights up for a couple of seconds with a name tag saying who and what, such as “Bunzato moved this” or “Kaelis added player Mo”. Screen readers hear the change read out. With reduced motion on, the highlight shows and goes without animating.",
+          "A sync pill next to the board code says whether the board is live: “Live”, “Connecting…”, “Reconnecting…”, “Offline · as of 14:32” or “Not connected · as of 14:32”. It only says Live while Next Up is actually getting through. On a phone it shrinks to a dot or an icon.",
+          "When the connection drops (a network change, a laptop waking from sleep, Next Up restarting for an update), the board says so, shows how old it is, and pauses editing with “Editing paused until we reconnect.” and a Retry button. It reconnects by itself, and when it's back it catches up on exactly the changes it missed, once each. If it has missed a great many, it reloads the board instead."
+        ],
+        "Improved": [
+          "If someone else changes a card while you're dragging, nothing moves under you: their changes wait until you let go. If they delete the card you're holding, the drag is cancelled and a message says who deleted it.",
+          "If someone else changes a card while you're editing it, what you've typed stays put. The edit sheet says “Changed by Bunzato” with a “Load their changes” button, and saving still checks for their change first, so nothing is overwritten without you seeing it.",
+          "If someone else deletes a card whose panel or edit sheet you have open, it says who deleted it, rather than showing details that are no longer there, and points to History to bring it back."
+        ],
+        "Fixed": [
+          "The edit sheet and the delete confirmation no longer say deleted cards can be restored “once History is built”. History has been here since 0.7.0."
+        ]
+      }
+    },
+    {
+      "version": "0.7.0",
+      "date": "2026-10-16",
+      "title": "History and Restore, and glass that looks like glass",
+      "sections": {
+        "New": [
+          "History: the clock button in the top bar opens the board's history, newest first, 50 changes at a time with “Load more” for older ones. Each line says who did what, for example “Bunzato moved Valheim · Now Playing → Played” or “Path removed player Larias from V Rising”, grouped under Today, Yesterday and earlier dates. Today's changes say how long ago they happened (“12 min ago”); hover over a time, or tap or long-press it on a phone, to see the exact date and time. Changes made without a display name show as “Someone”. Names are whatever each browser typed, and History says so.",
+          "“This card's history” in a card's panel opens History showing only that card's changes, with a button to widen it to the whole board. Closing it takes you back to the card.",
+          "Restore: card edits (name and logo), go-live date and server info changes, moves, deleted cards and removed players each have a Restore button. Restoring first shows what will change, with what the card has now beside what it will have afterwards, and only then does it. Like any change, it asks a browser that has never given a display name for one first.",
+          "A restore never deletes or rewrites anything in History. It makes the change and adds a new line, such as “Path moved Valheim back to Now Playing, 1st”, which says whose change it undid. That line has its own Restore, so a restore can be undone too. The change that was restored is marked “Restored” with who did it and when, and can't be restored a second time.",
+          "Restoring is careful when the board has moved on. If a card has been edited again since, only the fields that change touched go back and the rest stay as they are now. If its old lane has changed, it goes as close to its old place as the lane allows, and the confirmation says so. If the card has been deleted since, Restore offers to bring the card back too. It refuses, and says why, when a player of that name has signed up again, when the board already has 200 games, when the card already has 100 players, or when there is nothing left to undo. If someone else changes the card while the confirmation is open, it shows the new confirmation instead of restoring something you didn't agree to."
+        ],
+        "Improved": [
+          "The glass looks like glass. Dark and Light now have soft colour behind them (blue, rose, teal and a warm glow) for the lanes and bars to blur, every glass panel has a fine edge and a bright line along its top, and Light's panels are clearer instead of nearly solid white. The top bar now stays at the top of the screen as frosted glass, and the board scrolls underneath it and under the bottom bar. Text on the glass was measured at 4.5:1 contrast or better in every theme. Legacy stays flat and solid by design, cards with no logo keep their solid colour, and Pastel and Cyberpunk keep their look.",
+          "The version number and “What's new” moved onto the bottom bar, on the left, with “Buy me a coffee” on the right. On a phone both fit on one line."
+        ],
+        "Removed": [
+          "The separate version line under the board, now that the version is on the bottom bar."
         ]
       }
     },

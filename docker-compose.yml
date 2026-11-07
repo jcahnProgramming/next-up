@@ -1,5 +1,6 @@
 # Next Up: web app (UI + API) and MCP server (read-only AI access), each in its own container.
-# Both run from the same image and share one SQLite file: ./data → /data. Keep ./data on a local disk.
+# Both run from the same image and share one SQLite file: ./data → /data. Keep ./data on a local disk, not a
+# network or FUSE share (SQLite's file locking isn't dependable there).
 #
 # The web app is meant to be public, behind a reverse proxy or tunnel. The MCP server is not: keep it off the
 # proxy and reachable only from your own network.
@@ -30,6 +31,18 @@ services:
     environment:
       DATA_DIR: /data
       PORT: 3230
+      BACKUP_DIR: /backups
+    # Nightly backups (server/core/backup.js, RESTORE.md) go to the host folder in BACKUP_DIR (shell or .env),
+    # ideally on a different disk from ./data. Required, no default. The folder must already exist, owned by
+    # PUID:PGID: Docker must never create it (it would be root's). The deploy's preflight checks it before anything
+    # is restarted. Inside the container it is always /backups (the BACKUP_DIR below, which the app reads).
+    volumes:
+      - ./data:/data
+      - type: bind
+        source: "${BACKUP_DIR:?Set BACKUP_DIR to the host folder for nightly backups (see docker-compose.yml)}"
+        target: /backups
+        bind:
+          create_host_path: false
     ports:
       - "${BIND_IP:?Set BIND_IP to the host address to publish on (see docker-compose.yml)}:3230:3230"
     healthcheck:

@@ -3,6 +3,7 @@ import { CalendarIcon } from '../chrome/DatePicker.jsx';
 import { CloseIcon, CopyIcon, ErrorIcon, PlusIcon, RetryIcon, WarningIcon } from '../chrome/icons.jsx';
 import { copyText } from '../chrome/copyText.js';
 import { usePhone } from '../chrome/usePhone.js';
+import { useLiveChanges } from '../live/Live.jsx';
 import { useAskName } from '../prefs/NamePrompt.jsx';
 import { readDisplayName } from '../prefs/displayName.js';
 import { MAX_PLAYERS, PLAYER_NAME_MAX, checkPlayerName, playerExistsMessage, playerKey, playerLimitMessage } from '../../../server/core/cardDetail.js';
@@ -98,8 +99,11 @@ export function ServerInfo({ value, paused, onSet, toast }) {
  * this browser's display name first if it never has (adding is a change), then opens an inline box, pre-filled with
  * that name unless it's already on the card: still editable, so anyone can add someone else. Enter adds and keeps the
  * box open for the next name. A name already on the card (ignoring case) is refused inline before anything is sent,
- * and again by the server. Each chip's × removes that player at once, with no confirmation: History will be able to
- * put them back.
+ * and again by the server. Each chip's × removes that player at once, with no confirmation: History can put
+ * them back.
+ *
+ * Other people's sign-ups and removals arrive live (live/): each carries the player as they are now, so applying one
+ * twice changes nothing. Ones that arrive while the list is loading are applied on top of it once it has.
  */
 export function Players({ code, card, paused, onCount, onLocked, onGone }) {
   const askName = useAskName();
@@ -108,24 +112,30 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
   const errorId = useId();
   const input = useRef(null);
   const addButton = useRef(null);
+  const playersList = useRef(null);
   const [attempt, setAttempt] = useState(0);
   const [load, setLoad] = useState({ kind: 'loading' });
   const [list, setList] = useState([]);
   const [box, setBox] = useState(null); // null: closed; { draft, error, busy }
   const [removing, setRemoving] = useState(() => new Set());
   const [said, setSaid] = useState('');
+  const [removeError, setRemoveError] = useState(null);
   // The board hands in fresh callbacks on every render; the load mustn't re-run for that.
   const latest = useRef({ card, onCount, onLocked, onGone });
   latest.current = { card, onCount, onLocked, onGone };
 
+  const arrived = useRef(null); // live changes that came while the list was loading
   useEffect(() => {
     let live = true;
     setLoad({ kind: 'loading' });
+    arrived.current = [];
     loadPlayers(code, latest.current.card).then((r) => {
       if (!live) return;
       const { onCount: count, onLocked: locked, onGone: gone } = latest.current;
+      const later = arrived.current ?? [];
+      arrived.current = null;
       if (r.kind === 'ok') {
-        setList(r.players);
+        setList(later.reduce(applyPlayer, r.players));
         setLoad({ kind: 'ready' });
         count(r.players.length);
       } else if (r.kind === 'locked') locked(r.changed);
@@ -136,6 +146,14 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
       live = false;
     };
   }, [code, card.id, attempt]);
+
+  useLiveChanges((m) => {
+    if (m.reset) return setAttempt((n) => n + 1);
+    if (!m.player || m.entry.cardId !== card.id) return undefined;
+    if (arrived.current) arrived.current.push(m.player);
+    else setList((l) => applyPlayer(l, m.player));
+    return undefined;
+  });
 
   const boxOpen = box !== null;
   const boxBusy = box?.busy ?? false;
@@ -191,9 +209,18 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
     return undefined;
   };
 
+  // After a removal, keyboard focus (which was on the removed chip's ×) goes to the next chip's ×, or Add Player.
+  const refocus = (index) =>
+    requestAnimationFrame(() => {
+      if (document.activeElement && document.activeElement !== document.body) return;
+      const xs = playersList.current?.querySelectorAll('button.x') ?? [];
+      (xs[Math.min(index, xs.length - 1)] ?? addButton.current)?.focus({ preventScroll: true });
+    });
+
   const remove = async (player) => {
     if (removing.has(player.id)) return;
     if (!(await askName(`remove ${player.name} from ${card.title}`))) return;
+    setRemoveError(null);
     setRemoving((s) => new Set(s).add(player.id));
     const r = await removePlayer(code, card, player);
     setRemoving((s) => {
@@ -202,13 +229,14 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
       return next;
     });
     if (r.kind === 'ok' || r.kind === 'player-gone') {
+      refocus(list.findIndex((p) => p.id === player.id));
       setList((l) => l.filter((p) => p.id !== player.id));
       if (r.kind === 'ok') onCount(r.playerCount);
       setSaid(r.kind === 'ok' ? `Removed ${player.name}.` : `${player.name} had already been removed.`);
       if (r.kind === 'player-gone') setAttempt((n) => n + 1);
     } else if (r.kind === 'locked') onLocked(r.changed);
     else if (r.kind === 'gone') onGone();
-    else setSaid(r.offline ? `You’re offline, so ${player.name} wasn’t removed.` : `Couldn’t remove ${player.name}. Try again.`);
+    else setRemoveError(r.offline ? `You’re offline, so ${player.name} wasn’t removed. Nothing was saved.` : `Couldn’t remove ${player.name}. Nothing was saved; try again.`);
   };
 
   const n = list.length;
@@ -247,7 +275,7 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
         </div>
       )}
       {load.kind === 'ready' && n > 0 && (
-        <ul className="players" aria-label={n === 1 ? '1 player' : `${n} players`}>
+        <ul ref={playersList} className="players" aria-label={n === 1 ? '1 player' : `${n} players`}>
           {list.map((p) => (
             <li key={p.id} className="chip">
               <span className={`av ${hueOf(p.name)}`} aria-hidden="true">
@@ -258,7 +286,9 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
                 type="button"
                 className="x"
                 onClick={() => remove(p)}
-                disabled={paused || removing.has(p.id)}
+                disabled={paused}
+                // aria-disabled, not disabled, while it saves: a disabled button drops keyboard focus.
+                aria-disabled={removing.has(p.id) || undefined}
                 aria-label={`Remove ${p.name}`}
                 title={`Remove ${p.name}`}
               >
@@ -269,6 +299,12 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
         </ul>
       )}
 
+      {removeError && (
+        <span className="field-error" role="alert">
+          <ErrorIcon />
+          {removeError}
+        </span>
+      )}
       {load.kind === 'ready' &&
         (box ? (
           <form className="player-form" onSubmit={submit} noValidate>
@@ -339,6 +375,15 @@ export function Players({ code, card, paused, onCount, onLocked, onGone }) {
       </p>
     </section>
   );
+}
+
+/** A player as the live stream says they are now, applied to the list: gone if removed, else in sign-up order. */
+function applyPlayer(list, player) {
+  const { removed, ...p } = player;
+  const rest = list.filter((x) => x.id !== p.id);
+  if (removed) return rest.length === list.length ? list : rest;
+  if (rest.length < list.length) return list; // already shown
+  return [...rest, p].sort((a, b) => (a.addedAt < b.addedAt ? -1 : a.addedAt > b.addedAt ? 1 : a.id - b.id));
 }
 
 /** Two letters for the avatar: the first of two words, or the first two of one. */

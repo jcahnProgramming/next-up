@@ -23,6 +23,7 @@ export function DatePicker({ labelledBy, value, onChange, autoFocus = false, dis
   const root = useRef(null);
   const trigger = useRef(null);
   const popId = useId();
+  const valueId = useId();
 
   const close = (refocus = true) => {
     setOpen(false);
@@ -50,13 +51,13 @@ export function DatePicker({ labelledBy, value, onChange, autoFocus = false, dis
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open && !phone ? popId : undefined}
-        aria-labelledby={labelledBy}
+        aria-labelledby={`${labelledBy} ${valueId}`}
         disabled={disabled}
         onClick={() => (open ? close() : setOpen(true))}
         data-autofocus={autoFocus || undefined}
       >
         <CalendarIcon />
-        <span className={`dropdown-value${value ? '' : ' is-unset'}`}>{value ? formatDate(value) : 'Not set'}</span>
+        <span id={valueId} className={`dropdown-value${value ? '' : ' is-unset'}`}>{value ? formatDate(value) : 'Not set'}</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'} />
         </svg>

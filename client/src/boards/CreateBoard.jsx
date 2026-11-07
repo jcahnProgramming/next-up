@@ -65,10 +65,13 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
     setFailed(result.offline ? 'offline' : 'error');
   };
 
+  // Inline (desktop) it's a labelled form in the landing sheet; as a phone's bottom sheet it's a modal dialog over the
+  // page, and Tab stays inside it.
+  const modal = asSheet ? { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId, onKeyDown: keepFocusIn } : {};
   const panel = (
-    <div className={`create${asSheet ? ' is-sheet' : ''}`}>
+    <div className={`create${asSheet ? ' is-sheet' : ''}`} {...modal}>
       <div className="create-scrim" aria-hidden="true" onClick={busy ? undefined : onBack} />
-      <form className="create-sheet glass-2" onSubmit={submit} role="dialog" aria-labelledby={titleId} noValidate>
+      <form className="create-sheet glass-2" onSubmit={submit} aria-labelledby={titleId} noValidate>
         <span className="create-grabber" aria-hidden="true" />
         <div className="create-head">
           <span className="icon-circle icon-circle-sm ic-accent">
@@ -114,9 +117,9 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
         <div className="create-choice" aria-live="polite">
           {withPassword ? (
             <p>
-              <b>Locked, for good.</b> Anyone with the code sees only a lock screen until they enter this password. You’ll
-              be able to change it later in Settings (coming soon), but never remove it. Nobody can recover a forgotten
-              password, so keep it somewhere safe.
+              <b>Locked, for good.</b> Anyone with the code sees only a lock screen until they enter this password. You
+              can change it later in Settings, but never remove it. Nobody can recover a forgotten password, so keep it
+              somewhere safe.
             </p>
           ) : (
             <p>
@@ -159,3 +162,16 @@ export function CreateBoard({ code, heading: H = 'h2', sheetOnPhone = false, onB
   return asSheet ? createPortal(panel, document.body) : panel;
 }
 
+function keepFocusIn(e) {
+  if (e.key !== 'Tab') return;
+  const items = [...e.currentTarget.querySelectorAll('button:not([disabled]), input:not([disabled]), [href]')].filter((el) => el.offsetParent !== null);
+  if (!items.length) return;
+  const [first, last] = [items[0], items[items.length - 1]];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}

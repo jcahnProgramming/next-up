@@ -1,7 +1,7 @@
 # Next Up
 
 A game-planning kanban for the WoW guild Post Nerf Clarity, at https://nextup.postnerfclarity.com. Built for Path and
-the guild. Stack, structure and deploy are copied from `D:\Dev\home-dashboard`; when in doubt, do it the way it does.
+the guild. Stack, structure and deploy are copied from the owner's home-dashboard project; when in doubt, do it the way it does.
 
 **Hard boundary: PUBLIC on the internet** through a Cloudflare tunnel. **No user accounts, ever**: no
 login, no sign-up, no user table, no email, no OAuth. The board code is the access key, plus the board's password if
@@ -9,7 +9,7 @@ it has one.
 
 ---
 
-## What Next Up will be (the agreed spec; 0.6.0 has boards, access, lanes, cards, drag and drop and card details; not history or live sync yet)
+## What Next Up is (the agreed spec: complete since 0.9.0, released as 1.0.0 once it was in real use)
 
 - The front page has one box: type a code to open that board, or create it if it doesn't exist.
 - A board has three lanes: **Up Next**, **Now Playing**, **Played**. Cards drag between and within lanes.
@@ -45,6 +45,12 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 - **A password can only be set when the board is created.** An open board can never gain one later. A password
   board's password can be **changed** (current password required) but **never removed**: a locked board stays locked
   for life. The database enforces all three (triggers in `server/core/schema.js`), not just the app.
+- **Changing it** (`POST /api/boards/:code/password { current, password }`, Settings) checks the current password on
+  the shared wrong-password counter, refuses a new one equal to the current, raises `password_version`, gives THIS
+  browser a fresh grant at the new version, and logs `board.password_changed` (who and when, nothing else). Every
+  other grant is then stale, and the write's live notify ends every open stream still on the old version with
+  `locked { reason: 'password_changed' }` at once. A page told that looks the board up again first: another tab of the
+  browser that made the change holds the fresh cookie and simply reopens (`client/src/pages/BoardPage.jsx`).
 - **Rate limits are per network** (per client IP; IPv6 per /64), in memory (`server/core/rateLimit.js`): a restart
   forgets them. Behind the tunnel the client's address is Cloudflare's `CF-Connecting-IP` header
   (`server/core/network.js`); never rate-limit everyone as one IP by accident (every tunnel request shares
@@ -52,6 +58,11 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   The header can't be forged from the internet (Cloudflare's edge sets it), but a LAN device talking to port 3230
   directly can send its own. Setting `TRUSTED_PROXIES` in `.env` (cloudflared's address as the container sees it)
   makes the app honour the header only from there; until it is set, the header is honoured from any connection.
+  It is set on the live server (the value and how it was measured are in the owner's private ops notes, never here).
+  Docker can number its networks in 172.16–31.x or 192.168.x, so measure, never assume. The web app logs each
+  connection address the header arrives from, once, and whether it was honoured (never the header's value): that is
+  how the value is found, and how a wrong one shows (`IGNORED` on the tunnel's address means every visitor shares one
+  limit).
   - Unknown codes: **30 per network per 15 minutes**. Every creation attempt counts too (otherwise "that code is
     taken" would be an unlimited oracle). While a network is limited, every lookup answers "too many tries" except
     for boards this browser has opened before (it holds their access cookie): "locked" would still say "exists".
@@ -72,7 +83,7 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   password version. A version older than the board's is "the board's password changed". Page script never sees it;
   the lock button asks the server to clear it.
 - **Every board route lives under `/api/boards/:code`** and, except `lock` and `unlock`, is registered after
-  `requireAccess` in `server/boards/routes.js`, so it is protected by construction. A password board without access
+  `requireAccess` in `server/boards/routes.js`, so it is protected by construction (the live stream included). A password board without access
   answers only `{ status: 'locked', code }` (plus `reason: 'password_changed'`), to every method and every path.
 - **The display name is per browser** (localStorage) and is a label, not an identity: anyone can type any name. The
   history says "changed by <name>", never implies it was verified. It is asked for at a browser's first change, never
@@ -86,10 +97,13 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 
 - **Theme picker** (the five themes, with Light/Dark following the device by default as "Match device") and
   **display name**. Both are per browser.
-- **"This board"**: **change password** (password boards only; current password required, and the check shares the
-  wrong-password counter) and **delete board**. There is no "set" or "remove": a password is chosen only at creation
-  and can never be removed. It is a board setting that lives on the Settings page; it shows only while on a board you
-  can access, and is absent when Settings is opened from the landing page. (Not built yet.)
+- **"This board"** (`client/src/pages/settings/BoardSettings.jsx`): **change password** (password boards only;
+  current password, new, and again; a confirmation before anything is sent; the check shares the wrong-password
+  counter and shows its "too many tries" countdown) and **delete board** (type the code to confirm). There is no
+  "set" or "remove": a password is chosen only at creation and can never be removed. It shows only when Settings was
+  opened from an open board (the top bar's Settings link carries the code in history state, `chrome/AppShell.jsx`)
+  and the server still opens it for this browser; from the landing page or a lock screen it is absent. While the
+  board is being deleted it shows the countdown and Restore instead.
 
 ## Images
 
@@ -111,8 +125,18 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   reason here. The one exception:
   - **Retired boards.** Anyone with edit access can delete ("retire") a board. It is soft-deleted (`deleted_at`) and
     restorable for 24 hours; after that the board and its whole history are purged and its code becomes free. Reason:
-    with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever. (Not built
-    yet; the schema already lets only a retired board, or its events, be deleted.)
+    with a 500-board cap and no accounts, a dead board would otherwise hold its code and a slot forever.
+    (`server/boards/retire.js`.) `POST /api/boards/:code/deletion { confirm: <code> }` schedules it and logs
+    `board.deletion_scheduled`; `DELETE …/deletion` restores it and logs `board.deletion_cancelled`. While deleting,
+    the board's answers carry `deletion { scheduledAt, purgeAt, leftMs }` (`leftMs` measured by the server as it
+    answers: the client counts down from that, never from its own clock against `purgeAt`); reading, History, the
+    live stream and unlocking go on, every other write answers 409 `board_deleting`, and the database refuses every
+    event but the deletion's own (trigger `events_paused_while_deleting`, migration 006), so nothing can change.
+    The code stays taken and the board still counts against `MAX_BOARDS`. The sweep (`app.locals.sweep`, every
+    `SWEEP_MS` = 10 min from `index.js`, and once at start-up) purges boards past 24 hours (players, cards, events,
+    board, in one transaction, re-checked inside it) and ends their live streams with `gone`; looking up or creating a
+    code whose board is past its 24 hours purges it first, so the countdown reaching zero means the code is free. A
+    restored board has `deleted_at` NULL and is never touched (the `*_purge_only_retired` triggers refuse it too).
 - Deleting a card or player is a logged change that can be restored, never a hard delete. Cards are tombstoned
   (`cards.deleted_at`); the database refuses deleting a card row unless its board is retired.
 - **Cards** (`server/cards/routes.js`, rules shared with the client in `server/core/cardRules.js`): title 1–60
@@ -151,16 +175,79 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
   `{ cardId, before, after }` (restorable), `card.deleted` `{ cardId, card }` (restorable), where a card state is
   `{ title, logo, lane, position, index }` (created and deleted also carry `goLive` and `serverInfo` from 0.6.0);
   `card.moved` `{ cardId, before, after }` (restorable), where each is only the place `{ lane, position, index }`;
-  `card.detail_edited` `{ cardId, before, after }` (restorable), each `{ goLive, serverInfo }`
+  `card.detail_edited` `{ cardId, before, after }` (restorable), each `{ goLive, serverInfo }`;
+  `card.restored` `{ cardId, card }` (restorable: deletes it again; written only by restoring a delete)
   (`server/cards/events.js`). One save that renames, re-dates and moves logs card.edited, card.detail_edited,
-  card.moved in that order. `player.added` and `player.removed` `{ cardId, playerId, name, position }` (only removed
-  is restorable; `position` is the 0-based place in the sign-up list; `server/players/events.js`).
-- History offers Restore on card edits (details included), deletes, moves and removed players. Restoring a move puts the card as close to its old lane
-  and position as the board now allows. Password changes are logged but never restorable.
+  card.moved in that order. `player.added`, `player.removed` and `player.restored`
+  `{ cardId, playerId, name, position }` (removed and restored are restorable; `position` is the 0-based place in the
+  sign-up list; `server/players/events.js`). `board.password_changed` `{}`, `board.deletion_scheduled` `{ purgeAt }`
+  and `board.deletion_cancelled` `{}` (`server/boards/events.js`) are never restorable through History: a password
+  change can't be undone, and a deletion has its own Restore. Card and player queries shared by routes and restores live in
+  `server/cards/store.js` and `server/players/store.js`.
+- **History** (`server/history/routes.js`, `client/src/history/`): `GET /api/boards/:code/history` pages the log
+  newest first, 50 at a time (`?before=` cursor, at most 100 per answer, `?card=` for one card through the
+  `(board_id, card_id, created_at)` index; `card_id` is a VIRTUAL column read from the payload, so no stored row was
+  rewritten to add it). Each event type **declares** its line and its restore next to the feature that writes it:
+  `declareEventType({ type, restorable, payload, line(payload, { cardTitle, isRestore }), restore: { plan } })`.
+  Nothing in shared code switches on a type: the history route, `lineOf` and `planRestore` (`server/core/events.js`)
+  only call what the declaration gives them. A restorable type must declare `restore.plan`.
+- **Restore** offers on card edits (details included), deletes, moves and removed players, and on restores
+  themselves. `restore.plan(ctx, event, opts)` only reads, and returns `{ refuse }` or `{ preview, apply(actor) }`;
+  `GET …/history/:id/restore` shows the preview (now vs after, with a token), `POST` re-plans inside the write and
+  applies only if the token still matches (else 409 `changed` with the new preview). A restore **never edits or
+  removes an event**: `apply` makes the change and appends NEW events of the ordinary types, marked with the
+  `events.restores` column (the event undone; a unique partial index lets each event be restored once, and a trigger
+  keeps it on the same board). Undoing a delete writes `card.restored`, undoing a removal `player.restored`; both
+  are restorable (delete / remove again), so a restore of a restore works. Restoring a move puts the card as close to
+  its old lane and position as the board now allows and says so. An edit restores only the fields that event
+  changed. A change to a card deleted since asks first and, with `withCard`, brings the card back too (refused at
+  the 200-card cap). A removed player whose name has signed up again, or at the 100-player cap, is refused. A restore
+  is a change: it needs access and asks the display name first. Password changes are logged but never restorable.
+- **Live sync** (`server/live/`, `client/src/live/`) rides on `events`; there is no second channel of truth.
+  `GET /api/boards/:code/live?since=<event id>&tab=<tab id>` is a Server-Sent Events stream, registered after
+  `requireAccess` like every board route (a password board without access gets only the 403 `locked` answer, and no
+  stream opens). It sends the board's events in id order, each as `id: <event id>` `event: change` with
+  `{ entry, card, lane, player, board, own }`: the History entry (`describeEvents`, shared with the history route),
+  the card, player and board as they are NOW (so applying one twice is harmless; `board.deletion` is how viewers see
+  a deletion scheduled or restored), the card's lane keys (a rebalanced lane re-sorts), and `own` (this tab made it).
+  Then `ready { head, board }` once caught up; `reset { head }` when more than `REPLAY_MAX` = 200 behind (the client
+  reloads the board); `locked { reason: 'password_changed' }` and the stream ends when the board's
+  `password_version` passes the one its access was granted at (checked on every write and heartbeat); `gone` and the
+  stream ends when the board was purged (the page looks the code up again and finds it free). The cards
+  answer carries `head` (the newest event id as of that read), where a freshly loaded board's stream starts.
+  - Every non-GET board request notifies its board's streams once its answer has gone (`liveWrites`), and runs inside
+    `appendContext` so the hub learns which tab (`X-NU-Tab`, random per page load, never stored) wrote each event.
+    Nothing in the hub knows one event type from another.
+  - A heartbeat comment every `HEARTBEAT_MS` = 25 s (Cloudflare cuts a connection after ~100 s of silence); the
+    stream is `Cache-Control: no-store, no-transform` and `X-Accel-Buffering: no`, never compressed (compression
+    holds events back). cloudflared flushes `text/event-stream` on every write.
+  - Limits (`LIVE_LIMITS`, in memory): 20 open streams per network, 100 per board, 2,000 in all; past one, 429
+    `too_many_streams` with Retry-After 30 and the client backs off. A board with no viewers holds nothing (its entry
+    goes with its last stream; the heartbeat timer runs only while a stream is open). index.js ends every stream on
+    shutdown, and browsers reconnect to the next process and catch up.
+  - The client (`client/src/live/connection.js`) reads the stream with fetch (EventSource can't see 403/429), resumes
+    after the last id it applied, skips any id at or below it, and is `live` only after `ready` and while bytes
+    arrive (60 s of silence counts as dropped). States: connecting, live, reconnecting (backoff 1–30 s; `busy` on
+    429), offline (the browser says so), down (still failing after 20 s). **Anything but live pauses editing
+    everywhere** ("Editing paused until we reconnect." with Retry, which reconnects now). It reconnects at once on
+    `online`, and on showing the page again after a quiet spell (sleep).
+  - Applying (`client/src/cards/Board.jsx`): mid-drag every change is held until the drop (a remote delete of the
+    held card cancels the drag and says who); an open edit sheet keeps what's typed, says "Changed by …" with Load
+    their changes, and saves against the version it opened (the server's conflict check does the rest); a panel or
+    edit sheet whose card was deleted says so. Someone else's change flashes the card with its name tag
+    (`.flash-tag`, Card-States); this tab's own changes (`own`) never flash. No presence, typing or cursors.
+  - The LAN port is HTTP/1.1: a browser allows ~6 connections per host there, so more than about five board tabs
+    open at once on the LAN starve each other. Through the tunnel (HTTP/2) there's no such limit.
 - Every time-series table has a composite index on `(parent_id, timestamp)`.
 - Every query takes limit/cursor. No unbounded selects, ever.
 - One SQLite file (`data/next-up.db`), shared by the web and MCP containers. On the server it lives in the deploy
-  folder's `data/`, on a local disk, never on a network or merged share.
+  folder's `data/`, on a local disk, never on a network or FUSE share.
+- **Backups** (`server/core/backup.js`): the web container copies the database every night at 04:00 UTC with
+  SQLite's online backup (never a raw file copy), checks the copy with `integrity_check`, and keeps it as
+  `next-up-YYYY-MM-DD.db` in `BACKUP_DIR` (`/backups` in the container; on the host, the folder in the `BACKUP_DIR`
+  Gitea variable, on a different disk from the database on purpose). 30 days are kept; nothing else in the folder is touched. A failure is logged as `[backup] FAILED` and the
+  earlier backups stay. A backup holds password hashes and the access-grant key: the share stays private.
+  `server/tools/backup.js now | list | verify <file>`; `RESTORE.md` is the restore procedure.
 - Migrations live in `server/core/schema.js` (`{ id, up(db) }`). Never edit or reorder one that has shipped.
 
 ## Hosting and networking
@@ -172,22 +259,30 @@ Never build a stub that pretends part of this works. Until a piece ships, its pa
 - A home server, one deploy folder (Gitea variable `DEPLOY_DIR`). Two containers from one image: `next-up` (web, port
   **3230**) and `next-up-mcp` (MCP, port **3231**).
 - **Host ports bind to `BIND_IP` only, never `0.0.0.0`** (`server/test/compose-guard.test.js` fails otherwise).
-  `BIND_IP` is required in `docker-compose.yml` with no default; the deploy passes it from the Gitea variable.
-  Inside the containers the processes listen on `LISTEN_HOST=0.0.0.0`, the container's own interfaces; locally they
-  default to `127.0.0.1`.
+  `BIND_IP` and the backup folder `BACKUP_DIR` are required in `docker-compose.yml` with no default; the deploy
+  passes both from Gitea variables. Inside the containers the processes listen on `LISTEN_HOST=0.0.0.0`, the
+  container's own interfaces; locally they default to `127.0.0.1`.
 - **Only the web app is in the tunnel**: `nextup.postnerfclarity.com` → port 3230 on `BIND_IP`. The MCP server is
   LAN-only; never add it to the tunnel.
 - The tunnel's ingress is managed in the Cloudflare Zero Trust dashboard by the owner. Never change tunnel config,
   the cloudflared container, Gitea or its runners from this repo.
 - `/health` (both containers) returns `{ status, service, version }` and nothing else: it is public.
+- **Security headers** on every web answer (`server/core/headers.js`): a Content-Security-Policy allowing only this
+  origin (`script-src 'self'`, `style-src 'self'`, no `unsafe-inline`; `frame-ancestors 'none'`), `nosniff`,
+  `Referrer-Policy: no-referrer` (a board's URL holds its code), and a Permissions-Policy that denies every device
+  feature. So: no inline `<script>` or `<style>` anywhere (the theme boot is `client/public/theme-boot.js`), nothing
+  from another origin. React's `style={…}` is fine (it goes through the CSSOM). Hashed `/assets/*` are cached for a
+  year as immutable; `index.html` is revalidated on every load.
 
 ## Deploy
 
 Push to `main` → `.gitea/workflows/deploy.yml`: fast-forward the host checkout, `docker compose up -d --build`, then
 probe both ports on `BIND_IP` until healthy (~90 s), fail on any restart in the following 15 s (a crash on boot fails
 the deploy), and fail unless both report the version in the pulled `CHANGELOG.json`. It fingerprints `.env` before
-and after and fails if it changed. Host-specific values are Gitea Actions variables (`DEPLOY_DIR`,
-`GITEA_INTERNAL_URL`, `BIND_IP`); preflight fails if any is unset. Never hardcode them back into the workflow.
+and after and fails if it changed. Its preflight also refuses to deploy unless `BACKUP_DIR` exists on the host
+(compose mounts it with `create_host_path: false`; without the check, `up` would fail after stopping the site).
+Host-specific values are Gitea Actions variables (`DEPLOY_DIR`, `BACKUP_DIR`, `GITEA_INTERNAL_URL`, `BIND_IP`);
+preflight fails if any is unset. Never hardcode them back into the workflow or compose file.
 
 ## Credentials
 
@@ -197,6 +292,8 @@ and after and fails if it changed. Host-specific values are Gitea Actions variab
 - The key that signs access cookies is generated by a migration into `server_secrets` (in the database, not
   `.env`). Nothing may read it except `server/boards/grants.js`.
 - `TRUSTED_PROXIES` (optional, not a secret) is read at start-up; a malformed value stops the web app from booting.
+- Server logs never contain a board code (`loggablePath` in `server/core/errors.js` turns it into `:code`), a request
+  body, a password or hash, a cookie, a token or server info.
 - Never log or return a token, a board password or its hash, an access cookie or the signing key, including inside
   error messages.
 
@@ -210,8 +307,17 @@ and after and fails if it changed. Host-specific values are Gitea Actions variab
 - The MCP process opens the database `query_only`: SQLite itself refuses writes from it.
 - Keep tool names stable: a rename breaks every connected client.
 - **What MCP can never return**: board passwords or their hashes, the token, the access-grant key, anything that
-  unlocks a password board or grants editing. No tool reads boards yet.
-- Tools so far: `get_version`.
+  unlocks a password board or grants editing.
+- **Boards by code only** (`server/mcp/resolvers/board.js`): every board tool takes the code it was given. No tool
+  lists, searches or enumerates boards or codes, and no answer or error names a code the caller didn't give. A
+  password board answers exactly `{ status: 'locked' }` to every tool and every argument (the hash is never even
+  read), and no tool takes a password. A board past its 24 hours of deleting is "no board" (the MCP can't purge it).
+  Every board tool's description says password boards answer only "locked".
+- Tools so far: `get_version`; `get_board(code)` (lanes in order, each card's id, title, logo, go-live date, player
+  count and 1-based position; `deletion` or null); `get_card(code, card)` (by id, or exact title ignoring case;
+  `ambiguous` with the choices when a title fits more than one; players in sign-up order); `get_history(code,
+  limit?, before?)` (20 by default, at most 100, newest first, each change as History words it via `describeEvents`,
+  never a payload). Tested end to end over MCP against a real file in `server/test/mcp-read.test.js`.
 
 ## Honesty rules
 
@@ -221,27 +327,47 @@ and after and fails if it changed. Host-specific values are Gitea Actions variab
 - "Nothing here" and "no coverage here" must look different.
 - Stale data shows its age. If live sync drops, say so; never show a board as live when it isn't.
 - Wherever editing is paused because we're offline, say "Editing paused until we reconnect." with a "Retry" button.
+  While a board is being deleted, editing is paused too, and the board says so with the countdown and Restore.
 
 ## Design
 
 **`design/v1/` is the source of truth for the UI.** Read the relevant artboards and `design/v1/nu.css` before
 building any screen; where an artboard contradicts this file, this file wins and the conflict gets raised.
 
-Apple styling: glass, translucency, restraint, content-forward. No navigation menu: a top bar with the name and a
-settings button, a bottom bar with the version.
+Apple styling: glass, translucency, restraint, content-forward. No navigation menu: a sticky glass top bar with the
+name and its buttons (History on a board you can open, Settings), and one glass strip along the bottom with the
+version on the left and the coffee link on the right.
 
-- **The coffee bar** (`client/src/chrome/AppShell.jsx`) is a thin bar pinned to the bottom of the viewport on every
-  page, separate from the version link: one plain link to https://buymeacoffee.com/PathPlays (new tab,
-  `rel="noopener noreferrer"`) with an inline stroke icon. **Never** a script, widget, pixel, third-party logo or
-  analytics. It sits below dialogs, sheets and toasts; the page clears it with `--coffee-bar-h` of bottom padding
-  (so the version link sits just above it), toasts and the drag hint sit above it, and drag auto-scroll measures from
-  its top edge. It takes no pointer events during a drag.
+- **The bottom strip** (`client/src/chrome/AppShell.jsx`, class `coffee-bar`) is pinned to the bottom of the
+  viewport on every page: "Next Up v0.x.y · What's new" (to /changelog) on the left, and on the right one plain link
+  to https://buymeacoffee.com/PathPlays (new tab, `rel="noopener noreferrer"`) with an inline stroke icon. There is
+  no other version element. **Never** a script, widget, pixel, third-party logo or analytics. It is glass the page
+  scrolls under; it sits below dialogs, sheets and toasts; the page's end clears it with `--coffee-bar-h` of bottom
+  padding, toasts and the drag hint sit above it, and drag auto-scroll measures from its top edge (it keeps the
+  class `coffee-bar` for that). It takes no pointer events during a drag. At 390 px both links fit on one line;
+  narrower than 360 px they wrap and `--coffee-bar-h` doubles.
+- **The top bar** is sticky glass across the window (`.topbar-bar`); the page scrolls under it, and `html`'s
+  `scroll-padding` keeps anything scrolled into view clear of both bars. Drag auto-scroll's top band starts at its
+  bottom edge.
+- **Reduce motion**: under `prefers-reduced-motion: reduce`, things fade instead of sliding, scaling or rising, and
+  nothing pulses or shimmers for ever (the keyframes are redefined inside the media query, `tokens.css` and
+  `overlay.css`); a spinner still turns.
+- **Focus never falls to the page.** A new page focuses its heading (and follows it if the page replaces it, until
+  the reader first presses a key); a dialog gives focus back to what opened it, or the dialog it came from, or the
+  page heading; a control that disappears or becomes disabled under focus hands it on (Settings' change-password,
+  the lock screen, player chips). Fields that are busy are `readOnly` or `aria-disabled`, not `disabled`, when they
+  hold focus.
 
-- **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script in `client/index.html` applies the stored
+- **Themes:** Light, Dark, Legacy, Pastel, Cyberpunk. The theme boot script (`client/public/theme-boot.js`, loaded from `client/index.html`) applies the stored
   theme (`nu.theme` in localStorage) before first paint; unset, Light/Dark follow the device ("Match device"). Dark
   is glass. **Legacy is flat**: no blur or translucency, 1 px borders, small radii, squared buttons; cards stay
-  pills. The app still ships the home-dashboard tokens (`client/src/theme/tokens.css`) until the UI is converted to
-  `design/v1/nu.css`.
+  pills.
+- **Glass needs something to blur and an edge.** Light and Dark have coloured backdrop fields (`--blob-*` and a warm
+  field in `--backdrop-pattern`); every glass pane has `--edge` (a `--hairline-w` rim in `--glass-rim` and a 1 px top
+  `--glass-sheen`); the bars use `--surface-bar`. All are theme tokens in `client/src/theme/tokens.css`, never
+  one-off styles. Text on glass is checked at 4.5:1 or better against the brightest backdrop pixel under it, in a
+  browser, in every theme, including with cards scrolled under the bars. No-logo cards stay solid. The themes and shared tokens in `client/src/theme/tokens.css`
+  come from `design/v1/nu.css`; change them there first.
 - **Top bar option A**, with the board's code chip. On a password board unlocked in this browser, the chip carries the
   lock button that forgets the unlock.
 - **Phones (390 px):** the three lanes stack vertically. Moving a card is long-press, drag with auto-scroll near the
@@ -290,9 +416,19 @@ settings button, a bottom bar with the version.
   test moves (`clock.advance(ms)`), and `ip` per request as CF-Connecting-IP. Never point a test at `data/`.
 - Test the empty state with a fresh browser profile and an empty database.
 - Verify a fix's test catches the bug by running it against unfixed code.
+- Live sync: `server/test/live.test.js` reads real streams from `startApp()` (its `live` is the hub; `close()` ends
+  open streams first), and `server/test/live-client.test.js` runs the client's connection against a fake fetch and
+  clock.
+- Password changes, deleting, restoring and purging: `server/test/board-settings.test.js` (`sweep()` from `startApp()`
+  runs the purge on the test's clock).
 - Drag tests use real input (DevTools protocol) or a lost-capture simulation: events dispatched from page script never
   engage real pointer capture, so they hide drag bugs.
 - Visual pass in at least two themes, plus phone width (390 px), with no horizontal scroll.
+- Backups: `server/test/backup.test.js` (real files in a temp folder, writes landing mid-copy). Headers and log
+  redaction: `server/test/headers.test.js`. The CF-Connecting-IP trust check end to end over two real client
+  addresses (`::1` and `127.0.0.1`, `startApp({ host: '::' })`): `server/test/network.test.js`.
+- Contrast on glass is measured on real pixels: hide the text, screenshot its line boxes, compare its colour with
+  every pixel. axe can't see through blur and misreports glass both ways.
 
 ## Changelog
 
@@ -309,7 +445,15 @@ Newest first. Omit sections that don't apply (`Removed` is also allowed).
 
 - **PATCH** (0.x.1) for fixes, small additions and refinements. The default.
 - **MINOR** (0.x.0) for a genuinely new capability.
-- **1.0.0 is reserved** for: the full agreed spec working live and used by Post Nerf Clarity for one real game
-  rotation. Don't approach it.
+- **1.0.0 was reached on 2026-10-16**: the full agreed spec working live and used by Post Nerf Clarity for a real
+  game rotation (the `testboard` board, on desktop and phone). Releases after it follow the same PATCH / MINOR rules.
+
+## Roadmap (after 1.0)
+
+Planned, not specced. Each gets its own spec here before it is built.
+
+- Easter eggs and mini-games: off by default, with cryptic changelog entries.
+- Steam update badges on cards.
+- A public Discord bot.
 
 Write entries for someone reading them in six months: what changed from a user's point of view, not which files moved.

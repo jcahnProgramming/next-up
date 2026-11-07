@@ -139,4 +139,47 @@ export const coreMigrations = [
       `);
     },
   },
+  {
+    // History and restore. A restore never edits the event it undoes: it is a new event whose `restores` names that
+    // one, so the log stays append-only and a restore can itself be restored. `card_id` is read from the payload (a
+    // VIRTUAL column: no stored row changes, old events included) so one card's history is an index lookup.
+    id: '004_history_restore',
+    up(db) {
+      db.exec(`
+        -- Set only on the events a restore writes. NULL on every event that isn't a restore (all events before 0.7.0).
+        ALTER TABLE events ADD COLUMN restores INTEGER REFERENCES events (id);
+        ALTER TABLE events ADD COLUMN card_id INTEGER GENERATED ALWAYS AS (json_extract(payload, '$.cardId')) VIRTUAL;
+
+        -- An event is restored at most once: a second Restore of it is refused by the database too.
+        CREATE UNIQUE INDEX events_restored_once ON events (restores) WHERE restores IS NOT NULL;
+        CREATE INDEX events_board_card_time ON events (board_id, card_id, created_at);
+
+        CREATE TRIGGER events_restore_same_board BEFORE INSERT ON events
+          WHEN NEW.restores IS NOT NULL AND (SELECT board_id FROM events WHERE id = NEW.restores) IS NOT NEW.board_id
+          BEGIN SELECT RAISE(ABORT, 'a restore undoes an event on its own board'); END;
+      `);
+    },
+  },
+  {
+    // Live sync (live/hub.js) reads a board's events after the last one a browser saw, in id order: an index lookup.
+    id: '005_live_sync',
+    up(db) {
+      db.exec('CREATE INDEX events_board_seq ON events (board_id, id);');
+    },
+  },
+  {
+    // Retiring a board (boards/retire.js). While a board is being deleted (deleted_at set) nothing on it changes:
+    // every change writes an event in the same transaction, so refusing every event but the deletion's own (and its
+    // cancelling) pauses editing in the database as well as the routes. The sweep finds due boards by deleted_at.
+    id: '006_board_retire',
+    up(db) {
+      db.exec(`
+        CREATE TRIGGER events_paused_while_deleting BEFORE INSERT ON events
+          WHEN (SELECT deleted_at FROM boards WHERE id = NEW.board_id) IS NOT NULL
+            AND NEW.type NOT IN ('board.deletion_scheduled', 'board.deletion_cancelled')
+          BEGIN SELECT RAISE(ABORT, 'a board being deleted can''t change until it is restored'); END;
+        CREATE INDEX boards_retired ON boards (deleted_at) WHERE deleted_at IS NOT NULL;
+      `);
+    },
+  },
 ];

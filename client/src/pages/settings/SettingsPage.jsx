@@ -1,25 +1,36 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckIcon, ChevronLeft, WarningIcon } from '../../chrome/icons.jsx';
+import { checkCode } from '../../boards/codes.js';
 import { cleanName, MAX_NAME, storageAvailable, useDisplayName } from '../../prefs/displayName.js';
 import { setThemeChoice, THEMES, useThemeChoice } from '../../theme/theme.js';
+import { BoardSettings } from './BoardSettings.jsx';
 import './settings.css';
 
 // design/v1 Settings.dc.html. Theme and display name are per browser (localStorage), never an account, and never
-// sent to the server. The "This board" section (the board's password) comes with boards; it isn't drawn here.
+// sent to the server. "This board" (BoardSettings.jsx) shows only when Settings was opened from an open board: the
+// top bar's Settings button says which (chrome/AppShell.jsx), and the section checks this browser can still open it.
 export function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [canStore] = useState(storageAvailable);
-  // Back returns to wherever you came from; opened directly, it goes Home.
-  const back = () => (location.key !== 'default' ? navigate(-1) : navigate('/'));
+  const from = checkCode(location.state?.board);
+  const boardCode = from.ok ? from.code : null;
+  // Back returns to wherever you came from; opened directly, it goes Home (or to the board it was opened for).
+  const back = () => (location.key !== 'default' ? navigate(-1) : navigate(boardCode ? `/b/${boardCode}` : '/'));
 
   return (
     <div className="settings">
       <div className="settings-head">
         <button type="button" className="btn btn-ghost btn-sm settings-back" onClick={back}>
           <ChevronLeft />
-          Back
+          {boardCode ? (
+            <>
+              Back to <span className="code-text">{boardCode}</span>
+            </>
+          ) : (
+            'Back'
+          )}
         </button>
         <h1 className="settings-title display">Settings</h1>
       </div>
@@ -36,6 +47,7 @@ export function SettingsPage() {
 
       <ThemeSection />
       <NameSection />
+      {boardCode && <BoardSettings code={boardCode} />}
     </div>
   );
 }

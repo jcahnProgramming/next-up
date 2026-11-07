@@ -19,14 +19,20 @@ test('event types declare themselves; undeclared types and stray payload fields 
   assert.equal(db.prepare('SELECT COUNT(*) FROM events').pluck().get(), 0);
   assert.ok(appendEvent(db, { boardId, type: 'board.created', payload: { hasPassword: false } }) > 0);
 
-  assert.throws(() => declareEventType({ type: 'board.created', payload: z.object({}) }), /declared twice/);
-  assert.throws(() => declareEventType({ type: 'Bad-Type', payload: z.object({}) }), /noun\.verb/);
+  assert.throws(() => declareEventType({ type: 'board.created', payload: z.object({}), line: () => ({}) }), /declared twice/);
+  assert.throws(() => declareEventType({ type: 'Bad-Type', payload: z.object({}), line: () => ({}) }), /noun\.verb/);
 });
 
 test('a later feature declares its own type and can log it straight away', () => {
   const db = memoryDb();
   const boardId = boardIn(db);
-  const type = declareEventType({ type: 'test_thing.happened', restorable: true, payload: z.object({ n: z.number() }) });
+  const line = (p) => ({ verb: 'did', subject: `thing ${p.n}` });
+  const restore = { plan: () => ({ refuse: { code: 'nothing_to_restore', error: 'Nothing to do.' } }) };
+  // A type says how History reads it, and a restorable one how it's undone: no list of types anywhere else.
+  assert.throws(() => declareEventType({ type: 'test_thing.unread', payload: z.object({}) }), /needs line/);
+  assert.throws(() => declareEventType({ type: 'test_thing.unrestorable', restorable: true, line, payload: z.object({}) }), /needs restore\.plan/);
+  assert.throws(() => declareEventType({ type: 'test_thing.confused', restorable: false, line, restore, payload: z.object({}) }), /isn't restorable/);
+  const type = declareEventType({ type: 'test_thing.happened', restorable: true, payload: z.object({ n: z.number() }), line, restore });
   appendEvent(db, { boardId, type, actor: 'Path', payload: { n: 1 } });
   const [event] = listEvents(db, boardId).events;
   assert.equal(event.type, 'test_thing.happened');

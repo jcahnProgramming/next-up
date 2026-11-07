@@ -29,7 +29,8 @@ describe('cards on an open board', () => {
   test('a new board has no cards', async () => {
     const r = await api();
     assert.equal(r.status, 200);
-    assert.deepEqual(r.body, { cards: [], next: null, limit: MAX_CARDS });
+    // head: its one event so far (board.created), where a live stream picks up.
+    assert.deepEqual(r.body, { cards: [], next: null, limit: MAX_CARDS, head: 1 });
   });
 
   test('adding puts the card at the bottom of its lane and logs card.created with the whole card', async () => {

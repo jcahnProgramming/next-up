@@ -10,6 +10,13 @@
 .board-banner {
   margin: 0;
 }
+/* While the board is being deleted (boards/Deletion.jsx): the countdown doesn't jiggle as its digits change. */
+.deleting-banner .deleting-left {
+  font-variant-numeric: tabular-nums;
+}
+.deleting-banner > .btn {
+  flex: none;
+}
 
 /* ---------- lanes: side by side; stacked on narrow screens and phones (Board-Phone) ---------- */
 .lanes {
@@ -1118,9 +1125,10 @@ html.is-card-dragging * {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+/* The next and previous months' days are real, pickable dates: quieter than this month's, but still 4.5:1 (nu.css
+   dims them to 55% as well, which fell to 2.4:1 in Pastel and Cyberpunk). */
 .dp-day.is-out {
   color: var(--text-3);
-  opacity: 0.55;
 }
 .dp-day.is-today {
   box-shadow: inset 0 0 0 1.5px var(--accent);

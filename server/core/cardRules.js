@@ -14,6 +14,7 @@ export const laneName = (id) => LANES.find((l) => l.id === id)?.name ?? null;
 
 /** The most live (not deleted) cards one board holds. Deleted cards don't count. */
 export const MAX_CARDS = 200;
+export const cardLimitMessage = `This board has ${MAX_CARDS} games, the most a board can hold. Delete one to add another.`;
 
 export const TITLE_MAX = 60;
 

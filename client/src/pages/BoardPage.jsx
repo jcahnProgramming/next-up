@@ -47,10 +47,15 @@ export function BoardPage() {
 function BoardView({ code, state, setState, retry }) {
   const navigate = useNavigate();
   const { toast } = useTopbar();
+  // History (history/HistoryPanel.jsx): null, or { cardId } (null: the whole board). Opened from the top bar or a card.
+  const [history, setHistory] = useState(null);
+  // The board's live sync state, for the top bar's sync pill: { status, since }, or null when no board is open.
+  const [live, setLive] = useState(null);
 
   const relock = useCallback(async () => {
     const result = await lockBoard(code);
     if (result.kind === 'done') {
+      setHistory(null);
       setState({ kind: 'locked', changed: false });
       toast('Locked on this browser');
     } else {
@@ -59,10 +64,30 @@ function BoardView({ code, state, setState, retry }) {
   }, [code, setState, toast]);
 
   // The board locked under us (its lock pressed in another tab, or its password changed): back to the lock screen.
-  const onLocked = useCallback((changed) => setState({ kind: 'locked', changed }), [setState]);
+  // Unless this browser changed the password itself (in Settings, in another tab): then it holds a fresh grant, and
+  // looking the board up again opens it rather than asking for the password it just chose.
+  const onLocked = useCallback(
+    async (changed) => {
+      setHistory(null);
+      if (changed) {
+        const again = await lookupBoard(code);
+        if (again.kind === 'open') return setState({ kind: 'open', board: again.board, opened: Date.now() });
+      }
+      return setState({ kind: 'locked', changed });
+    },
+    [code, setState],
+  );
+  const openHistory = useCallback(() => setHistory({ cardId: null }), []);
 
   const open = state.kind === 'open';
-  useTopbarBoard({ code, plain: !open, onLock: open && state.board.hasPassword ? relock : undefined });
+  useTopbarBoard({
+    code,
+    plain: !open,
+    onLock: open && state.board.hasPassword ? relock : undefined,
+    onHistory: open ? openHistory : undefined,
+    // false: the board couldn't load, so no pill at all (cards/Board.jsx)
+    live: open && live !== false ? (live ?? { status: 'connecting', since: null }) : undefined,
+  });
 
   switch (state.kind) {
     case 'loading':
@@ -77,7 +102,19 @@ function BoardView({ code, state, setState, retry }) {
         </Centered>
       );
     case 'open':
-      return <Board board={state.board} onLocked={onLocked} />;
+      return (
+        <Board
+          // A fresh grant (see onLocked) opens the board afresh, with a new live stream.
+          key={state.opened ?? 0}
+          board={state.board}
+          onLocked={onLocked}
+          // Purged (24 hours after it was deleted): look the code up again, which shows it free.
+          onGone={retry}
+          history={history}
+          onHistory={setHistory}
+          onLive={setLive}
+        />
+      );
     case 'locked':
       return (
         <Centered>
@@ -128,13 +165,16 @@ function BoardView({ code, state, setState, retry }) {
             <p className="access-text">
               {state.offline
                 ? 'Boards need a connection to open.'
-                : 'Next Up didn’t answer. Nothing has changed on the board; this is only about reaching it.'}
+                : state.timedOut
+                  ? 'Timed out after 10 s. Nothing has changed on the board; this is only about reaching it.'
+                  : 'Next Up didn’t answer. Nothing has changed on the board; this is only about reaching it.'}
             </p>
             <div className="access-actions">
               <button type="button" className="btn btn-primary" onClick={retry}>
                 Retry
               </button>
             </div>
+            <HomeButton secondary />
           </section>
         </Centered>
       );

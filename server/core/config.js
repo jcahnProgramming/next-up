@@ -17,4 +17,7 @@ export const config = {
   dataDir: resolve(REPO_ROOT, dataDir),
   dbFile: process.env.DB_FILE || 'next-up.db',
   clientDist: resolve(REPO_ROOT, 'client', 'dist'),
+  // Where the nightly backups go (core/backup.js). Unset: no backups (local dev). In Docker: /backups, the host folder
+  // BACKUP_DIR mounted by docker-compose.yml.
+  backupDir: process.env.BACKUP_DIR ? resolve(REPO_ROOT, process.env.BACKUP_DIR) : null,
 };

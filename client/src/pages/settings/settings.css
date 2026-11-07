@@ -160,8 +160,102 @@
   gap: 10px;
 }
 
+/* ---------- this board (BoardSettings.jsx; design/v1 Settings .pw-state, and its "too many tries" st-warn) ---------- */
+.board-settings-loading {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-2);
+  font-size: var(--fs-footnote);
+}
+.pw-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icon-circle-row {
+  width: 40px;
+  height: 40px;
+}
+.pw-state-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pw-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.pw-state-sub {
+  font-size: var(--fs-caption);
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+.settings-rule {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--separator);
+}
+.pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--separator);
+}
+.pw-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.pw-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+/* A warning state inside the section: the countdown when wrong passwords are paused, and a board being deleted. */
+.st-warn {
+  border-radius: var(--r-card);
+  background: var(--warning-soft);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.deleting-left {
+  font-variant-numeric: tabular-nums;
+}
+.settings-deleting .btn {
+  margin-top: 4px;
+}
+
 /* ---------- phone ---------- */
 @media (max-width: 720px) {
+  .pw-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* The row's button drops below its words, full width, so neither squeezes the other. */
+  .pw-state {
+    flex-wrap: wrap;
+  }
+  .pw-state > .btn {
+    width: 100%;
+  }
+  .pw-actions {
+    flex-direction: column-reverse;
+  }
+  .pw-actions .btn {
+    width: 100%;
+  }
   .theme-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
