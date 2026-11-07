@@ -281,7 +281,7 @@ probe both ports on `BIND_IP` until healthy (~90 s), fail on any restart in the 
 the deploy), and fail unless both report the version in the pulled `CHANGELOG.json`. It fingerprints `.env` before
 and after and fails if it changed. Its preflight also refuses to deploy unless `BACKUP_DIR` exists on the host
 (compose mounts it with `create_host_path: false`; without the check, `up` would fail after stopping the site).
-Host-specific values are Gitea Actions variables (`DEPLOY_DIR`, `BACKUP_DIR`, `GITEA_INTERNAL_URL`, `BIND_IP`);
+Host-specific values are Gitea Actions variables (`DEPLOY_DIR`, `BACKUP_DIR`, `INTERNAL_GIT_URL`, `BIND_IP`);
 preflight fails if any is unset. Never hardcode them back into the workflow or compose file.
 
 ## Credentials

@@ -100,7 +100,7 @@ Configure it in `.env`:
 
 Point your reverse proxy or tunnel at port 3230 only; keep the MCP port on your own network. `/health` on both ports returns `{ status, service, version }` and nothing else.
 
-The repo also has the Gitea Actions workflow that deploys the live site on every push to `main` (`.gitea/workflows/deploy.yml`): it fast-forwards the server's checkout, rebuilds, and fails unless both containers come up healthy, stay up, and report the version in `CHANGELOG.json`. It never writes `.env` and checks that nothing else did. Its host-specific values are repository variables (`DEPLOY_DIR`, `BACKUP_DIR`, `GITEA_INTERNAL_URL`, `BIND_IP`).
+The repo also has the Gitea Actions workflow that deploys the live site on every push to `main` (`.gitea/workflows/deploy.yml`): it fast-forwards the server's checkout, rebuilds, and fails unless both containers come up healthy, stay up, and report the version in `CHANGELOG.json`. It never writes `.env` and checks that nothing else did. Its host-specific values are repository variables (`DEPLOY_DIR`, `BACKUP_DIR`, `INTERNAL_GIT_URL`, `BIND_IP`).
 
 ## Backups
 
