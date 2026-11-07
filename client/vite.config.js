@@ -25,14 +25,21 @@ export default defineConfig({
 function logoLibrary(dir) {
   const ID = 'virtual:nu-logos';
   const RESOLVED = `\0${ID}`;
+  let serving = false;
   return {
     name: 'nu-logo-library',
+    configResolved(config) {
+      serving = config.command === 'serve';
+    },
     resolveId(id) {
       return id === ID ? RESOLVED : null;
     },
     load(id) {
       if (id !== RESOLVED) return null;
-      this.addWatchFile(dir);
+      // Watching the folder: the build's watch mode needs addWatchFile. The dev server must not get it: it treats a
+      // watched file as an import of this module and tries to resolve it, and the folder's Windows path (D:\...)
+      // fails there, which broke the page in `npm run dev` on Windows. configureServer below watches it instead.
+      if (!serving) this.addWatchFile(dir);
       const { logos, problems } = readLibrary(dir);
       if (problems.length) this.error(describeProblems(problems));
       const imports = logos.map((l, i) => `import u${i} from ${JSON.stringify(`${l.path.replace(/\\/g, '/')}?url`)};`);
