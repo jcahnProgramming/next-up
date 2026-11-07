@@ -10,7 +10,12 @@ const procs = [
   ...(withMcp ? [['mcp', ['run', 'dev:mcp', '--workspace', 'server']]] : []),
   ['client', ['run', 'dev', '--workspace', 'client']],
 ].map(([name, args]) => {
-  const child = spawn(npm, args, { stdio: ['ignore', 'pipe', 'pipe'], shell: process.platform === 'win32' });
+  // Windows can only start npm.cmd through a shell, and Node deprecates passing an argument list along with
+  // shell: true (DEP0190), so there the command goes as one string. The arguments are the fixed ones above, never
+  // user input. Elsewhere npm starts directly, without a shell.
+  const opts = { stdio: ['ignore', 'pipe', 'pipe'] };
+  const child =
+    process.platform === 'win32' ? spawn([npm, ...args].join(' '), { ...opts, shell: true }) : spawn(npm, args, opts);
   const prefix = (chunk) =>
     chunk
       .toString()

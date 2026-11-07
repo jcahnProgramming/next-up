@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.0.2",
+      "date": "2026-11-07",
+      "title": "Security updates",
+      "sections": {
+        "Fixed": [
+          "Security updates for two of the building blocks Next Up runs on. One closes a way someone could have slowed down or stalled Next Up by sending it a specially crafted request; the other tightens how web addresses are checked inside the AI access point. Nothing about how boards look or work has changed."
+        ]
+      }
+    },
+    {
       "version": "1.0.1",
       "date": "2026-11-07",
       "title": "A README for visitors and a deploy you can point at your own server",

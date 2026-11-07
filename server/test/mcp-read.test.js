@@ -23,6 +23,7 @@ const TOKEN = 'test-token-0123456789abcdef';
 const PW = 'raid night 8pm';
 const DAY = 24 * 60 * 60 * 1000;
 
+let file; // the web app's own connection to the database file
 let web; // the web app, writing to the file through its own connection, as the next-up container does
 let mcp; // the MCP server on the same file, opened the way mcp/index.js opens it
 let client;
@@ -31,7 +32,7 @@ const seen = []; // every text any tool answered, for the "never says a code it 
 const ids = {};
 
 before(async () => {
-  const file = new Database(join(dir, 'next-up.db'));
+  file = new Database(join(dir, 'next-up.db'));
   file.pragma('journal_mode = WAL');
   file.pragma('foreign_keys = ON');
   const log = console.log;
@@ -93,8 +94,11 @@ before(async () => {
 
 after(async () => {
   await client?.close();
-  mcp?.close();
+  await new Promise((resolve) => (mcp ? mcp.close(() => resolve()) : resolve()));
   await web?.close();
+  // Both connections must be closed before the folder is deleted: Windows refuses to delete a file that is open
+  // (macOS and Linux allow it, which hid this).
+  file?.close();
   closeDb();
   rmSync(dir, { recursive: true, force: true });
 });
